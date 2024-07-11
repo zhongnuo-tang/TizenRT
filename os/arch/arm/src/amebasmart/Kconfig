@@ -67,10 +67,6 @@ config RTL8730E_SERIAL_FIFO
 	bool "UART SERIAL FIFO"
 	default n
 
-config AMEBASMART_MIPI
-        bool "AMEBASMART_MIPI"
-        default n
-
 config AMEBASMART_SPI
 	bool "AMEBASMART_SPI"
 	default n
@@ -159,7 +155,7 @@ config AMEBASMART_I2CTIMEOTICKS
 endif
 
 config AMEBASMART_I2S
-	bool "Amebasmart I2S"
+	bool "AMEBASMART_I2S"
 	default n
 
 if AMEBASMART_I2S
@@ -178,6 +174,11 @@ config AMEBASMART_I2S_TX
 	bool "Enable I2S TX"
 	default n
 endif
+
+config AMEBASMART_USB
+	bool "AMEBASMART_USB"
+	default y
+
 endmenu
 
 menu "Realtek RTL8730E WIFI Support"
