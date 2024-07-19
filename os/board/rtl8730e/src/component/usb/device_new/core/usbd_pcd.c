@@ -82,12 +82,12 @@ static int usbd_pcd_interrupt_init(usbd_pcd_t *pcd)
 
 	usb_os_sema_create(&pcd->isr_sema);
 
-	ret = rtos_task_create(&pcd->isr_task,
+	ret = rtw_create_task(&pcd->isr_task,
 						   "usbd_isr_task",
-						   usbd_pcd_isr_task,
-						   (void *)pcd,
 						   USBD_ISR_THREAD_STACK_SIZE,
-						   pcd->config.isr_priority);
+						   pcd->config.isr_priority,
+						   usbd_pcd_isr_task,
+						   (void *)pcd);
 	if (ret != SUCCESS) {
 		return HAL_ERR_MEM;
 	}
@@ -112,7 +112,7 @@ static int usbd_pcd_interrupt_deinit(usbd_pcd_t *pcd)
 		usb_hal_disable_interrupt();
 		usb_hal_unregister_irq_handler();
 		if (pcd->isr_task != NULL) {
-			rtos_task_delete(pcd->isr_task);
+			rtw_delete_task(&pcd->isr_task);
 			pcd->isr_task = NULL;
 		}
 		usb_os_sema_delete(pcd->isr_sema);

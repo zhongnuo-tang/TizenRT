@@ -20,39 +20,21 @@
 
 #include "platform_autoconf.h"
 
-#ifdef CONFIG_RTL8721D
-#define STD_PRINTF
-
-#include "platform_stdlib.h"
-#include "basic_types.h"
-#include "log.h"
-#endif
-
 #include "basic_types.h"
 #include "ameba.h"
-#ifndef CONFIG_FLOADER_USBD_EN
-#include "os_wrapper.h"
-#endif
+#include "osdep_service.h"
 
 /* Exported defines ----------------------------------------------------------*/
-
-#ifndef CONFIG_FLOADER_USBD_EN
-#define USB_OS_SEMA_TIMEOUT		(RTOS_SEMA_MAX_COUNT)
-#endif
+#define USB_OS_SEMA_TIMEOUT		(RTW_MAX_DELAY)
 
 /* Exported types ------------------------------------------------------------*/
+typedef _mutex usb_os_lock_t;
 
-#ifndef CONFIG_FLOADER_USBD_EN
+typedef _sema usb_os_sema_t;
 
-typedef rtos_mutex_t usb_os_lock_t;
+typedef _queue usb_os_queue_t;
 
-typedef rtos_sema_t usb_os_sema_t;
-
-typedef rtos_queue_t usb_os_queue_t;
-
-typedef rtos_task_t usb_os_task_t;
-
-#endif
+typedef _task usb_os_task_t;
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -96,8 +78,6 @@ void usb_os_memset(void *buf, u8 val, u32 size);
 
 void usb_os_memcpy(void *dst, const void *src, u32 size);
 
-#ifndef CONFIG_FLOADER_USBD_EN
-
 void *usb_os_malloc(u32 size);
 
 void usb_os_mfree(void *handle);
@@ -122,6 +102,7 @@ int usb_os_sema_take(usb_os_sema_t sema, u32 timeout_ms);
 
 int usb_os_sema_give(usb_os_sema_t sema);
 
+#if 0
 int usb_os_queue_create(usb_os_queue_t *queue, u32 msg_num, u32 msg_size);
 
 int usb_os_queue_delete(usb_os_queue_t queue);
@@ -129,9 +110,6 @@ int usb_os_queue_delete(usb_os_queue_t queue);
 int usb_os_queue_send(usb_os_queue_t queue, void *msg, u32 wait_ms);
 
 int usb_os_queue_receive(usb_os_queue_t queue, void *msg, u32 wait_ms);
-
-u32 usb_os_get_free_heap_size(void);
-
 #endif
 
 #endif /* USB_OS_H */

@@ -16,16 +16,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "usb_hal.h"
-#ifndef CONFIG_FLOADER_USBD_EN
-#include "os_wrapper.h"
-#endif
-
-/* Private defines -----------------------------------------------------------*/
-
-#ifndef CONFIG_FLOADER_USBD_EN
-USB_DATA_SECTION
-static const char *const TAG = "USB";
-#endif
+#include "usb_os.h"
 
 /* Private types -------------------------------------------------------------*/
 
@@ -51,7 +42,7 @@ static const char *const TAG = "USB";
 USB_TEXT_SECTION
 void usb_os_memset(void *buf, u8 val, u32 size)
 {
-	memset(buf, val, size);
+	rtw_memset(buf, val, size);
 }
 
 /**
@@ -64,7 +55,7 @@ void usb_os_memset(void *buf, u8 val, u32 size)
 USB_TEXT_SECTION
 void usb_os_memcpy(void *dst, const void *src, u32 size)
 {
-	memcpy(dst, src, size);
+	rtw_memcpy(dst, src, size);
 }
 
 /**
@@ -75,11 +66,7 @@ void usb_os_memcpy(void *dst, const void *src, u32 size)
 USB_TEXT_SECTION
 void usb_os_delay_us(u32 us)
 {
-#ifdef CONFIG_FLOADER_USBD_EN
 	DelayUs(us);
-#else
-	rtos_time_delay_us(us);
-#endif
 }
 
 /**
@@ -90,14 +77,8 @@ void usb_os_delay_us(u32 us)
 USB_TEXT_SECTION
 void usb_os_sleep_ms(u32 ms)
 {
-#ifdef CONFIG_FLOADER_USBD_EN
 	DelayMs(ms);
-#else
-	rtos_time_delay_ms(ms);
-#endif
 }
-
-#ifndef CONFIG_FLOADER_USBD_EN
 
 /**
   * @brief  malloc for size
@@ -111,9 +92,8 @@ void *usb_os_malloc(u32 size)
 	if (size == 0) {
 		return NULL;
 	}
-	buf = rtos_mem_zmalloc(size);
+	buf = rtw_zmalloc(size);
 	if (NULL == buf) {
-		RTK_LOGS(TAG, "[USB] Fail to alloc %d mem\n", size);
 		return NULL;
 	}
 
@@ -128,7 +108,7 @@ USB_TEXT_SECTION
 void usb_os_mfree(void *handle)
 {
 	if (handle) {
-		rtos_mem_free(handle);
+		rtw_mfree(handle, 0);
 	}
 }
 
@@ -142,7 +122,7 @@ int usb_os_lock_create(usb_os_lock_t *lock)
 {
 	int ret;
 
-	ret = rtos_mutex_create(lock);
+	ret = rtw_mutex_init(lock);
 	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_MEM;
 
 	return ret;
@@ -158,7 +138,7 @@ int usb_os_lock_delete(usb_os_lock_t lock)
 {
 	int ret;
 
-	ret = rtos_mutex_delete(lock);
+	ret = rtw_mutex_free(&lock);
 	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_PARA;
 
 	return ret;
@@ -174,7 +154,7 @@ int usb_os_lock(usb_os_lock_t lock)
 {
 	int ret;
 
-	ret = rtos_mutex_take(lock, MUTEX_WAIT_TIMEOUT);
+	ret = rtw_mutex_get(&lock);
 	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_PARA;
 
 	return ret;
@@ -190,7 +170,7 @@ int usb_os_unlock(usb_os_lock_t lock)
 {
 	int ret;
 
-	ret = rtos_mutex_give(lock);
+	ret = rtw_mutex_put(&lock);
 	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_PARA;
 
 	return ret;
@@ -234,7 +214,7 @@ int usb_os_sema_create(usb_os_sema_t *sema)
 {
 	int ret;
 
-	ret = rtos_sema_create(sema, 0U, 1U);
+	ret = rtw_init_sema(sema, 0);
 	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_MEM;
 
 	return ret;
@@ -249,7 +229,7 @@ int usb_os_sema_delete(usb_os_sema_t sema)
 {
 	int ret;
 
-	ret = rtos_sema_delete(sema);
+	ret = rtw_free_sema(&sema);
 	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_MEM;
 
 	return ret;
@@ -265,7 +245,7 @@ int usb_os_sema_take(usb_os_sema_t sema, u32 timeout_ms)
 {
 	int ret;
 
-	ret = rtos_sema_take(sema, timeout_ms);
+	ret = rtw_down_timeout_sema(&sema, timeout_ms);
 	ret = (ret == SUCCESS) ? HAL_OK : HAL_TIMEOUT;
 
 	return ret;
@@ -280,12 +260,14 @@ int usb_os_sema_give(usb_os_sema_t sema)
 {
 	int ret;
 
-	ret = rtos_sema_give(sema);
+	ret = rtw_up_sema(&sema);
 	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_PARA;
 
 	return ret;
 }
 
+/* USB Device not using queue */
+#if 0
 /**
  * @brief  Create queue
  * @param  queue: pointer to the queue handle
@@ -351,16 +333,4 @@ int usb_os_queue_receive(usb_os_queue_t queue, void *msg, u32 wait_ms)
 
 	return ret;
 }
-
-/**
- * @brief  Get free heap size
- * @param  void
- * @retval Free heap size
- */
-u32 usb_os_get_free_heap_size(void)
-{
-	return rtos_mem_get_free_heap_size();
-}
-
 #endif
-

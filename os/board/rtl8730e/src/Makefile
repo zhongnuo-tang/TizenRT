@@ -120,6 +120,11 @@ include component/bluetooth/example/ble_scatternet/Make.defs
 endif
 endif
 
+ifeq ($(CONFIG_AMEBASMART_USB),y)
+include component/usb/common_new/Make.defs
+include component/usb/device_new/core/Make.defs
+endif
+
 include component/file_system/ftl/Make.defs
 include component/file_system/kv/Make.defs
 include component/file_system/vfs2.0/Make.defs
