@@ -38,8 +38,14 @@
 
 #include <arch/irq.h>
 
-#if defined(CONFIG_USBDEV) && defined(CONFIG_AMEBASMART_USB)
 
+
+#if defined(CONFIG_USBDEV) && defined(CONFIG_AMEBASMART_USB)
+#include "usb_os.h"
+#include "usbd_pcd.h"
+#include "usbd_core.h"
+#include "usbd.h"
+#include "usbd_hal.h"
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -73,7 +79,6 @@
 #define EP3                   (3)
 #define EP4                   (4)
 #define EP5                   (5)
-#define EP6                   (6)
 
 #define AMEBASMART_ENDP_BIT(ep)    (1 << (ep))
 #define AMEBASMART_ENDP_ALLSET     0xff
@@ -221,11 +226,11 @@
 
 enum amebasmart_ep0state_e {
 	EP0STATE_IDLE = 0,			/* No request in progress */
-	EP0STATE_SETUP_OUT,			/* Set up recived with data for device OUT in progress */
-	EP0STATE_SETUP_READY,		/* Set up was recived prior and is in ctrl,
-								 * now the data has arrived */
-	EP0STATE_WRREQUEST,			/* Write request in progress */
-	EP0STATE_RDREQUEST,			/* Read request in progress */
+	EP0STATE_SETUP,			/* Set up recived with data for device in progress */
+	EP0STATE_DATA_IN,
+	EP0STATE_DATA_OUT,
+	EP0STATE_STATUS_IN,
+	EP0STATE_STATUS_OUT,
 	EP0STATE_STALLED			/* We are stalled */
 };
 
@@ -282,19 +287,46 @@ struct amebasmart_usbdev_s {
 	/* The bound device class driver */
 
 	struct usbdevclass_driver_s *driver;
-
+#ifdef CONFIG_AMEBASMART_USBD_CDC_ACM_ASYNC_XFER
+	static uint32_t cdc_acm_xfer_idx = 0;
+	static uint8_t cdc_acm_async_xfer_buf[CONFIG_CDC_ACM_ASYNC_BUF_SIZE] __attribute__((aligned(CACHE_LINE_SIZE)));
+	static uint16_t cdc_acm_async_xfer_buf_pos = 0;
+	static volatile int cdc_acm_async_xfer_busy = 0;
+	static sem_t cdc_acm_async_xfer_sema;
+#endif
 	/* AMEBASMART-specific fields */
-
-	uint8_t ep0state;			/* State of EP0 (see enum amebasmart_ep0state_e) */
-	uint8_t rsmstate;			/* Resume state (see enum amebasmart_rsmstate_e) */
-	uint8_t nesofs;				/* ESOF counter (for resume support) */
-	uint8_t rxpending:1;		/* 1: OUT data in PMA, but no read requests */
-	uint8_t selfpowered:1;		/* 1: Device is self powered */
-	uint8_t epavail;			/* Bitset of available endpoints */
-	uint8_t bufavail;			/* Bitset of available buffers */
-	uint16_t rxstatus;			/* Saved during interrupt processing */
-	uint16_t txstatus;			/* "   " "    " "       " "        " */
-	uint16_t imask;				/* Current interrupt mask */
+	uint32_t ep0_xfer_total_len;					/* The total data length to transfer */
+	uint32_t ep0_xfer_rem_len;					/* The remain data length to transfer */
+	uint32_t ep0_recv_rem_len;					/* The remain data length to receive */
+	uint8_t *ctrl_buf;							/* Buffer for control transfer */
+	void *pcd;								/* PCD handle */
+	uint16_t ep0_data_len;						/* EP0 data length */
+	uint8_t ep0_state;							/* EP0 state */
+	uint8_t dev_config;							/* Device config index */
+	uint8_t dev_speed;							/* Device speed, usb_speed_type_t */
+	uint8_t dev_state;							/* Device state, usbd_state_t */
+	uint8_t dev_old_state;						/* Device old state, usbd_state_t */
+	uint8_t dev_attach_status;					/* Device attach status, usbd_attach_status_t */
+	uint8_t test_mode;							/* Test mode */
+	uint8_t self_powered : 1;						/* Self powered or not, 0-bus powered, 1-self powered */
+	uint8_t remote_wakeup_en : 1;					/* Remote wakeup enable or not, 0-disabled, 1-enabled */
+	uint8_t remote_wakeup : 1;						/* Remote wakeup */
+	uint16_t cdc_acm_bulk_out_xfer_size;
+	uint16_t cdc_acm_bulk_in_xfer_size;
+	uint8_t bitrate;
+	uint8_t format;
+	uint8_t parity_type;
+	uint8_t data_type;
+	// uint8_t ep0state;			/* State of EP0 (see enum amebasmart_ep0state_e) */
+	// uint8_t rsmstate;			/* Resume state (see enum amebasmart_rsmstate_e) */
+	// uint8_t nesofs;				/* ESOF counter (for resume support) */
+	// uint8_t rxpending:1;		/* 1: OUT data in PMA, but no read requests */
+	// uint8_t selfpowered:1;		/* 1: Device is self powered */
+	// uint8_t epavail;			/* Bitset of available endpoints */
+	// uint8_t bufavail;			/* Bitset of available buffers */
+	// uint16_t rxstatus;			/* Saved during interrupt processing */
+	// uint16_t txstatus;			/* "   " "    " "       " "        " */
+	// uint16_t imask;				/* Current interrupt mask */
 
 	/* E0 SETUP data buffering.
 	 *
@@ -312,15 +344,43 @@ struct amebasmart_usbdev_s {
 	 *   Lenght of OUT DATA received in ep0data[]
 	 */
 
-	struct usb_ctrlreq_s ctrl;	/* Last EP0 request */
+	// struct usb_ctrlreq_s ctrl;	/* Last EP0 request */
 
-	uint8_t ep0data[CONFIG_USBDEV_SETUP_MAXDATASIZE];
-	uint16_t ep0datlen;
+	// uint8_t ep0data[CONFIG_USBDEV_SETUP_MAXDATASIZE];
+	// uint16_t ep0datlen;
 
-	/* The endpoint list */
+	// /* The endpoint list */
 
 	struct amebasmart_ep_s eplist[AMEBASMART_NENDPOINTS];
 };
+
+
+
+
+// struct amebasmart_usbd_cdc_acm_dev_t {
+// 	usb_setup_req_t ctrl_req;
+// 	usb_dev_t *dev;
+// 	usbd_cdc_acm_cb_t *cb;
+// #if CONFIG_CDC_ACM_NOTIFY
+// 	usbd_cdc_acm_ntf_t *intr_in_buf;
+// #endif
+// 	u32 bulk_out_buf_size;
+// 	u32 bulk_in_buf_size;
+// 	u8 *bulk_out_buf;
+// 	u8 *bulk_in_buf;
+// 	u8 *ctrl_buf;
+// #if CONFIG_CDC_ACM_NOTIFY
+// 	u16 intr_notify_idx;
+// #endif
+// 	u8 bulk_out_zlp : 1;
+// 	__IO u8 is_bulk_in_busy : 1;
+// 	__IO u8 is_ready : 1;
+// 	__IO u8 bulk_in_state : 1;
+// #if CONFIG_CDC_ACM_NOTIFY
+// 	__IO u8 is_intr_in_busy : 1;
+// 	__IO u8 intr_in_state : 1;
+// #endif
+// };
 
 /****************************************************************************
  * Private Function Prototypes
@@ -433,6 +493,35 @@ static void amebasmart_hwreset(struct amebasmart_usbdev_s *priv);
 static void amebasmart_hwsetup(struct amebasmart_usbdev_s *priv);
 static void amebasmart_hwshutdown(struct amebasmart_usbdev_s *priv);
 
+
+
+/*usbd related APIs*/
+static int amebasmart_usbd_init(struct amebasmart_usbdev_s *priv, usbd_config_t *cfg);
+static int amebasmart_usbd_deinit(struct amebasmart_usbdev_s *priv);
+static int amebasmart_usbd_attach_status(struct amebasmart_usbdev_s *priv);
+static int amebasmart_usbd_bus_status(struct amebasmart_usbdev_s *priv);
+static int amebasmart_usbd_ep_init(struct amebasmart_usbdev_s *priv, uint8_t ep_addr, uint8_t ep_type, uint16_t ep_mps);
+static int amebasmart_usbd_ep_deinit(struct amebasmart_usbdev_s *priv, uint8_t ep_addr);
+static int amebasmart_usbd_ep_transmit(struct amebasmart_usbdev_s *priv, uint8_t ep_addr, uint8_t *buf, uint16_t len);
+static int amebasmart_usbd_ep_receive(struct amebasmart_usbdev_s *priv, uint8_t ep_addr, uint8_t *buf, uint16_t len);
+static int amebasmart_usbd_ep0_transmit(struct amebasmart_usbdev_s *priv, uint8_t *buf, uint16_t len);
+static int amebasmart_usbd_ep0_receive(struct amebasmart_usbdev_s *priv, uint8_t *buf, uint16_t len);
+static int amebasmart_usbd_ep0_transmit_status(struct amebasmart_usbdev_s *priv);
+static int amebasmart_usbd_ep0_receive_status(struct amebasmart_usbdev_s *priv);
+static int amebasmart_usbd_ep0_set_stall(struct amebasmart_usbdev_s *priv);
+static int amebasmart_usbd_ep_set_stall(struct amebasmart_usbdev_s *priv, uint8_t ep_addr);
+static int amebasmart_usbd_ep_clear_stall(struct amebasmart_usbdev_s *priv, uint8_t ep_addr);
+static int amebasmart_usbd_ep_is_stall(struct amebasmart_usbdev_s *priv, uint8_t ep_addr);
+static int amebasmart_usbd_get_str_desc(const char *str, uint8_t *desc, uint16_t *len);
+
+
+/*CDC ACM related*/
+static void amebasmart_cdc_acm_cb_init(struct amebasmart_usbdev_s *priv);
+static int amebasmart_cdc_acm_cb_deinit(struct amebasmart_usbdev_s *priv);
+static int amebasmart_cdc_acm_cb_received(struct amebasmart_usbdev_s *priv, uint8_t *buf, uint32_t len);
+static int amebasmart_cdc_acm_cb_setup(usb_setup_req_t *req, u8 *buf);
+static void amebasmart_cdc_acm_cb_status_changed(struct amebasmart_usbdev_s *priv, uint8_t status);
+static int amebasmart_usbd_acm_init(struct amebasmart_usbdev_s *priv, uint16_t bulk_out_tx_size, uint16_t bulk_in_tx_size, usbd_cdc_acm_cb_t *cb);
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -441,7 +530,6 @@ static void amebasmart_hwshutdown(struct amebasmart_usbdev_s *priv);
  * be simply retained in a single global instance.
  */
 
-static struct amebasmart_usbdev_s g_usbdev;
 
 static const struct usbdev_epops_s g_epops = {
 	.configure = amebasmart_epconfigure,
@@ -462,6 +550,359 @@ static const struct usbdev_ops_s g_devops = {
 	.pullup = amebasmart_usbpullup,
 };
 
+
+static struct amebasmart_usbdev_s g_usbdev = {
+	.usbdev       = {
+		&g_devops
+	},
+	.cdc_acm_bulk_out_xfer_size = 2048,
+	.cdc_acm_bulk_in_xfer_size = 2048
+	.bitrate = 1500000;
+	.format = 0x00;
+	.parity_type = 0x00;
+	.data_type = 0x08;
+}
+
+/*CDC ACM related*/
+static usbd_cdc_acm_cb_t amebasmart_cdc_acm_cb = {
+	.init = amebasmart_cdc_acm_cb_init,
+	.deinit = amebasmart_cdc_acm_cb_deinit,
+	.setup = amebasmart_cdc_acm_cb_setup,
+	.received = amebasmart_cdc_acm_cb_received,
+	.status_changed = amebasmart_cdc_acm_cb_status_changed
+};
+
+#define CONFIG_AMEBASMART_CDC_ACM_ISR_THREAD_PRIORITY 7
+static usbd_config_t cdc_acm_cfg = {
+	.speed = USB_SPEED_FULL,
+	.dma_enable   = 1U,
+	.isr_priority = CONFIG_AMEBASMART_CDC_ACM_ISR_THREAD_PRIORITY,
+	.intr_use_ptx_fifo  = 0U,
+	.nptx_max_epmis_cnt = 1U,
+	.ext_intr_en        = USBD_EPMIS_INTR,
+	.nptx_max_err_cnt   = {0U, 0U, 0U, 2000U, }
+};
+
+
+static usbd_cdc_acm_line_coding_t amebasmart_cdc_acm_line_coding;
+
+static void amebasmart_cdc_acm_cb_init(struct amebasmart_usbdev_s *priv) {
+
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	int ret = 0;
+	DEBUGASSERT(dev);
+	usbd_cdc_acm_line_coding_t *lc = &amebasmart_cdc_acm_line_coding;
+
+	lc->bitrate = dev->bitrate;
+	lc->format = dev->format;
+	lc->parity_type = dev->parity_type;
+	lc->data_type = dev->data_type;
+
+#if CONFIG_AMEBASMART_USBD_CDC_ACM_ASYNC_XFER
+	dev->cdc_acm_async_xfer_buf_pos = 0;
+	dev->cdc_acm_async_xfer_busy = 0;
+#endif
+}
+
+/**
+  * @brief  DeInitializes the CDC media layer
+  * @param  None
+  * @retval Status
+  */
+static int amebasmart_cdc_acm_cb_deinit(struct amebasmart_usbdev_s *priv) {
+
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	int ret = 0;
+	DEBUGASSERT(dev);
+#if CONFIG_AMEBASMART_USBD_CDC_ACM_ASYNC_XFER
+	dev->cdc_acm_async_xfer_buf_pos = 0;
+	dev->cdc_acm_async_xfer_busy = 0;
+#endif
+	return HAL_OK;
+}
+
+/**
+  * @brief  Data received over USB OUT endpoint are sent over CDC interface through this function.
+  * @param  Buf: RX buffer
+  * @param  Len: RX data length (in bytes)
+  * @retval Status
+  */
+static int amebasmart_cdc_acm_cb_received(struct amebasmart_usbdev_s *priv, uint8_t *buf, uint32_t len) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	int ret = 0;
+	DEBUGASSERT(dev);
+
+#if CONFIG_AMEBASMART_USBD_CDC_ACM_ASYNC_XFER
+	if (0 == dev->cdc_acm_async_xfer_busy) {
+		if ((dev->cdc_acm_async_xfer_buf_pos + len) > dev->CONFIG_CDC_ACM_ASYNC_BUF_SIZE) {
+			len = dev->CONFIG_CDC_ACM_ASYNC_BUF_SIZE - dev->cdc_acm_async_xfer_buf_pos;  // extra data discarded
+		}
+
+		memcpy((void *)((uint32_t)dev->cdc_acm_async_xfer_buf + dev->cdc_acm_async_xfer_buf_pos), buf, len);
+		dev->cdc_acm_async_xfer_buf_pos += len;
+		if (dev->cdc_acm_async_xfer_buf_pos >= dev->CONFIG_CDC_ACM_ASYNC_BUF_SIZE) {
+			dev->cdc_acm_async_xfer_buf_pos = 0;
+			(void)sem_post(&dev->cdc_acm_async_xfer_sema);
+		}
+	} else {
+		dbg("[ACM] Busy, discard %dB\n", len);
+		ret = HAL_BUSY;
+	}
+
+	return ret;
+#else
+	return usbd_cdc_acm_transmit(buf, len);
+#endif
+}
+
+/**
+  * @brief  Handle the CDC class control requests
+  * @param  cmd: Command code
+  * @param  buf: Buffer containing command data (request parameters)
+  * @param  len: Number of data to be sent (in bytes)
+  * @retval Status
+  */
+static int amebasmart_cdc_acm_cb_setup(usb_setup_req_t *req, u8 *buf) {
+	usbd_cdc_acm_line_coding_t *lc = &amebasmart_cdc_acm_line_coding;
+
+	switch (req->bRequest) {
+	case CDC_SEND_ENCAPSULATED_COMMAND:
+		/* Do nothing */
+		break;
+
+	case CDC_GET_ENCAPSULATED_RESPONSE:
+		/* Do nothing */
+		break;
+
+	case CDC_SET_COMM_FEATURE:
+		/* Do nothing */
+		break;
+
+	case CDC_GET_COMM_FEATURE:
+		/* Do nothing */
+		break;
+
+	case CDC_CLEAR_COMM_FEATURE:
+		/* Do nothing */
+		break;
+
+	case CDC_SET_LINE_CODING:
+		if (req->wLength == CDC_ACM_LINE_CODING_SIZE) {
+			lc->bitrate = (u32)(buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24));
+			lc->format = buf[4];
+			lc->parity_type = buf[5];
+			lc->data_type = buf[6];
+		}
+		break;
+
+	case CDC_GET_LINE_CODING:
+		buf[0] = (u8)(lc->bitrate & 0xFF);
+		buf[1] = (u8)((lc->bitrate >> 8) & 0xFF);
+		buf[2] = (u8)((lc->bitrate >> 16) & 0xFF);
+		buf[3] = (u8)((lc->bitrate >> 24) & 0xFF);
+		buf[4] = lc->format;
+		buf[5] = lc->parity_type;
+		buf[6] = lc->data_type;
+		break;
+
+	case CDC_SET_CONTROL_LINE_STATE:
+		/*
+		wValue:	wValue, Control Signal Bitmap
+				D2-15:	Reserved, 0
+				D1:	RTS, 0 - Deactivate, 1 - Activate
+				D0:	DTR, 0 - Not Present, 1 - Present
+		*/
+		cdc_acm_ctrl_line_state = req->wValue;
+		if (cdc_acm_ctrl_line_state & 0x01) {
+			dbg("[ACM] VCOM port activate\n");
+#if CONFIG_AMEBASMART_CDC_ACM_NOTIFY
+			usbd_cdc_acm_notify_serial_state(CDC_ACM_CTRL_DSR | CDC_ACM_CTRL_DCD);
+#endif
+		}
+		break;
+
+	case CDC_SEND_BREAK:
+		/* Do nothing */
+		break;
+
+	default:
+		break;
+	}
+
+	return HAL_OK;
+}
+
+static void amebasmart_cdc_acm_cb_status_changed(struct amebasmart_usbdev_s *priv, uint8_t status) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+#if CONFIG_AMEBASMART_USBD_CDC_ACM_HOTPLUG
+	dev->cdc_acm_attach_status = status;
+	sem_post(&dev->cdc_acm_attach_status_changed_sema);
+#endif
+}
+
+
+static int amebasmart_usbd_acm_init(struct amebasmart_usbdev_s *priv, uint16_t bulk_out_tx_size, uint16_t bulk_in_tx_size, usbd_cdc_acm_cb_t *cb) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	int ret = -1;
+	ret = usbd_cdc_acm_init(dev->cdc_acm_bulk_out_xfer_size, dev->cdc_acm_bulk_in_xfer_size, &cb);
+	if (ret != 0) {
+		dbg("USB ACM init failed\n");
+		amebasmart_usbd_deinit(dev);
+	}
+	return ret;
+}
+
+
+static int amebasmart_usbd_init(struct amebasmart_usbdev_s *priv, usbd_config_t *cfg) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	dev->dev_state  = USBD_STATE_DEFAULT;
+	dev->ctrl_buf = (u8 *)usb_os_malloc(USB_OTG_HS_MAX_PACKET_SIZE);
+	if (dev->ctrl_buf == NULL) {
+		return HAL_ERR_MEM;
+	}
+
+	/* Init PCD Driver */
+	return usbd_pcd_init(dev, cfg);
+
+};
+
+static int amebasmart_usbd_deinit(struct amebasmart_usbdev_s *priv) {
+	
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	int ret = 0;
+	DEBUGASSERT(dev);
+	dev->dev_state  = USBD_STATE_DEFAULT;
+	if (dev->driver != NULL) {
+		dev->driver->clear_config(dev, dev->dev_config);
+		dev->driver = NULL;
+	}
+
+	ret = usbd_pcd_deinit(dev);
+
+	if (dev->ctrl_buf != NULL) {
+		usb_os_mfree(dev->ctrl_buf);
+		dev->ctrl_buf = NULL;
+	}
+	return ret;
+};
+
+static int amebasmart_usbd_attach_status(struct amebasmart_usbdev_s *priv) {
+	
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	return dev->dev_attach_status;
+};
+
+static int amebasmart_usbd_bus_status(struct amebasmart_usbdev_s *priv, u32 *bus_status) {
+	
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	if (dev->pcd && bus_status) {
+		return usbd_hal_get_bus_status(dev->pcd, bus_status);
+	} else {
+		dbg("[USBD] Not ready\n");
+		return HAL_ERR_PARA;
+	}
+};
+
+static int amebasmart_usbd_ep_init(struct amebasmart_usbdev_s *priv, uint8_t ep_addr, uint8_t ep_type, uint16_t ep_mps) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	return usbd_pcd_ep_init(dev->pcd, ep_addr, ep_mps, ep_type);
+}
+
+static int amebasmart_usbd_ep_deinit(struct amebasmart_usbdev_s *priv, uint8_t ep_addr) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	return usbd_pcd_ep_deinit(dev->pcd, ep_addr);
+}
+
+static int amebasmart_usbd_ep_transmit(struct amebasmart_usbdev_s *priv, uint8_t ep_addr, uint8_t *buf, uint16_t len) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	return usbd_pcd_ep_transmit(dev->pcd, ep_addr, buf, len);
+}
+
+static int amebasmart_usbd_ep_receive(struct amebasmart_usbdev_s *priv, uint8_t ep_addr, uint8_t *buf, uint16_t len) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	return usbd_pcd_ep_receive(dev->pcd, ep_addr, buf, len);
+}
+
+static int amebasmart_usbd_ep0_transmit(struct amebasmart_usbdev_s *priv, uint8_t *buf, uint16_t len) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	/* Set EP0 State */
+	dev->ep0_state = USBD_EP0_DATA_IN;
+	dev->ep0_xfer_total_len = len;
+	dev->ep0_xfer_rem_len = len;
+
+	/* Start the transfer */
+	return usbd_ep_transmit(dev, USB_EP0_IN, buf, len);
+}
+static int amebasmart_usbd_ep0_receive(struct amebasmart_usbdev_s *priv, uint8_t *buf, uint16_t len) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	/* Set EP0 State */
+	dev->ep0_state = USBD_EP0_DATA_OUT;
+	dev->ep0_recv_rem_len = len;
+
+	/* Start the transfer */
+	return usbd_ep_receive(dev, USB_EP0_OUT, buf, len);
+}
+
+static int amebasmart_usbd_ep0_transmit_status(struct amebasmart_usbdev_s *priv) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	return usbd_core_ep0_transmit_status(dev);
+}
+
+static int amebasmart_usbd_ep0_receive_status(struct amebasmart_usbdev_s *priv) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	return usbd_core_ep0_receive_status(dev);
+}
+
+static int amebasmart_usbd_ep0_set_stall(struct amebasmart_usbdev_s *priv) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	return usbd_core_ep0_set_stall(dev);
+}
+
+static int amebasmart_usbd_ep_set_stall(struct amebasmart_usbdev_s *priv, uint8_t ep_addr) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	return usbd_core_ep_set_stall(dev, ep_addr);
+}
+
+static int amebasmart_usbd_ep_clear_stall(struct amebasmart_usbdev_s *priv, uint8_t ep_addr) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	return usbd_core_ep_clear_stall(dev, ep_addr);
+}
+
+static int amebasmart_usbd_ep_is_stall(struct amebasmart_usbdev_s *priv, uint8_t ep_addr) {
+	struct amebasmart_usbdev_s *dev = (struct amebasmart_usbdev_s *)priv;
+	DEBUGASSERT(dev);
+	return usbd_core_ep_is_stall(dev, ep_addr);
+}
+
+static int amebasmart_usbd_get_str_desc(const char *str, uint8_t *desc, uint16_t *len) {
+	uint8_t idx = 0U;
+	uint8_t *p = (uint8_t *)str;
+
+	if (p != NULL) {
+		*len = (uint16_t)(strlen(str) * 2 + 2);
+		desc[idx++] = *(uint8_t *)(void *)len;
+		desc[idx++] = USB_DESC_TYPE_STRING;
+
+		while (*p != '\0') {
+			desc[idx++] = *p++;
+			desc[idx++] =  0U;
+		}
+	}
+}
 /****************************************************************************
  * Public Data
  ****************************************************************************/
