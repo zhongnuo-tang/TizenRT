@@ -1,24 +1,26 @@
-/**
-  ******************************************************************************
-  * @file    ameba_usb.c
-  * @date    2021-03-23
-  * @brief   This file provides the USB HAL functionalities
-  ******************************************************************************
-  * @attention
-  *
-  * This module is a confidential and proprietary property of RealTek and
-  * possession or use of this module requires written permission of RealTek.
-  *
-  * Copyright(c) 2021, Realtek Semiconductor Corporation. All rights reserved.
-  ******************************************************************************
-  */
+/*
+ * Copyright (c) 2024 Realtek Semiconductor Corp.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 /* Includes ------------------------------------------------------------------*/
 
 #include "ameba_soc.h"
 
-static const char *TAG = "USB";
 /* Private defines -----------------------------------------------------------*/
+
+/* USB OTG addon control register */
+#define USB_ADDON_REG_CTRL							(USB_OTG_REG_BASE + 0x30004UL)
+
+#define USB_ADDON_REG_CTRL_BIT_UPLL_CKRDY			BIT(5)  /* 1: USB PHY clock ready */
+#define USB_ADDON_REG_CTRL_BIT_USB_OTG_RST			BIT(8)  /* 1: Enable USB OTG */
+#define USB_ADDON_REG_CTRL_BIT_USB_DPHY_FEN			BIT(9)  /* 1: Enable USB DPHY */
+#define USB_ADDON_REG_CTRL_BIT_USB_APHY_EN			BIT(14) /* 1: Enable USB APHY */
+#define USB_ADDON_REG_CTRL_BIT_LS_HST_UTMI_EN		BIT(22) /* 1: Enable the support of low-speed host mode when using utmi 16bit */
+#define USB_ADDON_REG_CTRL_BIT_HS_IP_GAP_OPT_POS	20U		/* MAC high-speed host inter-packet delay */
+#define USB_ADDON_REG_CTRL_BIT_HS_IP_GAP_OPT_MASK	(0x3U << USB_ADDON_REG_CTRL_BIT_HS_IP_GAP_OPT_POS)
+#define USB_ADDON_REG_CTRL_BIT_HS_IP_GAP_OPT		(USB_ADDON_REG_CTRL_BIT_HS_IP_GAP_OPT_MASK)
 
 /* Private types -------------------------------------------------------------*/
 
@@ -28,7 +30,10 @@ static const char *TAG = "USB";
 
 /* Private variables ---------------------------------------------------------*/
 
-USB_DATA_SECTION
+
+static const char *const TAG = "USB";
+
+
 static const usb_cal_data_t usb_cut_a_cal_data[] = {
 	{0x00, 0xE0, 0x9D},
 	{0x00, 0xE1, 0x19},
@@ -44,7 +49,7 @@ static const usb_cal_data_t usb_cut_a_cal_data[] = {
 	{0xFF, 0x00, 0x00}
 };
 
-USB_DATA_SECTION
+
 static const usb_cal_data_t usb_cut_b_cal_data[] = {
 	{0x00, 0xE0, 0x9D},
 	{0x00, 0xE1, 0x19},
@@ -63,7 +68,18 @@ static const usb_cal_data_t usb_cut_b_cal_data[] = {
 /* Private functions ---------------------------------------------------------*/
 
 /* Exported functions --------------------------------------------------------*/
+/** @addtogroup Ameba_Periph_Driver
+  * @{
+  */
 
+/** @defgroup USB
+* @brief USB driver modules
+* @{
+*/
+
+/** @defgroup USB_Exported_Functions USB Exported Functions
+  * @{
+  */
 /**
   * @brief  Get USB chip specific calibration data
   * @param  mode: 0 - device; 1 - host
@@ -91,7 +107,7 @@ usb_cal_data_t *usb_chip_get_cal_data(u8 mode)
   * @retval Status
   */
 USB_TEXT_SECTION
-u8 usb_chip_init(void)
+int usb_chip_init(void)
 {
 	u32 reg = 0;
 	u32 count = 0;
@@ -135,11 +151,11 @@ u8 usb_chip_init(void)
 	DelayUs(10);
 
 	/* USB enable PHY */
-	reg = HAL_READ32(USB_OTG_REG_BASE, USB_ADDON_REG_CTRL);
+	reg = HAL_READ32(USB_ADDON_REG_CTRL, 0U);
 	reg &= ~USB_ADDON_REG_CTRL_BIT_HS_IP_GAP_OPT_MASK;
 	reg |= (0x3U << USB_ADDON_REG_CTRL_BIT_HS_IP_GAP_OPT_POS); // Inter-packet gap 343ns, spec 399ns
 	reg |= (USB_ADDON_REG_CTRL_BIT_USB_DPHY_FEN | USB_ADDON_REG_CTRL_BIT_USB_APHY_EN | USB_ADDON_REG_CTRL_BIT_LS_HST_UTMI_EN);
-	HAL_WRITE32(USB_OTG_REG_BASE, USB_ADDON_REG_CTRL, reg);
+	HAL_WRITE32(USB_ADDON_REG_CTRL, 0U, reg);
 	DelayUs(34);
 
 	/* Wait UPLL_CKRDY */
@@ -147,15 +163,15 @@ u8 usb_chip_init(void)
 		/* 1ms timeout expected, 10ms for safe */
 		DelayUs(10);
 		if (++count > 1000U) {
-			RTK_LOGE(TAG, "USB_Init timeout\n");
+			RTK_LOGE(TAG, "[USB] Chip init TO\n");
 			return HAL_TIMEOUT;
 		}
-	} while (!(HAL_READ32(USB_OTG_REG_BASE, USB_ADDON_REG_CTRL) & USB_ADDON_REG_CTRL_BIT_UPLL_CKRDY));
+	} while (!(HAL_READ32(USB_ADDON_REG_CTRL, 0U) & USB_ADDON_REG_CTRL_BIT_UPLL_CKRDY));
 
 	/* USBOTG_EN = 1 => enable USBOTG */
-	reg = HAL_READ32(USB_OTG_REG_BASE, USB_ADDON_REG_CTRL);
+	reg = HAL_READ32(USB_ADDON_REG_CTRL, 0U);
 	reg |= USB_ADDON_REG_CTRL_BIT_USB_OTG_RST;
-	HAL_WRITE32(USB_OTG_REG_BASE, USB_ADDON_REG_CTRL, reg);
+	HAL_WRITE32(USB_ADDON_REG_CTRL, 0U, reg);
 
 	return HAL_OK;
 }
@@ -166,19 +182,19 @@ u8 usb_chip_init(void)
   * @retval Status
   */
 USB_TEXT_SECTION
-u8 usb_chip_deinit(void)
+int usb_chip_deinit(void)
 {
 	u32 reg = 0;
 
 	/* USBOTG_EN = 0 => disable USBOTG */
-	reg = HAL_READ32(USB_OTG_REG_BASE, USB_ADDON_REG_CTRL);
+	reg = HAL_READ32(USB_ADDON_REG_CTRL, 0U);
 	reg &= (~USB_ADDON_REG_CTRL_BIT_USB_OTG_RST);
-	HAL_WRITE32(USB_OTG_REG_BASE, USB_ADDON_REG_CTRL, reg);
+	HAL_WRITE32(USB_ADDON_REG_CTRL, 0U, reg);
 
 	/* USBPHY_EN = 0 */
-	reg = HAL_READ32(USB_OTG_REG_BASE, USB_ADDON_REG_CTRL);
+	reg = HAL_READ32(USB_ADDON_REG_CTRL, 0U);
 	reg &= (~(USB_ADDON_REG_CTRL_BIT_USB_DPHY_FEN | USB_ADDON_REG_CTRL_BIT_USB_APHY_EN));
-	HAL_WRITE32(USB_OTG_REG_BASE, USB_ADDON_REG_CTRL, reg);
+	HAL_WRITE32(USB_ADDON_REG_CTRL, 0U, reg);
 
 	/* USB ISO_USBD_EN = 1 => enable isolation output signal from PD_USBD*/
 	reg = HAL_READ32(SYSTEM_CTRL_BASE_HP, REG_HSYS_USB_CTRL);
@@ -211,3 +227,6 @@ u8 usb_chip_deinit(void)
 	return HAL_OK;
 }
 
+/**@}*/
+/**@}*/
+/**@}*/

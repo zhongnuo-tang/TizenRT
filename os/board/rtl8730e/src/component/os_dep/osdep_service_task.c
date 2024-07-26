@@ -51,7 +51,7 @@ int rtw_create_task(struct task_struct *ptask, const char *name,
 	task_info[2] = NULL;
 	pid = kernel_thread(name, priority, stack_size, wrapper_thread, (char * const *)task_info);
 	if (pid == ERROR) {
-		DBG_ERR("%s fail\n", name);
+		dbg("%s fail\n", name);
 		return _FAIL;
 	}
 	ptask->task = (pid_t)pid;

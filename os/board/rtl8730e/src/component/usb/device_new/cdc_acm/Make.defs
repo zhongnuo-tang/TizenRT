@@ -16,10 +16,7 @@
 #
 ###########################################################################
 
-CSRCS += usbd_core.c \
-         usbd_hal.c \
-         usbd_pcd.c \
-         usbd.c \
+CSRCS += usbd_cdc_acm.c \
 
-DEPPATH += --dep-path component/usb/device_new/core
-VPATH += :component/usb/device_new/core
+DEPPATH += --dep-path component/usb/device_new/cdc_acm
+VPATH += :component/usb/device_new/cdc_acm

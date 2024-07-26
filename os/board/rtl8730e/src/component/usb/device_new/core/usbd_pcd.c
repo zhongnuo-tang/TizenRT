@@ -61,7 +61,7 @@ static void usbd_pcd_handle_interrupt(usbd_pcd_t *pcd);
 USB_BSS_SECTION
 static usbd_pcd_t usbd_pcd;
 
-USB_DATA_SECTION
+
 static const char *const TAG = "USBD";
 
 /* Private functions ---------------------------------------------------------*/
@@ -88,7 +88,8 @@ static int usbd_pcd_interrupt_init(usbd_pcd_t *pcd)
 						   pcd->config.isr_priority,
 						   usbd_pcd_isr_task,
 						   (void *)pcd);
-	if (ret != SUCCESS) {
+	if (ret != 1) {
+		dbg("create task fail in interrupt init\n");
 		return HAL_ERR_MEM;
 	}
 
@@ -108,17 +109,16 @@ static int usbd_pcd_interrupt_init(usbd_pcd_t *pcd)
 USB_TEXT_SECTION
 static int usbd_pcd_interrupt_deinit(usbd_pcd_t *pcd)
 {
-	if (pcd->isr_initialized) {
-		usb_hal_disable_interrupt();
-		usb_hal_unregister_irq_handler();
-		if (pcd->isr_task != NULL) {
-			rtw_delete_task(&pcd->isr_task);
-			pcd->isr_task = NULL;
-		}
-		usb_os_sema_delete(pcd->isr_sema);
-		pcd->isr_initialized = 0;
-	}
-	return HAL_OK;
+    if (pcd->isr_initialized) {
+        usb_hal_disable_interrupt();
+        usb_hal_unregister_irq_handler();
+        if (pcd->isr_task.task > 0) {
+            rtw_delete_task(&pcd->isr_task);
+        }
+        usb_os_sema_delete(pcd->isr_sema);
+        pcd->isr_initialized = 0;
+    }
+    return HAL_OK;
 }
 
 /**
@@ -230,17 +230,17 @@ static void usbd_pcd_handle_enum_done_interrupt(usbd_pcd_t *pcd)
 
 	pcd->config.speed = usbd_hal_get_device_speed(pcd);
 
-	RTK_LOGS(TAG, "[USBD] Speed %d\n", pcd->config.speed);
+	RTK_LOGE(TAG, "[USBD] Speed %d\n", pcd->config.speed);
 
 	/* Set USB Turnaround time */
 	usbd_hal_set_turnaround_time(pcd);
 
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 	usbd_core_set_speed(pcd->dev, (usb_speed_type_t)pcd->config.speed);
 
 	/* Reset Device */
 	usbd_core_reset(pcd->dev);
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 }
 
 /**
@@ -252,9 +252,9 @@ USB_TEXT_SECTION
 static void usbd_pcd_handle_suspend_interrupt(usbd_pcd_t *pcd)
 {
 	if ((USB_DEVICE->DSTS & USB_OTG_DSTS_SUSPSTS) == USB_OTG_DSTS_SUSPSTS) {
-		usb_os_unlock(pcd->lock);
+		usb_os_unlock(&pcd->lock);
 		usbd_core_suspend(pcd->dev);
-		usb_os_lock(pcd->lock);
+		usb_os_lock(&pcd->lock);
 	}
 }
 
@@ -284,9 +284,9 @@ static void usbd_pcd_handle_ep_out_setup_packet_interrupt(usbd_pcd_t *pcd, u8 ep
 	}
 
 	/* Inform the upper layer that a setup packet is available */
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 	usbd_core_setup_stage(pcd->dev, (u8 *)pcd->setup);
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 }
 
 /**
@@ -327,9 +327,9 @@ static void usbd_pcd_handle_ep_out_transfer_complete_interrupt(usbd_pcd_t *pcd, 
 					ep->xfer_buff += ep->xfer_count;
 				}
 
-				usb_os_unlock(pcd->lock);
+				usb_os_unlock(&pcd->lock);
 				usbd_core_data_out_stage(pcd->dev, ep_num, ep->xfer_buff);
-				usb_os_lock(pcd->lock);
+				usb_os_lock(&pcd->lock);
 
 				if ((ep_num == 0U) && (ep->xfer_len == 0U)) {
 					/* this is ZLP, so prepare EP0 for next setup */
@@ -348,14 +348,14 @@ static void usbd_pcd_handle_ep_out_transfer_complete_interrupt(usbd_pcd_t *pcd, 
 				if ((DoepintReg & USB_OTG_DOEPINT_OTEPSPR) == USB_OTG_DOEPINT_OTEPSPR) {
 					USB_PCD_CLEAR_OUT_EP_INTR(ep_num, USB_OTG_DOEPINT_OTEPSPR);
 				}
-				usb_os_unlock(pcd->lock);
+				usb_os_unlock(&pcd->lock);
 				usbd_core_data_out_stage(pcd->dev, ep_num, ep->xfer_buff);
-				usb_os_lock(pcd->lock);
+				usb_os_lock(&pcd->lock);
 			}
 		} else {
-			usb_os_unlock(pcd->lock);
+			usb_os_unlock(&pcd->lock);
 			usbd_core_data_out_stage(pcd->dev, ep_num, ep->xfer_buff);
-			usb_os_lock(pcd->lock);
+			usb_os_lock(&pcd->lock);
 		}
 	}
 }
@@ -651,7 +651,7 @@ static void usbd_pcd_handle_in_ep_tx_fifo_empty_interrupt(usbd_pcd_t *pcd, u8 ep
 	ep = &pcd->in_ep[ep_num];
 
 	if (ep->xfer_count > ep->xfer_len) {
-		//RTK_LOGS(TAG, "[USBD] IN EP%d xfer err\n", ep_num);
+		//RTK_LOGE(TAG, "[USBD] IN EP%d xfer err\n", ep_num);
 		return;
 	}
 
@@ -782,9 +782,9 @@ static void usbd_pcd_handle_in_ep_interrupt(usbd_pcd_t *pcd)
 					pep->xfer_buff += pep->max_packet_len;
 				}
 
-				usb_os_unlock(pcd->lock);
+				usb_os_unlock(&pcd->lock);
 				usbd_core_data_in_stage(pcd->dev, ep_num, pep->xfer_buff, HAL_OK);
-				usb_os_lock(pcd->lock);
+				usb_os_lock(&pcd->lock);
 
 				if (pcd->config.dma_enable) {
 					/* this is ZLP, so prepare EP0 for next setup */
@@ -931,10 +931,10 @@ static void usbd_pcd_get_in_ep_sequence_from_in_token_queue(usbd_pcd_t *pcd)
 
 #if IN_TOKEN_PREDICT_DEBUG_EN
 	for (i = 0; i < USB_IN_TOKEN_QUEUE_DEPTH; i++) {
-		RTK_LOGS(TAG, "[USBD] Raw INTKN[%d]=EP%d\n", i, intkn_seq[i]);
+		RTK_LOGE(TAG, "[USBD] Raw INTKN[%d]=EP%d\n", i, intkn_seq[i]);
 	}
 
-	RTK_LOGS(TAG, "[USBD] Start=%d end=%d\n", start, end);
+	RTK_LOGE(TAG, "[USBD] Start=%d end=%d\n", start, end);
 #endif
 
 	/* Update seqnum based on intkn_seq[] */
@@ -951,7 +951,7 @@ static void usbd_pcd_get_in_ep_sequence_from_in_token_queue(usbd_pcd_t *pcd)
 
 #if IN_TOKEN_PREDICT_DEBUG_EN
 	for (i = 0; i < USB_MAX_ENDPOINTS; i++) {
-		RTK_LOGS(TAG, "[USBD] Unsorted SEQ[%d]=%d\n", i, seq[i]);
+		RTK_LOGE(TAG, "[USBD] Unsorted SEQ[%d]=%d\n", i, seq[i]);
 	}
 #endif
 
@@ -977,7 +977,7 @@ static void usbd_pcd_get_in_ep_sequence_from_in_token_queue(usbd_pcd_t *pcd)
 
 #if IN_TOKEN_PREDICT_DEBUG_EN
 	for (i = 0; i < USB_MAX_ENDPOINTS; i++) {
-		RTK_LOGS(TAG, "[USBD] Sorted SEQ[%d]=%d\n", i, seq[i]);
+		RTK_LOGE(TAG, "[USBD] Sorted SEQ[%d]=%d\n", i, seq[i]);
 	}
 #endif
 
@@ -995,7 +995,7 @@ static void usbd_pcd_get_in_ep_sequence_from_in_token_queue(usbd_pcd_t *pcd)
 
 #if IN_TOKEN_PREDICT_DEBUG_EN
 	for (i = 0; i < USB_MAX_ENDPOINTS; i++) {
-		RTK_LOGS(TAG, "[USBD] INTKN[%d]=%d\n", i, pcd->in_ep_sequence[i]);
+		RTK_LOGE(TAG, "[USBD] INTKN[%d]=%d\n", i, pcd->in_ep_sequence[i]);
 	}
 #endif
 }
@@ -1022,7 +1022,7 @@ static int usbd_pcd_handle_ep_np_tx_fifo_empty_interrupt(usbd_pcd_t *pcd, u8 ep_
 	}
 
 	if ((ep->xfer_count > ep->xfer_len) || ((ep->xfer_len > 0) && (ep->xfer_buff == NULL))) {
-		//RTK_LOGS(TAG, "[USBD] NPTxFEmp: invalid para\n");
+		//RTK_LOGE(TAG, "[USBD] NPTxFEmp: invalid para\n");
 		return 0;
 	}
 
@@ -1096,7 +1096,7 @@ static void usbd_pcd_handle_np_tx_fifo_empty_interrupt(usbd_pcd_t *pcd)
 					USB_GLOBAL->GINTMSK |= USB_OTG_GINTMSK_NPTXFEM;
 				}
 			} else {
-				//RTK_LOGS(TAG, "[USBD] Invalid EP %d in InTkn learn Q\n", ep_num);
+				//RTK_LOGE(TAG, "[USBD] Invalid EP %d in InTkn learn Q\n", ep_num);
 			}
 		}
 	}
@@ -1111,10 +1111,10 @@ static void usbd_pcd_handle_np_tx_fifo_empty_interrupt(usbd_pcd_t *pcd)
 #ifdef USBD_XFER_ERROR_DETECT_EN
 				if (ep->nptx_err_cnt < pcd->config.nptx_max_err_cnt[i]) {
 					if (++ep->nptx_err_cnt == pcd->config.nptx_max_err_cnt[i]) {
-						//RTK_LOGS(TAG, "[USBD] EP%d TX TO %d: %d, %d\n", i, ep->nptx_err_cnt, ep->xfer_len, ep->xfer_count);
-						usb_os_unlock(pcd->lock);
+						//RTK_LOGE(TAG, "[USBD] EP%d TX TO %d: %d, %d\n", i, ep->nptx_err_cnt, ep->xfer_len, ep->xfer_count);
+						usb_os_unlock(&pcd->lock);
 						usbd_core_data_in_stage(pcd->dev, (u8)i, ep->xfer_buff, HAL_TIMEOUT);
-						usb_os_lock(pcd->lock);
+						usb_os_lock(&pcd->lock);
 					} else {
 						USB_GLOBAL->GINTMSK |= USB_OTG_GINTMSK_NPTXFEM;
 						//RTK_LOGD(TAG, "EP%d TXE miss %d: %d, %d\n", i, ep->nptx_err_cnt, ep->xfer_len, ep->xfer_count);
@@ -1205,9 +1205,9 @@ static void usbd_pcd_handle_wakeup_interrupt(usbd_pcd_t *pcd)
 		pcd->lpm_state = LPM_L0;
 		// FIXME: Do nothing
 	} else {
-		usb_os_unlock(pcd->lock);
+		usb_os_unlock(&pcd->lock);
 		usbd_core_resume(pcd->dev);
-		usb_os_lock(pcd->lock);
+		usb_os_lock(&pcd->lock);
 	}
 }
 
@@ -1219,9 +1219,9 @@ static void usbd_pcd_handle_wakeup_interrupt(usbd_pcd_t *pcd)
 USB_TEXT_SECTION
 static void usbd_pcd_handle_sof_interrupt(usbd_pcd_t *pcd)
 {
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 	usbd_core_sof(pcd->dev);
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 }
 
 /**
@@ -1243,9 +1243,9 @@ static void usbd_pcd_handle_eopf_interrupt(usbd_pcd_t *pcd)
 USB_TEXT_SECTION
 static void usbd_pcd_handle_srq_interrupt(usbd_pcd_t *pcd)
 {
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 	usbd_core_connected(pcd->dev);
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 }
 
 /**
@@ -1259,9 +1259,9 @@ static void usbd_pcd_handle_otg_interrupt(usbd_pcd_t *pcd)
 	u32 reg = USB_GLOBAL->GOTGINT;
 
 	if ((reg & USB_OTG_GOTGINT_SEDET) == USB_OTG_GOTGINT_SEDET) {
-		usb_os_unlock(pcd->lock);
+		usb_os_unlock(&pcd->lock);
 		usbd_core_disconnected(pcd->dev);
-		usb_os_lock(pcd->lock);
+		usb_os_lock(&pcd->lock);
 	}
 
 	USB_GLOBAL->GOTGINT |= reg;
@@ -1278,17 +1278,17 @@ static void usbd_pcd_handle_interrupt(usbd_pcd_t *pcd)
 	/* ensure that we are in device mode */
 	if (usb_hal_get_otg_mode() == USB_OTG_MODE_DEVICE) {
 
-		usb_os_lock(pcd->lock);
+		usb_os_lock(&pcd->lock);
 
 		u32  gintsts =  usb_hal_read_interrupts();
 
 		/* avoid spurious interrupt */
 		if (gintsts == 0U) {
-			usb_os_unlock(pcd->lock);
+			usb_os_unlock(&pcd->lock);
 			return;
 		}
 
-		//RTK_LOGS(TAG, "====== IRQ 0x%08x =======\n", usb_hal_read_interrupts());
+		//RTK_LOGE(TAG, "====== IRQ 0x%08x =======\n", usb_hal_read_interrupts());
 
 		if (gintsts & (USB_OTG_GINTSTS_IEPINT)) {
 			usbd_pcd_handle_in_ep_interrupt(pcd);
@@ -1372,7 +1372,7 @@ static void usbd_pcd_handle_interrupt(usbd_pcd_t *pcd)
 			usbd_pcd_handle_otg_interrupt(pcd);
 		}
 
-		usb_os_unlock(pcd->lock);
+		usb_os_unlock(&pcd->lock);
 	}
 }
 
@@ -1396,16 +1396,16 @@ int usbd_pcd_init(usb_dev_t *dev, usbd_config_t *config)
 	dev->pcd = &usbd_pcd;
 	pcd->dev = dev;
 
-	RTK_LOGS(TAG, "[USBD] Config:\n");
-	RTK_LOGS(TAG, "[USBD] * speed: %d\n", config->speed);
-	RTK_LOGS(TAG, "[USBD] * dma_en: %d\n", config->dma_enable);
-	RTK_LOGS(TAG, "[USBD] * isr_priority: %d\n", config->isr_priority);
-	RTK_LOGS(TAG, "[USBD] * intr_use_ptx_fifo: %d\n", config->intr_use_ptx_fifo);
-	RTK_LOGS(TAG, "[USBD] * ptx_fifo_first: %d\n", config->ptx_fifo_first);
-	RTK_LOGS(TAG, "[USBD] * ext_intr_en: 0x%08x\n", config->ext_intr_en);
-	RTK_LOGS(TAG, "[USBD] * nptx_max_epmis_cnt: %d\n", config->nptx_max_epmis_cnt);
+	RTK_LOGE(TAG, "[USBD] Config:\n");
+	RTK_LOGE(TAG, "[USBD] * speed: %d\n", config->speed);
+	RTK_LOGE(TAG, "[USBD] * dma_en: %d\n", config->dma_enable);
+	RTK_LOGE(TAG, "[USBD] * isr_priority: %d\n", config->isr_priority);
+	RTK_LOGE(TAG, "[USBD] * intr_use_ptx_fifo: %d\n", config->intr_use_ptx_fifo);
+	RTK_LOGE(TAG, "[USBD] * ptx_fifo_first: %d\n", config->ptx_fifo_first);
+	RTK_LOGE(TAG, "[USBD] * ext_intr_en: 0x%08x\n", config->ext_intr_en);
+	RTK_LOGE(TAG, "[USBD] * nptx_max_epmis_cnt: %d\n", config->nptx_max_epmis_cnt);
 	for (i = 0U; i < USB_MAX_ENDPOINTS; i++) {
-		RTK_LOGS(TAG, "[USBD] * nptx_max_err_cnt[%d]: %d\n", i, config->nptx_max_err_cnt[i]);
+		RTK_LOGE(TAG, "[USBD] * nptx_max_err_cnt[%d]: %d\n", i, config->nptx_max_err_cnt[i]);
 	}
 
 	usb_os_memcpy((void *)&pcd->config, (void *)config, sizeof(usbd_config_t));
@@ -1420,7 +1420,7 @@ int usbd_pcd_init(usb_dev_t *dev, usbd_config_t *config)
 		/* Allocate lock resource and initialize it */
 		ret = usb_os_lock_create(&pcd->lock);
 		if (ret != HAL_OK) {
-			RTK_LOGS(TAG, "[USBD] PCD lock init fail\n");
+			RTK_LOGE(TAG, "[USBD] PCD lock init fail\n");
 			pcd->pcd_state = HAL_PCD_STATE_ERROR;
 			return HAL_ERR_MEM;
 		}
@@ -1428,7 +1428,7 @@ int usbd_pcd_init(usb_dev_t *dev, usbd_config_t *config)
 		/* Init the low level hardware: GPIO, CLOCK, PHY... */
 		ret = usb_chip_init();
 		if (ret != HAL_OK) {
-			RTK_LOGS(TAG, "[USBD] Low-level init fail\n");
+			RTK_LOGE(TAG, "[USBD] Low-level init fail\n");
 			pcd->pcd_state = HAL_PCD_STATE_ERROR;
 			return ret;
 		}
@@ -1442,7 +1442,7 @@ int usbd_pcd_init(usb_dev_t *dev, usbd_config_t *config)
 		return HAL_ERR_MEM;
 	}
 	if (config->dma_enable && (!USB_IS_MEM_DMA_ALIGNED(pcd->setup))) {
-		RTK_LOGS(TAG, "[USBD] Setup buf align err!\n");
+		RTK_LOGE(TAG, "[USBD] Setup buf align err!\n");
 		return HAL_ERR_MEM;
 	}
 
@@ -1452,7 +1452,7 @@ int usbd_pcd_init(usb_dev_t *dev, usbd_config_t *config)
 	/* Init the Core (common init.) */
 	ret = usb_hal_core_init(config->dma_enable);
 	if (ret != HAL_OK) {
-		RTK_LOGS(TAG, "[USBD] Core init fail\n");
+		RTK_LOGE(TAG, "[USBD] Core init fail\n");
 		pcd->pcd_state = HAL_PCD_STATE_ERROR;
 		return ret;
 	}
@@ -1463,7 +1463,7 @@ int usbd_pcd_init(usb_dev_t *dev, usbd_config_t *config)
 	/* Init Device */
 	ret = usbd_hal_device_init(pcd);
 	if (ret != HAL_OK) {
-		RTK_LOGS(TAG, "[USBD] Init fail\n");
+		RTK_LOGE(TAG, "[USBD] Init fail\n");
 		pcd->pcd_state = HAL_PCD_STATE_ERROR;
 		return ret;
 	}
@@ -1509,7 +1509,7 @@ int usbd_pcd_init(usb_dev_t *dev, usbd_config_t *config)
 #if CONFIG_USB_OTG
 	ret = usb_hal_enable_otg();
 	if (ret != HAL_OK) {
-		RTK_LOGS(TAG, "[USBD] OTG EN fail\n");
+		RTK_LOGE(TAG, "[USBD] OTG EN fail\n");
 		pcd->pcd_state = HAL_PCD_STATE_ERROR;
 		return ret;
 	}
@@ -1517,7 +1517,7 @@ int usbd_pcd_init(usb_dev_t *dev, usbd_config_t *config)
 
 	ret = usb_hal_calibrate(USB_OTG_MODE_DEVICE);
 	if (ret != HAL_OK) {
-		RTK_LOGS(TAG, "[USBD] PHY calibration fail\n");
+		RTK_LOGE(TAG, "[USBD] PHY calibration fail\n");
 		pcd->pcd_state = HAL_PCD_STATE_ERROR;
 		return ret;
 	}
@@ -1525,14 +1525,14 @@ int usbd_pcd_init(usb_dev_t *dev, usbd_config_t *config)
 
 	ret = usbd_hal_config_dfifo(pcd);
 	if (ret != HAL_OK) {
-		RTK_LOGS(TAG, "[USBD] DFIFO CFG fail\n");
+		RTK_LOGE(TAG, "[USBD] DFIFO CFG fail\n");
 		pcd->pcd_state = HAL_PCD_STATE_ERROR;
 		return ret;
 	}
 
 	ret = usbd_pcd_interrupt_init(pcd);
 	if (ret != HAL_OK) {
-		RTK_LOGS(TAG, "[USBD] INT init fail\n");
+		RTK_LOGE(TAG, "[USBD] INT init fail %x\n",ret);
 		pcd->pcd_state = HAL_PCD_STATE_ERROR;
 		return ret;
 	}
@@ -1565,7 +1565,7 @@ int usbd_pcd_deinit(usb_dev_t *dev)
 
 	usb_chip_deinit();
 
-	usb_os_lock_delete(pcd->lock);
+	usb_os_lock_delete(&pcd->lock);
 
 	if (pcd->setup != NULL) {
 		usb_os_mfree(pcd->setup);
@@ -1588,10 +1588,14 @@ int usbd_pcd_deinit(usb_dev_t *dev)
 USB_TEXT_SECTION
 int usbd_pcd_start(usbd_pcd_t *pcd)
 {
-	usb_os_lock(pcd->lock);
+	dbg("before os lock\n");
+	// usb_os_lock(&pcd->lock);
+	dbg("after os lock\n");
 	usbd_hal_connect(pcd);
 	usb_hal_enable_global_interrupt();
-	usb_os_unlock(pcd->lock);
+	dbg("before os unlock\n");
+	// usb_os_unlock(&pcd->lock);
+	dbg("after os unlock\n");
 	return HAL_OK;
 }
 
@@ -1603,19 +1607,19 @@ int usbd_pcd_start(usbd_pcd_t *pcd)
 USB_TEXT_SECTION
 int usbd_pcd_stop(usbd_pcd_t *pcd)
 {
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 
 	if (pcd->pcd_state != HAL_PCD_STATE_STOP) {
 		usb_hal_disable_global_interrupt();
 		if (usbd_hal_device_stop(pcd) != HAL_OK) {
-			usb_os_unlock(pcd->lock);
+			usb_os_unlock(&pcd->lock);
 			return HAL_ERR_HW;
 		}
 		usbd_hal_disconnect(pcd);
 		pcd->pcd_state = HAL_PCD_STATE_STOP;
 	}
 
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 
 	return HAL_OK;
 }
@@ -1628,9 +1632,9 @@ int usbd_pcd_stop(usbd_pcd_t *pcd)
 USB_TEXT_SECTION
 int usbd_pcd_dev_connected(usbd_pcd_t *pcd)
 {
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 	usbd_hal_connect(pcd);
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 	return HAL_OK;
 }
 
@@ -1642,9 +1646,9 @@ int usbd_pcd_dev_connected(usbd_pcd_t *pcd)
 USB_TEXT_SECTION
 int usbd_pcd_dev_desconnected(usbd_pcd_t *pcd)
 {
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 	usbd_hal_disconnect(pcd);
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 	return HAL_OK;
 }
 
@@ -1657,12 +1661,12 @@ int usbd_pcd_dev_desconnected(usbd_pcd_t *pcd)
 USB_TEXT_SECTION
 int usbd_pcd_set_address(usbd_pcd_t *pcd, u8 address)
 {
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 	pcd->address = address;
 	usbd_hal_set_device_address(pcd, address);
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 
-	RTK_LOGS(TAG, "[USBD] Addr %d\n", address);
+	RTK_LOGE(TAG, "[USBD] Addr %d\n", address);
 
 	return HAL_OK;
 }
@@ -1709,9 +1713,9 @@ int usbd_pcd_ep_init(usbd_pcd_t *pcd, u8 ep_addr, u16 ep_mps, u8 ep_type)
 		}
 	}
 
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 	usbd_hal_ep_activate(pcd, ep);
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 
 	return ret;
 }
@@ -1737,9 +1741,9 @@ int usbd_pcd_ep_deinit(usbd_pcd_t *pcd, u8 ep_addr)
 	ep->is_initialized = 0U;
 	ep->is_ptx = 0U;
 
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 	usbd_hal_ep_deactivate(pcd, ep);
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 	return HAL_OK;
 }
 
@@ -1762,7 +1766,7 @@ int usbd_pcd_ep_receive(usbd_pcd_t *pcd, u8 ep_addr, u8 *buf, u32 len)
 		if (USB_IS_MEM_DMA_ALIGNED(buf)) {
 			DCache_CleanInvalidate((u32)buf, len);
 		} else {
-			RTK_LOGS(TAG, "[USBD] EP%02x RX buf align err!\n", ep_addr);
+			RTK_LOGE(TAG, "[USBD] EP%02x RX buf align err!\n", ep_addr);
 			return HAL_ERR_MEM;
 		}
 	}
@@ -1780,7 +1784,7 @@ int usbd_pcd_ep_receive(usbd_pcd_t *pcd, u8 ep_addr, u8 *buf, u32 len)
 		ep->dma_addr = (u32)buf;
 	}
 
-	usb_os_lock_safe(pcd->lock);
+	usb_os_lock_safe(&pcd->lock);
 
 	if (ep_num == 0U) {
 		usbd_hal_ep0_start_transfer(pcd, ep);
@@ -1788,7 +1792,7 @@ int usbd_pcd_ep_receive(usbd_pcd_t *pcd, u8 ep_addr, u8 *buf, u32 len)
 		usbd_hal_ep_start_transfer(pcd, ep);
 	}
 
-	usb_os_unlock_safe(pcd->lock);
+	usb_os_unlock_safe(&pcd->lock);
 
 	return HAL_OK;
 }
@@ -1824,7 +1828,7 @@ int usbd_pcd_ep_transmit(usbd_pcd_t *pcd, u8 ep_addr, u8 *buf, u32 len)
 		if (USB_IS_MEM_DMA_ALIGNED(buf)) {
 			DCache_CleanInvalidate((u32)buf, len);
 		} else {
-			RTK_LOGS(TAG, "[USBD] EP%02x TX buf align err!\n", ep_addr);
+			RTK_LOGE(TAG, "[USBD] EP%02x TX buf align err!\n", ep_addr);
 			return HAL_ERR_MEM;
 		}
 	}
@@ -1846,7 +1850,7 @@ int usbd_pcd_ep_transmit(usbd_pcd_t *pcd, u8 ep_addr, u8 *buf, u32 len)
 	ep->nptx_err_cnt = 0;
 #endif
 
-	usb_os_lock_safe(pcd->lock);
+	usb_os_lock_safe(&pcd->lock);
 
 	if (ep_num == 0U) {
 		usbd_hal_ep0_start_transfer(pcd, ep);
@@ -1854,7 +1858,7 @@ int usbd_pcd_ep_transmit(usbd_pcd_t *pcd, u8 ep_addr, u8 *buf, u32 len)
 		usbd_hal_ep_start_transfer(pcd, ep);
 	}
 
-	usb_os_unlock_safe(pcd->lock);
+	usb_os_unlock_safe(&pcd->lock);
 
 	return HAL_OK;
 }
@@ -1884,14 +1888,14 @@ int usbd_pcd_ep_set_stall(usbd_pcd_t *pcd, u8 ep_addr)
 	ep->is_stall = 1U;
 	ep->addr = ep_addr;
 
-	usb_os_lock_safe(pcd->lock);
+	usb_os_lock_safe(&pcd->lock);
 
 	usbd_hal_ep_set_stall(pcd, ep);
 	if (ep_num == 0U) {
 		usbd_hal_ep0_out_start(pcd);
 	}
 
-	usb_os_unlock_safe(pcd->lock);
+	usb_os_unlock_safe(&pcd->lock);
 
 	return HAL_OK;
 }
@@ -1921,9 +1925,9 @@ int usbd_pcd_ep_clear_stall(usbd_pcd_t *pcd, u8 ep_addr)
 	ep->is_stall = 0U;
 	ep->addr = ep_addr;
 
-	usb_os_lock_safe(pcd->lock);
+	usb_os_lock_safe(&pcd->lock);
 	usbd_hal_ep_clear_stall(pcd, ep);
-	usb_os_unlock_safe(pcd->lock);
+	usb_os_unlock_safe(&pcd->lock);
 
 	return HAL_OK;
 }
@@ -1940,7 +1944,7 @@ int usbd_pcd_ep_flush(usbd_pcd_t *pcd, u8 ep_addr)
 	u32 fifo_num;
 	usbd_pcd_ep_t *ep;
 
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 
 	if (USB_EP_IS_IN(ep_addr)) {
 		ep = &pcd->in_ep[USB_EP_NUM(ep_addr)];
@@ -1950,7 +1954,7 @@ int usbd_pcd_ep_flush(usbd_pcd_t *pcd, u8 ep_addr)
 		usb_hal_flush_rx_fifo();
 	}
 
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 
 	return HAL_OK;
 }

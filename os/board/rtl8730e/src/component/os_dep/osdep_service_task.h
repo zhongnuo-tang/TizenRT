@@ -56,7 +56,7 @@ struct task_struct {
 	uint32_t callback_running; /* for internal use only */
 };
 
-typedef task_struct _task;
+typedef struct task_struct _task;
 /*********************************** Thread related *****************************************/
 
 /**

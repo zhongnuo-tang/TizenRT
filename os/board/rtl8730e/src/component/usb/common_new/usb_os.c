@@ -120,12 +120,8 @@ void usb_os_mfree(void *handle)
 USB_TEXT_SECTION
 int usb_os_lock_create(usb_os_lock_t *lock)
 {
-	int ret;
-
-	ret = rtw_mutex_init(lock);
-	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_MEM;
-
-	return ret;
+	rtw_mutex_init(lock);
+	return SUCCESS;
 }
 
 /**
@@ -134,14 +130,10 @@ int usb_os_lock_create(usb_os_lock_t *lock)
   * @retval status
   */
 USB_TEXT_SECTION
-int usb_os_lock_delete(usb_os_lock_t lock)
+int usb_os_lock_delete(usb_os_lock_t *lock)
 {
-	int ret;
-
-	ret = rtw_mutex_free(&lock);
-	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_PARA;
-
-	return ret;
+	rtw_mutex_free(lock);
+	return SUCCESS;
 }
 
 /**
@@ -150,14 +142,10 @@ int usb_os_lock_delete(usb_os_lock_t lock)
   * @retval status
   */
 USB_TEXT_SECTION
-int usb_os_lock(usb_os_lock_t lock)
+int usb_os_lock(usb_os_lock_t *lock)
 {
-	int ret;
-
-	ret = rtw_mutex_get(&lock);
-	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_PARA;
-
-	return ret;
+	rtw_mutex_get(lock);
+	return SUCCESS;
 }
 
 /**
@@ -166,14 +154,10 @@ int usb_os_lock(usb_os_lock_t lock)
   * @retval status
   */
 USB_TEXT_SECTION
-int usb_os_unlock(usb_os_lock_t lock)
+int usb_os_unlock(usb_os_lock_t *lock)
 {
-	int ret;
-
-	ret = rtw_mutex_put(&lock);
-	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_PARA;
-
-	return ret;
+	rtw_mutex_put(lock);	
+	return SUCCESS;
 }
 
 /**
@@ -182,7 +166,7 @@ int usb_os_unlock(usb_os_lock_t lock)
   * @retval status
   */
 USB_TEXT_SECTION
-int usb_os_lock_safe(usb_os_lock_t lock)
+int usb_os_lock_safe(usb_os_lock_t *lock)
 {
 	usb_hal_disable_interrupt();
 	return usb_os_lock(lock);
@@ -194,7 +178,7 @@ int usb_os_lock_safe(usb_os_lock_t lock)
   * @retval status
   */
 USB_TEXT_SECTION
-int usb_os_unlock_safe(usb_os_lock_t lock)
+int usb_os_unlock_safe(usb_os_lock_t *lock)
 {
 	int ret;
 
@@ -212,12 +196,8 @@ int usb_os_unlock_safe(usb_os_lock_t lock)
 USB_TEXT_SECTION
 int usb_os_sema_create(usb_os_sema_t *sema)
 {
-	int ret;
-
-	ret = rtw_init_sema(sema, 0);
-	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_MEM;
-
-	return ret;
+	rtw_init_sema(sema, 0);
+	return SUCCESS;
 }
 
 /**
@@ -227,12 +207,8 @@ int usb_os_sema_create(usb_os_sema_t *sema)
  */
 int usb_os_sema_delete(usb_os_sema_t sema)
 {
-	int ret;
-
-	ret = rtw_free_sema(&sema);
-	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_MEM;
-
-	return ret;
+	rtw_free_sema(&sema);
+	return SUCCESS;
 }
 
 /**
@@ -243,12 +219,8 @@ int usb_os_sema_delete(usb_os_sema_t sema)
  */
 int usb_os_sema_take(usb_os_sema_t sema, u32 timeout_ms)
 {
-	int ret;
-
-	ret = rtw_down_timeout_sema(&sema, timeout_ms);
-	ret = (ret == SUCCESS) ? HAL_OK : HAL_TIMEOUT;
-
-	return ret;
+	rtw_down_timeout_sema(&sema, timeout_ms);
+	return SUCCESS;
 }
 
 /**
@@ -258,12 +230,8 @@ int usb_os_sema_take(usb_os_sema_t sema, u32 timeout_ms)
  */
 int usb_os_sema_give(usb_os_sema_t sema)
 {
-	int ret;
-
-	ret = rtw_up_sema(&sema);
-	ret = (ret == SUCCESS) ? HAL_OK : HAL_ERR_PARA;
-
-	return ret;
+	rtw_up_sema(&sema);
+	return SUCCESS;
 }
 
 /* USB Device not using queue */

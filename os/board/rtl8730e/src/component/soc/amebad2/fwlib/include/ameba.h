@@ -44,9 +44,9 @@
 #include "ameba_swr_calib.h"
 #include "ameba_nandflash.h"
 #include "ameba_system.h"
-#if (defined(CONFIG_USB_NEW_STACK_EN) || defined(CONFIG_BUILD_USB_LIB))
+
 #include "ameba_usb.h"
-#endif
+
 #ifndef CONFIG_BUILD_ROM
 #include "ameba_ipc_api.h"
 #endif

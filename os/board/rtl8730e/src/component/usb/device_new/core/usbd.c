@@ -30,7 +30,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-USB_DATA_SECTION
+
 static const char *const TAG = "USBD";
 
 /* USB device handler */
@@ -51,7 +51,7 @@ int usbd_init(usbd_config_t *cfg)
 {
 	usb_dev_t *dev = &usbd_dev;
 
-	RTK_LOGS(TAG, "[USBD] INIT\n");
+	RTK_LOGE(TAG, "[USBD] INIT\n");
 
 	dev->dev_state  = USBD_STATE_DEFAULT;
 	dev->ctrl_buf = (u8 *)usb_os_malloc(USB_OTG_HS_MAX_PACKET_SIZE);
@@ -74,7 +74,7 @@ int usbd_deinit(void)
 	int ret = HAL_OK;
 	usb_dev_t *dev = &usbd_dev;
 
-	RTK_LOGS(TAG, "[USBD] DEINIT\n");
+	RTK_LOGE(TAG, "[USBD] DEINIT\n");
 
 	dev->dev_state  = USBD_STATE_DEFAULT;
 
@@ -116,7 +116,7 @@ int usbd_get_bus_status(u32 *bus_status)
 	if (dev->pcd && bus_status) {
 		return usbd_hal_get_bus_status(dev->pcd, bus_status);
 	} else {
-		RTK_LOGS(TAG, "[USBD] Not ready\n");
+		RTK_LOGE(TAG, "[USBD] Not ready\n");
 		return HAL_ERR_PARA;
 	}
 }
@@ -131,7 +131,7 @@ int usbd_wake_host(void)
 	if (dev->pcd) {
 		return usbd_hal_wake_host(dev->pcd);
 	} else {
-		RTK_LOGS(TAG, "[USBD] Not ready\n");
+		RTK_LOGE(TAG, "[USBD] Not ready\n");
 		return HAL_ERR_PARA;
 	}
 }

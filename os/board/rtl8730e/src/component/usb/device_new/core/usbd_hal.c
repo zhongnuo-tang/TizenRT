@@ -27,7 +27,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-USB_DATA_SECTION
+
 static const char *const TAG = "USB";
 
 /* Private functions ---------------------------------------------------------*/
@@ -282,13 +282,13 @@ int usbd_hal_device_stop(usbd_pcd_t *pcd)
 	/* Flush the FIFO */
 	ret = usb_hal_flush_rx_fifo();
 	if (ret != HAL_OK) {
-		RTK_LOGS(TAG, "[USBD] Fail to flush RXFF\n");
+		RTK_LOGE(TAG, "[USBD] Fail to flush RXFF\n");
 		return ret;
 	}
 
 	ret = usb_hal_flush_tx_fifo(0x10U);
 	if (ret != HAL_OK) {
-		RTK_LOGS(TAG, "[USBD] Fail to flush TXFF\n");
+		RTK_LOGE(TAG, "[USBD] Fail to flush TXFF\n");
 		return ret;
 	}
 
@@ -1045,7 +1045,7 @@ int usbd_hal_wake_host(usbd_pcd_t *pcd)
 {
 	u32 dsts;
 
-	usb_os_lock(pcd->lock);
+	usb_os_lock(&pcd->lock);
 
 	dsts = USB_DEVICE->DCTL & ~USB_OTG_DCTL_RWUSIG;
 	dsts |= USB_OTG_DCTL_RWUSIG;
@@ -1059,7 +1059,7 @@ int usbd_hal_wake_host(usbd_pcd_t *pcd)
 	dsts &= ~USB_OTG_DCTL_RWUSIG;
 	USB_DEVICE->DCTL = dsts;
 
-	usb_os_unlock(pcd->lock);
+	usb_os_unlock(&pcd->lock);
 
 	return HAL_OK;
 }

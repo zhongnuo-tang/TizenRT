@@ -123,11 +123,12 @@ endif
 ifeq ($(CONFIG_AMEBASMART_USB),y)
 include component/usb/common_new/Make.defs
 include component/usb/device_new/core/Make.defs
+include component/usb/device_new/cdc_acm/Make.defs
 endif
 
 include component/file_system/ftl/Make.defs
-include component/file_system/kv/Make.defs
-include component/file_system/vfs2.0/Make.defs
+#include component/file_system/kv/Make.defs
+#include component/file_system/vfs2.0/Make.defs
 
 ARCH_SRCDIR = 	$(TOPDIR)/arch/$(CONFIG_ARCH)/src
 BOARD_SRCDIR = 	$(TOPDIR)/board
@@ -175,9 +176,9 @@ CFLAGS += -I$(COMPONENT_DIR)/mbed/targets/hal/rtl8730e
 CFLAGS += -I$(COMPONENT_DIR)/os_dep
 CFLAGS += -I$(TOPDIR)/net/netmgr
 # Temporary keep it, need further check whether the usb needs the filesystem
-CFLAGS += -I$(COMPONENT_DIR)/file_system/vfs2.0
+#CFLAGS += -I$(COMPONENT_DIR)/file_system/vfs2.0
 CFLAGS += -I$(COMPONENT_DIR)/file_system/ftl
-CFLAGS += -I$(COMPONENT_DIR)/file_system/kv
+#CFLAGS += -I$(COMPONENT_DIR)/file_system/kv
 
 ifeq ($(CONFIG_AMEBASMART_BLE),y)
 CFLAGS += -I$(DIR_BT)/inc
@@ -210,7 +211,11 @@ else
   CFLAGS += -I$(TOPDIR)/se/ameba
   
 endif
-
+ifeq ($(CONFIG_AMEBASMART_USB),y)
+CFLAGS += -I$(COMPONENT_DIR)/usb/common_new
+CFLAGS += -I$(COMPONENT_DIR)/usb/device_new/core
+CFLAGS += -I$(COMPONENT_DIR)/usb/device_new/cdc_acm
+endif
 all: libboard$(LIBEXT)
 
 $(AOBJS): %$(OBJEXT): %$(ASMEXT)

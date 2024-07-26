@@ -86,7 +86,7 @@
 /** @defgroup USB_Code_Sections
   * @{
   */
-#define USB_DATA_SECTION
+
 #define USB_BSS_SECTION
 #define USB_TEXT_SECTION
 /** @} */

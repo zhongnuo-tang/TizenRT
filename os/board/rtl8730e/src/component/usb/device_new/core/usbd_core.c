@@ -51,7 +51,7 @@ static int usbd_core_clear_class_config(usb_dev_t  *dev, u8 config);
 USB_BSS_SECTION
 static u8 usbd_cfg;
 
-USB_DATA_SECTION
+
 static const char *const TAG = "USBD";
 
 /* Private functions ---------------------------------------------------------*/
@@ -76,7 +76,7 @@ static void usbd_core_get_descriptor(usb_dev_t *dev, usb_setup_req_t *req)
 	}
 
 	if (dma && (!USB_IS_MEM_DMA_ALIGNED(buf))) {
-		RTK_LOGS(TAG, "[USBD] Desc buf align err\n");
+		RTK_LOGE(TAG, "[USBD] Desc buf align err\n");
 		usbd_core_ep_set_stall(dev, USB_EP0_IN);
 		return;
 	}

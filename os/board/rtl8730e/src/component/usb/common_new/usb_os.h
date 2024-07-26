@@ -84,15 +84,15 @@ void usb_os_mfree(void *handle);
 
 int usb_os_lock_create(usb_os_lock_t *lock);
 
-int usb_os_lock_delete(usb_os_lock_t lock);
+int usb_os_lock_delete(usb_os_lock_t *lock);
 
-int usb_os_lock(usb_os_lock_t lock);
+int usb_os_lock(usb_os_lock_t *lock);
 
-int usb_os_unlock(usb_os_lock_t lock);
+int usb_os_unlock(usb_os_lock_t *lock);
 
-int usb_os_lock_safe(usb_os_lock_t lock);
+int usb_os_lock_safe(usb_os_lock_t *lock);
 
-int usb_os_unlock_safe(usb_os_lock_t lock);
+int usb_os_unlock_safe(usb_os_lock_t *lock);
 
 int usb_os_sema_create(usb_os_sema_t *sema);
 
