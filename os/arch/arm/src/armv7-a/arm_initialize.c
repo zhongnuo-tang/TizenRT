@@ -211,7 +211,7 @@ void up_initialize(void)
 #if defined(CONFIG_USBDEV) || defined(CONFIG_USBHOST)
   /* Initialize USB -- device and/or host */
 
-  arm_usbinitialize();
+  // arm_usbinitialize();
 #endif
 
   /* Initialize the L2 cache if present and selected */
