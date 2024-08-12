@@ -276,6 +276,9 @@ static void usbd_pcd_handle_ep_out_setup_packet_interrupt(usbd_pcd_t *pcd, u8 ep
 			((DoepintReg & USB_OTG_DOEPINT_STPKTRX) == USB_OTG_DOEPINT_STPKTRX)) {
 			USB_PCD_CLEAR_OUT_EP_INTR(ep_num, USB_OTG_DOEPINT_STPKTRX);
 		}
+		if (pcd->setup != NULL) {
+			DCache_Invalidate((u32)pcd->setup, USBD_SETUP_PACKET_BUF_LEN);
+		}
 	} else {
 		if ((gSNPSiD == USB_OTG_CORE_ID_310A) &&
 			((DoepintReg & USB_OTG_DOEPINT_STPKTRX) == USB_OTG_DOEPINT_STPKTRX)) {
@@ -323,8 +326,12 @@ static void usbd_pcd_handle_ep_out_transfer_complete_interrupt(usbd_pcd_t *pcd, 
 					ep->xfer_count = ep->max_packet_len * pktcnt - xfer_size;
 				}
 
+				if ((ep->xfer_count != 0U) && (ep->xfer_buff != NULL)) {
+					DCache_Invalidate((u32)ep->xfer_buff, ep->xfer_count);
+				}
+ 
 				if (ep->xfer_buff) {
-					ep->xfer_buff += ep->xfer_count;
+					ep->xfer_buff += ep->xfer_count;/*For control OUT xfer*/
 				}
 
 				usb_os_unlock(&pcd->lock);
@@ -1288,7 +1295,7 @@ static void usbd_pcd_handle_interrupt(usbd_pcd_t *pcd)
 			return;
 		}
 
-		//RTK_LOGE(TAG, "====== IRQ 0x%08x =======\n", usb_hal_read_interrupts());
+		//DiagPrintf("====== IRQ 0x%08x =======\n", usb_hal_read_interrupts());
 
 		if (gintsts & (USB_OTG_GINTSTS_IEPINT)) {
 			usbd_pcd_handle_in_ep_interrupt(pcd);
@@ -1536,7 +1543,6 @@ int usbd_pcd_init(usb_dev_t *dev, usbd_config_t *config)
 		pcd->pcd_state = HAL_PCD_STATE_ERROR;
 		return ret;
 	}
-
 	return HAL_OK;
 }
 
@@ -1764,7 +1770,7 @@ int usbd_pcd_ep_receive(usbd_pcd_t *pcd, u8 ep_addr, u8 *buf, u32 len)
 
 	if ((dma != 0) && (buf != NULL) && (len != 0)) {
 		if (USB_IS_MEM_DMA_ALIGNED(buf)) {
-			DCache_CleanInvalidate((u32)buf, len);
+			DCache_Clean((u32)buf, len);
 		} else {
 			RTK_LOGE(TAG, "[USBD] EP%02x RX buf align err!\n", ep_addr);
 			return HAL_ERR_MEM;
