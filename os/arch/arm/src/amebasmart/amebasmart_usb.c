@@ -761,29 +761,35 @@ int amebasmart_up_usbinitialize(struct amebasmart_usbdev_s *priv)
 /*It takes sometime for USB initialization to complete, so during boot up stage, it /dev/console will be
  register with serial first to prevent opening an empty path, then once usb is ready, re-register it to usb and
  open the fd*/
+extern int tash_start(void);
+extern void tash_stop(void);
+static struct task_struct register_usb_task;
 static int register_usb(void)
 {
 	while(!cdc_acm_ready_flag){
-		usleep(1000);
+		usleep(100);
 	}
 	USB_DEV.isconsole = true;
 	uart_register("/dev/ttyACM0", &USB_DEV);
 	/*unregister /dev/console because serial was sharing the same fd during serial initialization*/
 	unregister_driver("/dev/console");
+	tash_stop();
 	uart_register("/dev/console", &USB_DEV);
 	int fd;
 	fd = open("/dev/console", O_RDWR);
 	if(fd >= 0) {
 		dup2(fd, 1);
 		dup2(fd, 2);
-		return OK;
+		tash_start();
+		goto EXIT_USB_REGISTER;
 	} else {
-		return -1;
+		goto EXIT_USB_REGISTER;
 	}
-
+EXIT_USB_REGISTER:
+	rtw_delete_task(&register_usb_task); /* Kill suspend thread after all init tasks done */
 }
 
-void usb_initialize(void)
+static void usb_init_task(void)
 {
 	struct amebasmart_usbdev_s *priv = NULL;
 	priv = &g_usbdev;
@@ -798,6 +804,10 @@ void usb_initialize(void)
 	if (ret != OK) {
 		udbg("usb register failed");
 	}
+}
+void usb_initialize(void)
+{
+	rtw_create_task(&register_usb_task, (const char *)"usb_init_task", 512, 155, usb_init_task, NULL);
 }
 
 
