@@ -126,6 +126,13 @@ config ARCH_CHIP_AMEBASMART
 	---help---
 		Realtek AMEBASMART architectures (ARM Cortex-A32).
 
+config ARCH_CHIP_AMEBAGREEN2
+	bool "Realtek AMEBAGREEN2"
+	select ARCH_HAVE_MPU
+	select ARCH_HAVE_I2CRESET
+	select ARCH_HAVE_HEAPCHECK if DEBUG
+	---help---
+		Realtek AMEBAGREEN2 architectures (ARM Cortex-M23/33).
 endchoice
 
 config ARCH_CHIP
@@ -139,6 +146,7 @@ config ARCH_CHIP
 	default "amebad"	if ARCH_CHIP_AMEBAD
 	default "amebalite"	if ARCH_CHIP_AMEBALITE
 	default "amebasmart"	if ARCH_CHIP_AMEBASMART
+	default "amebagreen2"	if ARCH_CHIP_AMEBAGREEN2
 	default "stm32h745"     if ARCH_CHIP_STM32H745
 	default "imx6"		if ARCH_CHIP_IMX6
 
@@ -543,6 +551,9 @@ source arch/arm/src/amebalite/Kconfig
 endif
 if ARCH_CHIP_AMEBASMART
 source arch/arm/src/amebasmart/Kconfig
+endif
+if ARCH_CHIP_AMEBAGREEN2
+source arch/arm/src/amebagreen2/Kconfig
 endif
 if ARCH_CHIP_STM32H745
 source arch/arm/src/stm32h745/Kconfig
