@@ -7,7 +7,6 @@
 #ifndef _AMEBA_SECURITY_AP_H_
 #define _AMEBA_SECURITY_AP_H_
 
-#include "ameba_secure_boot.h"
 
 #define CERT_SIZE_4K_ALIGN		0x1000
 #define CERT_MAX_KEYINFO		5

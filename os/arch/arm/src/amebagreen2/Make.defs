@@ -139,7 +139,9 @@ CFLAGS+= -mcmse
 CFLAGS += -I$(ARCH_SRCDIR)/armv8-m
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os/tizenrt
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os_dep
+CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/include
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/fwlib/include
+CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/hal/include
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/fwlib/include/cmsis
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os/freertos
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/app/monitor/include
@@ -171,17 +173,17 @@ CHIP_CSRCS += amebagreen2_serial.c
 #CHIP_CSRCS += amebagreen2_spi.c
 
 ifeq ($(CONFIG_BOARDCTL_RESET),y)
-CHIP_CSRCS += amebagreen2_systemreset.c
+#CHIP_CSRCS += amebagreen2_systemreset.c
 endif
 ifeq ($(CONFIG_SYSTEM_REBOOT_REASON),y)
 #CMN_CSRCS += amebagreen2_reboot_reason.c #FIXME
 endif
 ifeq ($(CONFIG_BINARY_SIGNING),y)
-CMN_CSRCS += amebagreen2_signature.c
+#CMN_CSRCS += amebagreen2_signature.c
 endif
 
 ifeq ($(CONFIG_AMEBALITE_TRUSTZONE),y)
-CHIP_CSRCS += amebagreen2_nsc.c
+#CHIP_CSRCS += amebagreen2_nsc.c
 
 # trustzone library
 ifeq ($(CONFIG_ARCH_FPU),y)

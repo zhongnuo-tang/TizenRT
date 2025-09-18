@@ -99,7 +99,7 @@ extern uint32_t SystemCoreClock;
  ****************************************************************************/
 
 /****************************************************************************
- * Function:  amebalite_timerisr
+ * Function:  amebagreen2_timerisr
  *
  * Description:
  *   The timer ISR will perform a variety of services for various portions
@@ -128,7 +128,7 @@ void up_timer_initialize(void)
 {
   /* Set the SysTick interrupt to the min priority */ 
 #ifdef CONFIG_ARCH_IRQPRIO
-  up_prioritize_irq(AMEBALITE_IRQ_SYSTICK, NVIC_SYSH_PRIORITY_DEFAULT);
+  up_prioritize_irq(AMEBAGREEN2_IRQ_SYSTICK, NVIC_SYSH_PRIORITY_DEFAULT);
 #else
   uint32_t regval;
   regval = getreg32(NVIC_SYSH12_15_PRIORITY);
@@ -146,7 +146,7 @@ void up_timer_initialize(void)
 
   /* Attach the timer interrupt vector */
 
-  (void)irq_attach(AMEBALITE_IRQ_SYSTICK, (xcpt_t)up_timerisr, NULL);
+  (void)irq_attach(AMEBAGREEN2_IRQ_SYSTICK, (xcpt_t)up_timerisr, NULL);
 
   /* Enable SysTick interrupts */
 

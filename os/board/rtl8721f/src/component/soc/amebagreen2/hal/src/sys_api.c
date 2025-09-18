@@ -22,7 +22,6 @@
 #include "cmsis.h"
 #include "sys_api.h"
 #include "flash_api.h"
-#include "ameba_ota.h"
 #include "log.h"
 //#define printf					printf
 

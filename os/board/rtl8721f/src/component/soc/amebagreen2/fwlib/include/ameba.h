@@ -14,8 +14,8 @@
 #include "rom/rand.h"
 #include "rom/diag.h"
 #include "hal_platform.h"
-#include "ameba_vector.h"
 #include "cmsis_cpu.h"
+#include "ameba_vector.h"
 #ifdef CONFIG_ARM_CORE_CM4
 #include "mpu_config.h"
 #include "ameba_cache.h"

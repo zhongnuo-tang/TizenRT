@@ -21,7 +21,7 @@
 #define __Vendor_SysTickConfig    0U        /* Set to 1 if different SysTick Config is used */
 #define __FPU_PRESENT             0U        /* FPU present */
 #define __FPU_DP                  0U        /* double precision FPU */
-#define __DSP_PRESENT             0U        /* DSP extension present */
+#define __DSP_PRESENT             1U        /* DSP extension present */
 #define __PMU_PRESENT             1U        /* PMU present */
 #define __PMU_NUM_EVENTCNT        4U        /* Number of PMU event counters */
 #define __ICACHE_PRESENT          1U        /* Instruction Cache present */

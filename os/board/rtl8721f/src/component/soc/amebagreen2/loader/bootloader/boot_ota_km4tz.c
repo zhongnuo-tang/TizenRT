@@ -5,7 +5,6 @@
  */
 
 #include "ameba_soc.h"
-#include "ameba_secure_boot.h"
 #include "bootloader_km4tz.h"
 #include "boot_ota_km4tz.h"
 #ifdef CONFIG_COMPRESS_OTA_IMG

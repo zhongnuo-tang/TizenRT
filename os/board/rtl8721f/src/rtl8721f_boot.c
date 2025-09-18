@@ -98,7 +98,7 @@ extern void wlan_initialize(void);
 /************************************************************************************
  * Public Functions
  ************************************************************************************/
-#ifdef CONFIG_PRODCONFIG
+#if 0
 static int up_check_prod(void)
 {
 	u8 prod_disable;
@@ -233,15 +233,15 @@ void board_initialize(void)
 	// for (u32 rw_prot = 0; rw_prot <= 0x5C; rw_prot += 4) {
 	// 	HAL_WRITE32(0x4100DE00, rw_prot, 0);
 	// }
-
-	InterruptRegister(IPC_INTHandler, IPC_CPU0_IRQ, (u32)IPCKM4_DEV, INT_PRI5);
+	/*IPC table initialization*/
+	ipc_table_init(IPCAP_DEV);
+	InterruptRegister(IPC_INTHandler, IPC_CPU0_IRQ, (u32)IPCAP_DEV, INT_PRI5);
 	InterruptEn(IPC_CPU0_IRQ, INT_PRI5);
 
 #if 0 //def CONFIG_MBED_TLS_ENABLED
 	app_mbedtls_rom_init();
 #endif
 
-	ipc_table_init(IPCKM4_DEV);
 
 	/*switch shell control to KM0 */
 	//InterruptDis(UART_LOG_IRQ);

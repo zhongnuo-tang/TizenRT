@@ -46,7 +46,6 @@
 /** @defgroup IRQ_Exported_Types IRQ Exported Types
   * @{
   */
-typedef s32 IRQn_Type;
 typedef void (*HAL_VECTOR_FUN)(void);
 typedef u32(*IRQ_FUN)(void *Data);
 typedef u32(*Fault_Patch)(uint32_t *MSP, uint32_t lr, uint32_t fault_id);

@@ -7,7 +7,6 @@
 #include "ameba_soc.h"
 #include "bootloader_km4tz.h"
 #include "ameba_dump_stack.h"
-#include "ameba_secure_boot.h"
 #include "boot_ota_km4tz.h"
 #ifdef CONFIG_FULLMAC_DEV
 #include "hci_core.h"

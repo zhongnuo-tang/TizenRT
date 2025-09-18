@@ -1314,7 +1314,7 @@ int up_lowgetc(void)
 #ifdef CONFIG_UART4_SERIAL_CONSOLE
 	u32 IrqEn = LOGUART_GetIMR();
 	LOGUART_SetIMR(0);
-	rxd = LOGUART_GetChar(_FALSE);
+	rxd = LOGUART_GetChar(FALSE);
 	LOGUART_SetIMR(IrqEn);
 #else
 	if (CONSOLE_DEV.isconsole == false)
