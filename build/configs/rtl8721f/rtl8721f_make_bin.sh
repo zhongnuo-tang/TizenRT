@@ -85,7 +85,7 @@ $GNUUTL/prepend_header.sh $BINDIR/xip_image2.bin __flash_text_start__ $BINDIR/ta
 
 cat $BINDIR/xip_image2_prepend.bin $BINDIR/sram_2_prepend.bin $BINDIR/psram_2_prepend.bin > $BINDIR/km4tz_image2_all.bin
 
-python $GNUUTL/axf2bin.py imagetool $BINDIR/km4tz_image2_all.bin
+# python $GNUUTL/axf2bin.py imagetool $BINDIR/km4tz_image2_all.bin
 
 
 

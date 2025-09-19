@@ -4,15 +4,32 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "ameba_soc.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+#include <tinyara/config.h>
+#include <tinyara/mm/heap_regioninfo.h>
+/* Scheduler includes. */
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #include "FreeRTOS.h"
-#include "os_wrapper_memory.h"
+#include "task.h"     /* RTOS task related API prototypes. */
+#include "queue.h"    /* RTOS queue related API prototypes. */
+#include "timers.h"   /* Software timer related API prototypes. */
+#include "semphr.h"   /* Semaphore related API prototypes. */
+#endif
+
+#include "ameba_soc.h"
+
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
+extern int main(void);
+extern void arm_gic_set_CUTVersion(uint32_t CUTVersion);
+#endif
 
 static const char *TAG = "APP";
 
 extern int main(void);
 extern void NS_ENTRY BOOT_IMG3(void);
-extern void SOCPS_WakeFromPG_AP(void);
 
 u32 app_mpu_nocache_check(u32 mem_addr)
 {
@@ -80,38 +97,6 @@ void _init(void) {}
 #endif
 #endif
 
-void app_testmode_status(void)
-{
-	/* OTPC and SIC share one master port, OTPC use the port defaultly and SIC can use then OTPC autoload done. */
-	if (SYSCFG_TRP_TestMode()) {
-		if (SYSCFG_TRP_OTPBYP()) {
-			RTK_LOGI(TAG, "Bypass OTP autoload\r\n");
-		} else {
-			RTK_LOGI(TAG, "In Test mode: 0x%lx\r\n", SYSCFG_TRP_ICFG());
-		}
-	}
-}
-
-
-void os_init(void)
-{
-#ifdef CONFIG_PLATFORM_FREERTOS_ROM
-	/* If using rom os, some variables should be initialized */
-	extern void os_rom_init(void);
-	os_rom_init();
-#endif
-
-#ifdef CONFIG_PSRAM_ALL_FOR_AP_HEAP
-#if (defined CONFIG_WHC_HOST || defined CONFIG_WHC_NONE)
-	extern bool os_heap_add(u8 * start_addr, size_t heap_size);
-	if (ChipInfo_PsramExists()) {
-		os_heap_add((uint8_t *)__km4tz_bd_psram_start__, (size_t)(__non_secure_psram_end__ - __km4tz_bd_psram_start__));
-	}
-#endif
-#endif
-	rtos_mem_init();
-}
-
 // The Main App entry point
 void app_start(void)
 {
@@ -137,16 +122,8 @@ void app_start(void)
 	RTK_LOGI(TAG, "IMG2 SECURE STATE: %d\n", cmse_address_info.flags.secure);
 #endif
 
-	app_testmode_status();
-
-	data_flash_highspeed_setup();
-
 	SystemCoreClockUpdate();
-	RTK_LOGI(TAG, "AP CPU CLK: %lu Hz \n", SystemCoreClock);
-
-	/* Init heap region and configure FreeRTOS */
-	os_init();
-	XTAL_INIT();
+	//RTK_LOGI(TAG, "AP CPU CLK: %lu Hz \n", SystemCoreClock);
 
 	if ((SYSCFG_RLVersion()) >= SYSCFG_CUT_VERSION_B) {
 		if (SYSCFG_CHIPType_Get() == CHIP_TYPE_ASIC_POSTSIM) {//Only Asic need OSC Calibration
@@ -158,22 +135,13 @@ void app_start(void)
 
 #ifndef CONFIG_WIFI_HOST_CONTROL
 #if defined (__GNUC__)
-	extern void __libc_init_array(void);
+	//extern void __libc_init_array(void);
 	/* Add This for C++ support */
-	__libc_init_array();
+	//__libc_init_array();
 #endif
 #endif
-
-	mpu_init();
-	app_mpu_nocache_init();
-
-	main(); /* project/xxxx/src/main.c */
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
+	main();
+#endif
 }
-
-IMAGE2_ENTRY_SECTION
-RAM_START_FUNCTION Img2EntryFun0 = {
-	app_start,
-	SOCPS_WakeFromPG_AP,
-	(u32) RomVectorTable
-};
 

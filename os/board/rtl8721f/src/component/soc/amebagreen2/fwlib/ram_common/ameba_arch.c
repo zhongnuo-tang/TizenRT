@@ -73,7 +73,7 @@ void Systick_update(void)
 	SysTick->VAL = 0UL;
 
 	/* Configure SysTick to interrupt at the requested rate. */
-	SysTick->LOAD = (SystemCoreClock / RTOS_TICK_RATE_HZ) - 1UL;
+	SysTick->LOAD = (SystemCoreClock / 1000UL) - 1UL;
 }
 
 /**

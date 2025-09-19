@@ -5,9 +5,14 @@
  */
 
 #include "ameba_soc.h"
+#include "osdep_service.h"
 
 static const char *const TAG = "IPC";
-rtos_sema_t ipc_Semaphore[IPC_TX_CHANNEL_NUM];
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
+SemaphoreHandle_t ipc_Semaphore[IPC_TX_CHANNEL_NUM];
+#else
+_sema ipc_Semaphore[IPC_TX_CHANNEL_NUM];
+#endif
 
 /**
   * @brief  init ipc interrupt handler table.
