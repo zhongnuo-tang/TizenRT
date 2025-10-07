@@ -49,7 +49,7 @@
 #
 ############################################################################
 
-CSRCS +=ameba_pmc.c \
+CSRCS +=ameba_pmc.c ameba_app_start.c\
 
 
 DEPPATH += --dep-path component/soc/amebagreen2/fwlib/ram_km4tz
