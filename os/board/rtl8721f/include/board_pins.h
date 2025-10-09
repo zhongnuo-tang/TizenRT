@@ -230,7 +230,7 @@
 #define		WAKEPIN_3	((u32)0x00000003)	/*!< see aon_wakepin */
 
 #define IS_UART0_TX(tx) ((tx == PA_3) || (tx == PA_14) || (tx == PA_29) || (tx == PB_6))
-#define IS_UART1_TX(tx) ((tx == PA_5) || (tx == PA_10) || (tx == PA_25) || (tx == PB_11) || (tx == PB_20) || (tx == PB_30))
+#define IS_UART1_TX(tx) ((tx == PA_5) || (tx == PA_10) || (tx == PA_25) || (tx == PB_11) || (tx == PB_30))
 #define IS_UART2_TX(tx) ((tx == PA_8) || (tx == PA_12) || (tx == PA_23) || (tx == PB_22))
 #define IS_UART4_TX(tx) (tx == PB_20)
 

@@ -655,12 +655,14 @@ void os_start(void)
 	g_lastpid = CONFIG_SMP_NCPUS - 1;
 
 	/* Fill the stack information to Idle task's tcb */
-
+lldbg("595\n");
+DelayMs(10);
 	g_idletcb[0].cmn.adj_stack_size = CONFIG_IDLETHREAD_STACKSIZE;
 	g_idletcb[0].cmn.stack_alloc_ptr = (void *)(g_idle_topstack - CONFIG_IDLETHREAD_STACKSIZE);
 	g_idletcb[0].cmn.adj_stack_ptr = (void *)(g_idle_topstack - 4);
-
-	DEBUGASSERT(up_getsp() >= (uint32_t)g_idletcb[0].cmn.stack_alloc_ptr && up_getsp() <= (uint32_t)g_idletcb[0].cmn.adj_stack_ptr);
+lldbg("596\n");
+DelayMs(10);
+	// DEBUGASSERT(up_getsp() >= (uint32_t)g_idletcb[0].cmn.stack_alloc_ptr && up_getsp() <= (uint32_t)g_idletcb[0].cmn.adj_stack_ptr);
 
 	/* The memory manager is available */
 

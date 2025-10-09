@@ -114,23 +114,29 @@ extern unsigned int __PsramStackLimit;
 #define HEAP_LIMIT ((uintptr_t)&__StackLimit)
 #define PSRAM_HEAP_BASE ((uintptr_t)&_sext_heap)
 #define PSRAM_HEAP_LIMIT ((uintptr_t)&__PsramStackLimit)
-
+// sidle stack 2004fc00
+//CONFIG_IDLETHREAD_STACKSIZE 1024
+//_sint_heap 20019960
+//__StackLimit 20050000
+//_sext_heap 60000020
 const uintptr_t g_idle_topstack = IDLE_STACK;
 
-void os_heap_init(void)
-{
+void os_heap_init(void){
 	kregionx_start[0] = (void *)HEAP_BASE;
 	kregionx_size[0] = (size_t)(HEAP_LIMIT - HEAP_BASE);
-    
 #if CONFIG_KMM_REGIONS >= 2
-    /* External PSRAM heap */
-		kregionx_start[1] = (void *)PSRAM_HEAP_BASE;
-		kregionx_size[1] = (size_t)(PSRAM_HEAP_LIMIT - PSRAM_HEAP_BASE);
-#endif
+#if CONFIG_KMM_REGIONS == 3
+	kregionx_start[1] = (void *)PSRAM_HEAP_BASE;
+	kregionx_size[1] = (size_t)kregionx_start[1] + kregionx_size[1] - PSRAM_HEAP_BASE;
 
-#if CONFIG_KMM_REGIONS >= 3
-    /* If you have 3 regions, define proper addresses here */
-    #error "3-region configuration not implemented"
+	kregionx_start[2] = (void *)kregionx_start[2];
+	kregionx_size[2] = (size_t)PSRAM_HEAP_LIMIT - (size_t)kregionx_start[2];
+#elif CONFIG_KMM_REGIONS > 3
+#error "Need to check here for heap."
+#else
+	kregionx_start[1] = (void *)PSRAM_HEAP_BASE;
+	kregionx_size[1] = (size_t)(PSRAM_HEAP_LIMIT - PSRAM_HEAP_BASE);
+#endif
 #endif
 }
 // The Main App entry point
@@ -157,7 +163,7 @@ void app_start(void)
 	cmse_address_info_t cmse_address_info = cmse_TT((void *)app_start);
 	RTK_LOGI(TAG, "IMG2 SECURE STATE: %d\n", cmse_address_info.flags.secure);
 #endif
-
+	data_flash_highspeed_setup();
 	SystemCoreClockUpdate();
 	//RTK_LOGI(TAG, "AP CPU CLK: %lu Hz \n", SystemCoreClock);
 
@@ -169,8 +175,10 @@ void app_start(void)
 
 	}
 	os_heap_init();
+	XTAL_INIT();
 	mpu_init();
 	app_mpu_nocache_init();
+
 #ifdef CONFIG_STACK_COLORATION
 	/* Set the IDLE stack to the coloration value and jump into os_start() */
 

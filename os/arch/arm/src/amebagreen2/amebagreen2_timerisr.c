@@ -109,7 +109,7 @@ extern uint32_t SystemCoreClock;
 
 int up_timerisr(int irq, uint32_t *regs)
 {
-  lldbg("enter\n");
+  //lldbg("enter\n");
     /* Process timer interrupt */
     sched_process_timer();
     
@@ -127,39 +127,38 @@ int up_timerisr(int irq, uint32_t *regs)
 
 void up_timer_initialize(void)
 {
-  lldbg("enter up_timer_initialize \n");
+  //lldbg("enter up_timer_initialize \n");
   
   /* Add delay to see if timing is issue */
   up_mdelay(10);
   
 #ifdef CONFIG_ARCH_IRQPRIO
-  lldbg("Configuring IRQ priority\n");
+  //lldbg("Configuring IRQ priority\n");
   up_prioritize_irq(AMEBAGREEN2_IRQ_SYSTICK, NVIC_SYSH_PRIORITY_DEFAULT);
 #else
-  lldbg("Configuring NVIC priority\n");
+  //lldbg("Configuring NVIC priority\n");
   uint32_t regval;
   regval = getreg32(NVIC_SYSH12_15_PRIORITY);
-  lldbg("NVIC priority reg before: 0x%x\n", regval);
+  //lldbg("NVIC priority reg before: 0x%x\n", regval);
   regval &= ~NVIC_SYSH_PRIORITY_PR15_MASK;
   regval |= (NVIC_SYSH_PRIORITY_MIN << NVIC_SYSH_PRIORITY_PR15_SHIFT);
   putreg32(regval, NVIC_SYSH12_15_PRIORITY);
-  lldbg("NVIC priority reg after: 0x%d\n", getreg32(NVIC_SYSH12_15_PRIORITY));
+  //lldbg("NVIC priority reg after: 0x%d\n", getreg32(NVIC_SYSH12_15_PRIORITY));
 #endif
 
-  lldbg("Disabling SysTick\n");
+  //lldbg("Disabling SysTick\n");
   putreg32(0, NVIC_SYSTICK_CTRL);
   putreg32(0, NVIC_SYSTICK_CURRENT);
 
-  // lldbg("Setting SysTick reload: %u\n", SYSTICK_RELOAD);
+  // //lldbg("Setting SysTick reload: %u\n", SYSTICK_RELOAD);
   putreg32(SYSTICK_RELOAD, NVIC_SYSTICK_RELOAD);
 
-  lldbg("Attaching timer ISR\n");
+  //lldbg("Attaching timer ISR\n");
   (void)irq_attach(AMEBAGREEN2_IRQ_SYSTICK, (xcpt_t)up_timerisr, NULL);
 
-  lldbg("Enabling SysTick\n");
+  //lldbg("Enabling SysTick\n");
   putreg32((NVIC_SYSTICK_CTRL_CLKSOURCE | NVIC_SYSTICK_CTRL_TICKINT |
             NVIC_SYSTICK_CTRL_ENABLE), NVIC_SYSTICK_CTRL);
-  
-  lldbg("SysTick CTRL: %d\n", getreg32(NVIC_SYSTICK_CTRL));
-  lldbg("exit up_timer_initialize\n");
+  //lldbg("SysTick CTRL: %d\n", getreg32(NVIC_SYSTICK_CTRL));
+  //lldbg("exit up_timer_initialize\n");
 }

@@ -246,22 +246,23 @@ SECTIONS
 		__ram_nocache_end__ = .;
 	} > KM4TZ_BD_RAM
 
-
-    .idle_stack (NOLOAD):
-    {
-        _sidle_stack = ABSOLUTE(.);    /* TIZENRT: Start of idle stack */
-        . = . + CONFIG_IDLETHREAD_STACKSIZE;
-        . = ALIGN(4);
-    } > KM4TZ_BD_RAM
-
-    /* put in the end of sram part */
+    /* TIZENRT: Internal RAM heap */
 	.bdram_heap.start (NOLOAD):
 	{
         _sint_heap = ABSOLUTE(.);      /* TIZENRT: Start of heap in internal RAM */
 		__bdram_heap_buffer_start__ = .;
 	} > KM4TZ_BD_RAM
 
-    /* put in the end of psram part */
+    /* TIZENRT: Stack at end of internal RAM */
+    .idle_stack (NOLOAD):
+    {
+        /* Place stack at the very END of internal RAM */
+        _sidle_stack = ABSOLUTE(ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM) - CONFIG_IDLETHREAD_STACKSIZE);
+        . = . + CONFIG_IDLETHREAD_STACKSIZE;
+        . = ALIGN(4);
+    } > KM4TZ_BD_RAM
+
+    /* TIZENRT: PSRAM heap */
 	.psram_heap.start (NOLOAD):
 	{
         _sext_heap = ABSOLUTE(.);      /* TIZENRT: Start of heap in external RAM */
@@ -282,11 +283,16 @@ SECTIONS
 		__ctrace_end__ = .;
 	} > CTRACE
 
-    .stack_heap_limits (NOLOAD):
+    /* TIZENRT: Stack and heap limits - split by memory region */
+    .stack_heap_limits_internal (NOLOAD):
     {
-        __StackLimit = ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM);        
-        __PsramStackLimit = ORIGIN(KM4TZ_BD_PSRAM) + LENGTH(KM4TZ_BD_PSRAM);
+        __StackLimit = ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM);
     } > KM4TZ_BD_RAM
+
+    .stack_heap_limits_psram (NOLOAD):
+    {
+        __PsramStackLimit = ORIGIN(KM4TZ_BD_PSRAM) + LENGTH(KM4TZ_BD_PSRAM);
+    } > KM4TZ_BD_PSRAM
 }
 
 /* Assertions */
@@ -295,12 +301,13 @@ ASSERT(__sram_image2_start__ == ORIGIN(KM4TZ_BD_RAM), "__sram_image2_start__ is 
 ASSERT(__flash_text_start__ == ORIGIN(KM4TZ_IMG2_XIP), "__flash_text_start__ is changed.")
 ASSERT(__psram_image2_start__ == ORIGIN(KM4TZ_BD_PSRAM), "__psram_image2_start__ is changed.")
 
-/* Heap buffer calculations */
-__bdram_heap_buffer_size__ = ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM) - __bdram_heap_buffer_start__;
-__psram_heap_buffer_start__ = .;
-__psram_heap_buffer_size__ = 0;
-__psram_heap_extend_start__ = .;
-__psram_heap_extend_size__ = 0;
+/* TIZENRT: Safety assertions */
+ASSERT(_sint_heap < _sidle_stack, "Internal heap overlaps with stack!")
+ASSERT((_sidle_stack - _sint_heap) > 1024, "Too little space between heap and stack!")
+
+/* Heap size calculations */
+__bdram_heap_buffer_size__ = _sidle_stack - _sint_heap;
+__psram_heap_buffer_size__ = ORIGIN(KM4TZ_BD_PSRAM) + LENGTH(KM4TZ_BD_PSRAM) - __psram_heap_buffer_start__;
 SECTIONS
 {
     PROVIDE(__retrieve_ap_buffer_size__ = 0xf40);

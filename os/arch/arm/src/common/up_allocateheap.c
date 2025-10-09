@@ -144,6 +144,7 @@ void up_allocate_kheap(FAR void **heap_start, size_t *heap_size)
 	*heap_size = (void *)KREGION_END - *heap_start;
 
 	// lldbg("start = 0x%x size = %d\n", *heap_start, *heap_size);
+	lldbg("exit\n");
 }
 
 /****************************************************************************

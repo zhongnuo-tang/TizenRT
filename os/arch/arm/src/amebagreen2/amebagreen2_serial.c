@@ -1239,8 +1239,8 @@ void up_serialinit(void)
 {
 #ifdef CONSOLE_DEV
 	CONSOLE_DEV.isconsole = true;
+
 	rtl8721f_up_setup(&CONSOLE_DEV);
-	lldbg("enter\n");
 	/* Register the console */
 	uart_register("/dev/console", &CONSOLE_DEV);
 #endif

@@ -1,3 +1,4 @@
+
 /** mbed Microcontroller Library
   ******************************************************************************
   * @file    serial_api.c
@@ -371,7 +372,6 @@ void serial_init(serial_t *obj, PinName tx, PinName rx)
 	assert_param(tx <= _PC_8);
 	assert_param(rx <= _PC_8);
 
-	RTK_LOGI(TAG, "uart idx: %x\n", uart_idx);
 	serial_enable(obj);
 
 	puart_adapter = &(uart_adapter[obj->uart_idx]);
@@ -391,6 +391,7 @@ void serial_init(serial_t *obj, PinName tx, PinName rx)
 
 	InterruptRegister((IRQ_FUN)uart_irqhandler, puart_adapter->IrqNum, (u32)puart_adapter, INT_PRI_MIDDLE);
 	InterruptEn(puart_adapter->IrqNum, INT_PRI_MIDDLE);
+	DiagPrintf("396");
 
 #ifdef CONFIG_MBED_ENABLED
 	// For stdio management
@@ -399,6 +400,8 @@ void serial_init(serial_t *obj, PinName tx, PinName rx)
 		_memcpy(&stdio_uart, obj, sizeof(serial_t));
 	}
 #endif
+	DiagPrintf("init done\n");
+
 }
 
 /**
