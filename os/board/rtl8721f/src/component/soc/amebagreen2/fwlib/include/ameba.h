@@ -102,7 +102,7 @@
 #include "ameba_thermal.h"
 
 #include "ameba_rcc.h"
-//#include "ameba_usrcfg.h"
+#include "ameba_usrcfg.h"
 #include "rom/log.h"
 #include "rom/sscanf_minimal.h"
 

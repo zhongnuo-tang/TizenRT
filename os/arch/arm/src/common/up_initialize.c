@@ -204,7 +204,7 @@ void up_initialize(void)
 	/* Initialize the interrupt subsystem */
 
 	up_irqinitialize();
-
+	lldbg("after\n");
 	/* Initialize the DMA subsystem if the weak function up_dmainitialize has been
 	 * brought into the build
 	 */
@@ -313,7 +313,7 @@ void up_initialize(void)
 #endif
 	/* Initialize the network */
 
-	up_netinitialize();
+	// up_netinitialize();
 
 	/* Initialize USB -- device and/or host */
 

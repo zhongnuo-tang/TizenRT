@@ -143,7 +143,7 @@ void up_allocate_kheap(FAR void **heap_start, size_t *heap_size)
 
 	*heap_size = (void *)KREGION_END - *heap_start;
 
-	lldbg("start = 0x%x size = %d\n", *heap_start, *heap_size);
+	// lldbg("start = 0x%x size = %d\n", *heap_start, *heap_size);
 }
 
 /****************************************************************************
@@ -160,7 +160,7 @@ void up_add_kregion(void)
 	kheap = kmm_get_baseheap();
 	for (region_cnt = 1; region_cnt < CONFIG_KMM_REGIONS; region_cnt++) {
 		if (kheap[kregionx_heap_idx[region_cnt]].mm_heapsize == 0) {
-			lldbg("Heap idx = %u start = 0x%x size = %d\n", kregionx_heap_idx[region_cnt], kregionx_start[region_cnt], kregionx_size[region_cnt]);
+			// lldbg("Heap idx = %u start = 0x%x size = %d\n", kregionx_heap_idx[region_cnt], kregionx_start[region_cnt], kregionx_size[region_cnt]);
 			if (mm_initialize(&kheap[kregionx_heap_idx[region_cnt]], kregionx_start[region_cnt], kregionx_size[region_cnt]) != OK) {
 				return;
 			}
@@ -180,7 +180,7 @@ void up_add_kregion(void)
 
 		heap_size = kregionx_end - heap_start;
 
-		lldbg("start = 0x%x size = %d\n", heap_start, heap_size);
+		// lldbg("start = 0x%x size = %d\n", heap_start, heap_size);
 		mm_addregion(&kheap[kregionx_heap_idx[region_cnt]], heap_start, heap_size);
 	}
 }

@@ -503,7 +503,7 @@ int os_bringup(void)
 	 * containing the PATH variable will be inherited by all of the threads
 	 * created by the IDLE task.
 	 */
-
+	lldbg("os_bringup\n");
 #if !defined(CONFIG_DISABLE_ENVIRON) && defined(CONFIG_PATH_INITIAL)
 	(void)setenv("PATH", CONFIG_PATH_INITIAL, 1);
 #endif

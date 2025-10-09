@@ -76,7 +76,8 @@ endif
 include Make.defs
 include component/soc/amebagreen2/fwlib/ram_km4tz/Make.defs
 include component/soc/amebagreen2/fwlib/ram_common/Make.defs
-
+include component/soc/amebagreen2/hal/src/Make.defs
+include component/usrcfg/rtl8721f/Make.defs
 
 #include component/lwip/api/Make.defs
 # include component/os_dep/Make.defs
@@ -133,7 +134,9 @@ CFLAGS += -I$(TOPDIR)/arch/$(CONFIG_ARCH)/src/armv8-m
 # CFLAGS += -I$(TARGETDIR)/cmsis
 # CFLAGS += -I$(TARGETDIR)/cmsis-dsp/Include
 # CFLAGS += -I$(TARGETDIR)/cmsis-dsp/PrivateInclude
+CFLAGS += -I$(TARGETDIR)/fwlib/
 CFLAGS += -I$(TARGETDIR)/fwlib/include
+CFLAGS += -I$(TARGETDIR)/fwlib/include/rom
 CFLAGS += -I$(TARGETDIR)/fwlib/include/cmsis
 CFLAGS += -I$(TARGETDIR)/fwlib/include/cmsis/source
 # CFLAGS += -I$(TARGETDIR)/app/monitor/include
@@ -141,6 +144,7 @@ CFLAGS += -I$(TARGETDIR)/fwlib/include/cmsis/source
 # CFLAGS += -I$(TARGETDIR)/swlib
 # CFLAGS += -I$(TARGETDIR)/misc
 # CFLAGS += -I$(COMPONENT_DIR)/os_dep
+CFLAGS += -I$(COMPONENT_DIR)/usrcfg/rtl8721f/include
 
 # CFLAGS += -I$(COMPONENT_DIR)/wifi
 # CFLAGS += -I$(COMPONENT_DIR)/wifi/api

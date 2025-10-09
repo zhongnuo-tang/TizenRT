@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2020 Samsung Electronics All Rights Reserved.
+ * Copyright 2025 Samsung Electronics All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,6 +97,7 @@ MEMORY
     BTRACE (rx) : ORIGIN = 0xC8800000, LENGTH = 0xC9000000 - 0xC8800000
     CTRACE (rx) : ORIGIN = 0xCA000000, LENGTH = 0xCA7FFFFF - 0xCA000000
 }
+
 __ipc_memory_start__ = ORIGIN(KM4NS_IPC_RAM);
 __km4ns_flash_text_start__ = ORIGIN(KM4NS_IMG2_XIP);
 __km4ns_flash_text_end__ = ORIGIN(KM4NS_IMG2_XIP) + LENGTH(KM4NS_IMG2_XIP);
@@ -109,141 +110,193 @@ __km4tz_img3_text_end__ = ORIGIN(KM4TZ_IMG3_XIP) + LENGTH(KM4TZ_IMG3_XIP);
 __km4tz_bd_ram_start__ = ORIGIN(KM4TZ_BD_RAM) - 0x20;
 __km4tz_bd_psram_start__ = ORIGIN(KM4TZ_BD_PSRAM) - 0x20;
 __non_secure_psram_end__ = (0x60400000);
+
 SECTIONS
 {
- .xip_image2.text :
- {
-  __flash_text_start__ = .;
-  *(.non.dram.text*)
-  *(.xip.only.text*)
-  *(.xip.only.rodata*)
-  . = ALIGN(32);
-  __flash_text_end__ = .;
- } > KM4TZ_IMG2_XIP
- .sram_image2.text.data ORIGIN(KM4TZ_BD_RAM):
- {
-  __sram_image2_start__ = .;
-  __image2_entry_func__ = .;
-  KEEP(*(SORT(.image2.entry.data*)))
-  __image2_validate_code__ = .;
-  KEEP(*(.image2.validate.rodata*))
-  . = ALIGN(32);
-  *(.sramdram.only.text*)
-  *(.sram.only.text*)
-  *(.sram.only.data*)
-  __sram_image2_end__ = .;
-  . = ALIGN(32);
- } > KM4TZ_BD_RAM
- .psram_image2.text.data ORIGIN(KM4TZ_BD_PSRAM):
- {
-  __psram_image2_start__ = .;
- 
-  __psram_image2_end__ = .;
- } > KM4TZ_BD_PSRAM
- .xip_image2.text :
- {
-  __image2_backtrace_start__ = .;
-  *(.img2_custom_signature*)
-  *(.image2.net.ram.text*)
-  *(.timesensitive.text*)
-  *(.text*)
-  *(.rodata*)
-  . = ALIGN (4);
-  __cmd_table_start__ = .;
-  KEEP(*(.cmd.table.data*))
-  __cmd_table_end__ = .;
-  . = ALIGN (4);
-  __ipc_table_start__ = .;
-  KEEP(*(*.ipc.table.data*))
-  __ipc_table_end__ = .;
-  . = ALIGN (4);
-  __git_ver_table_start__ = .;
-  KEEP(*(.git.ver.data))
-  __git_ver_table_end__ = .;
-  . = ALIGN(4);
-  __c_plus_plus_support_start__ = .;
-  __preinit_array_start = .;
-  KEEP(*(.preinit_array))
-  __preinit_array_end = .;
-  . = ALIGN(4);
-  __init_array_start = .;
-  KEEP(*(SORT(.init_array.*)))
-  KEEP(*(.init_array))
-  __init_array_end = .;
-  . = ALIGN(4);
-  __fini_array_start = .;
-  KEEP(*(SORT(.fini_array.*)))
-  KEEP(*(.fini_array))
-  __fini_array_end = .;
-  __c_plus_plus_support_end__ = .;
-  __image2_backtrace_end__ = .;
-  . = ALIGN (32);
- } > KM4TZ_IMG2_XIP
- .ARM.extab :
- {
-  *(.ARM.extab* .gnu.linkonce.armextab.*)
- } > KM4TZ_BD_RAM
- .ARM.exidx :
- {
-  __exidx_start = .;
-  *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-  __exidx_end = .;
- } > KM4TZ_BD_RAM
- .sram_image2.text.data :
- {
-  *(.timesensitive.data*)
-  *(.data*)
-  . = ALIGN(32);
- } > KM4TZ_BD_RAM
- .ram_image2.bss (NOLOAD):
- {
-  __bss_start__ = .;
-  *(.bss*)
-  *(COMMON)
-  __bss_end__ = .;
- } > KM4TZ_BD_RAM
- .ram_image2.bd.data (NOLOAD):
- {
-  . = ALIGN (32);
-  __ram_bd_start__ = .;
-  *(.bdsram.data*)
-  . = ALIGN (32);
-  __ram_bd_end__ = .;
- } > KM4TZ_BD_RAM
- .ram_image2.nocache.data (NOLOAD):
- {
-  . = ALIGN (32);
-  __ram_nocache_start__ = .;
-  *(.nocache.data*)
-  . = ALIGN (32);
-  __ram_nocache_end__ = .;
- } > KM4TZ_BD_RAM
- .bdram_heap.start (NOLOAD):
- {
-  __bdram_heap_buffer_start__ = .;
- } > KM4TZ_BD_RAM
- .psram_heap.start (NOLOAD):
- {
-  __psram_heap_buffer_start__ = .;
- } > KM4TZ_BD_PSRAM
- .bluetooth_trace.text :
- {
-  __btrace_start__ = .;
-  *(.BTTRACE)
-  __btrace_end__ = .;
- } > BTRACE
- .coex_trace.text :
- {
-  __ctrace_start__ = .;
-  *(.COEXTRACE)
-  __ctrace_end__ = .;
- } > CTRACE
+    /* xip part */
+    .xip_image2.text :
+    {
+        __flash_text_start__ = .;
+        *(.non.dram.text*)
+        *(.xip.only.text*)
+        *(.xip.only.rodata*)
+        . = ALIGN(32);
+        __flash_text_end__ = .;
+    } > KM4TZ_IMG2_XIP
+
+    /* sram part */
+    .sram_image2.text.data ORIGIN(KM4TZ_BD_RAM):
+    {
+        __sram_image2_start__ = .;
+        __image2_entry_func__ = .;
+        _sdata = ABSOLUTE(.);
+        KEEP(*(SORT(.image2.entry.data*)))
+        __image2_validate_code__ = .;
+        KEEP(*(.image2.validate.rodata*))
+        . = ALIGN(32);
+        *(.sramdram.only.text*)
+        *(.sram.only.text*)
+        *(.sram.only.data*)
+        __sram_image2_end__ = .;
+        . = ALIGN(32);
+    } > KM4TZ_BD_RAM
+
+    /* image2: normal image start */
+    .psram_image2.text.data ORIGIN(KM4TZ_BD_PSRAM):
+    {
+        __psram_image2_start__ = .;
+        __psram_image2_end__ = .;
+    } > KM4TZ_BD_PSRAM
+
+    /* text section */
+    .xip_image2.text :
+    {
+        __image2_backtrace_start__ = .;
+        *(.img2_custom_signature*)
+        *(.image2.net.ram.text*)
+        *(.timesensitive.text*)
+
+        *(.text*)
+        *(.rodata*)
+
+        . = ALIGN (4);
+        __cmd_table_start__ = .;
+        KEEP(*(.cmd.table.data*))
+        __cmd_table_end__ = .;
+        . = ALIGN (4);
+        __ipc_table_start__ = .;
+        KEEP(*(*.ipc.table.data*))
+        __ipc_table_end__ = .;
+        . = ALIGN (4);
+        __git_ver_table_start__ = .;
+        KEEP(*(.git.ver.data))
+        __git_ver_table_end__ = .;
+
+        /* Add This for C++ support */
+        . = ALIGN(4);
+        __c_plus_plus_support_start__ = .;
+        __preinit_array_start = .;
+        KEEP(*(.preinit_array))
+        __preinit_array_end = .;
+        . = ALIGN(4);
+        __init_array_start = .;
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array))
+        __init_array_end = .;
+        . = ALIGN(4);
+        __fini_array_start = .;
+        KEEP(*(SORT(.fini_array.*)))
+        KEEP(*(.fini_array))
+        __fini_array_end = .;
+        __c_plus_plus_support_end__ = .;
+        __image2_backtrace_end__ = .;
+
+        . = ALIGN (32);
+    } > KM4TZ_IMG2_XIP
+
+    /* C++ .ARM.extab/.ARM.exidx address shall same as *(.text*) */
+    .ARM.extab :
+    {
+        *(.ARM.extab* .gnu.linkonce.armextab.*)
+    } > KM4TZ_BD_RAM
+
+    .ARM.exidx :
+    {
+        __exidx_start = .;
+        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        __exidx_end = .;
+    } > KM4TZ_BD_RAM
+
+    .sram_image2.text.data :
+    {
+        *(.timesensitive.data*)
+        *(.data*)
+        _edata = ABSOLUTE(.);
+        /*cache line size aligned in order to avoid MMU remap err*/
+        . = ALIGN(32);
+    } > KM4TZ_BD_RAM
+
+    
+    /* TIZENRT REQUIREMENT: BSS section with start/end markers */
+    .ram_image2.bss (NOLOAD):
+	{
+		_sbss = ABSOLUTE(.);           /* TIZENRT: Start of .bss section */
+		__bss_start__ = .;
+		*(.bss*)
+		*(COMMON)
+		__bss_end__ = .;
+		_ebss = ABSOLUTE(.);           /* TIZENRT: End+1 of .bss section */
+	} > KM4TZ_BD_RAM
+    
+    .ram_image2.bd.data (NOLOAD):
+	{
+		. = ALIGN (32);
+		__ram_bd_start__ = .;
+		*(.bdsram.data*)
+		. = ALIGN (32);
+		__ram_bd_end__ = .;
+	} > KM4TZ_BD_RAM
+
+    .ram_image2.nocache.data (NOLOAD):
+	{
+		. = ALIGN (32);
+		__ram_nocache_start__ = .;
+		*(.nocache.data*)
+		. = ALIGN (32);
+		__ram_nocache_end__ = .;
+	} > KM4TZ_BD_RAM
+
+
+    .idle_stack (NOLOAD):
+    {
+        _sidle_stack = ABSOLUTE(.);    /* TIZENRT: Start of idle stack */
+        . = . + CONFIG_IDLETHREAD_STACKSIZE;
+        . = ALIGN(4);
+    } > KM4TZ_BD_RAM
+
+    /* put in the end of sram part */
+	.bdram_heap.start (NOLOAD):
+	{
+        _sint_heap = ABSOLUTE(.);      /* TIZENRT: Start of heap in internal RAM */
+		__bdram_heap_buffer_start__ = .;
+	} > KM4TZ_BD_RAM
+
+    /* put in the end of psram part */
+	.psram_heap.start (NOLOAD):
+	{
+        _sext_heap = ABSOLUTE(.);      /* TIZENRT: Start of heap in external RAM */
+		__psram_heap_buffer_start__ = .;
+	} > KM4TZ_BD_PSRAM
+
+    .bluetooth_trace.text :
+	{
+		__btrace_start__ = .;
+		*(.BTTRACE)
+		__btrace_end__ = .;
+	} > BTRACE
+
+	.coex_trace.text :
+	{
+		__ctrace_start__ = .;
+		*(.COEXTRACE)
+		__ctrace_end__ = .;
+	} > CTRACE
+
+    .stack_heap_limits (NOLOAD):
+    {
+        __StackLimit = ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM);        
+        __PsramStackLimit = ORIGIN(KM4TZ_BD_PSRAM) + LENGTH(KM4TZ_BD_PSRAM);
+    } > KM4TZ_BD_RAM
 }
+
+/* Assertions */
 ASSERT(__image2_entry_func__ == ORIGIN(KM4TZ_BD_RAM), "__image2_entry_func__ is not KM4TZ_BD_RAM.")
 ASSERT(__sram_image2_start__ == ORIGIN(KM4TZ_BD_RAM), "__sram_image2_start__ is changed.")
 ASSERT(__flash_text_start__ == ORIGIN(KM4TZ_IMG2_XIP), "__flash_text_start__ is changed.")
 ASSERT(__psram_image2_start__ == ORIGIN(KM4TZ_BD_PSRAM), "__psram_image2_start__ is changed.")
-  __bdram_heap_buffer_size__ = ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM) - __bdram_heap_buffer_start__;
+
+/* Heap buffer calculations */
+__bdram_heap_buffer_size__ = ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM) - __bdram_heap_buffer_start__;
 __psram_heap_buffer_start__ = .;
 __psram_heap_buffer_size__ = 0;
 __psram_heap_extend_start__ = .;

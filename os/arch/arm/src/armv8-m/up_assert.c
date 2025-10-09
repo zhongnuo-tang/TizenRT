@@ -529,9 +529,9 @@ void check_heap_corrupt(struct tcb_s *fault_tcb)
 
 static inline void print_assert_detail(const uint8_t *filename, int lineno, struct tcb_s *fault_tcb, uint32_t asserted_location)
 {
-	lldbg_noarg("===========================================================\n");
-	lldbg_noarg("Assertion details\n");
-	lldbg_noarg("===========================================================\n");
+	// lldbg_noarg("===========================================================\n");
+	// lldbg_noarg("Assertion details\n");
+	// lldbg_noarg("===========================================================\n");
 #if CONFIG_TASK_NAME_SIZE > 0
 	lldbg("Assertion failed at file:%s line: %d task: %s\n", filename, lineno, fault_tcb->name);
 #else
@@ -628,7 +628,7 @@ void up_assert(const uint8_t *filename, int lineno)
 	}
 
 #ifdef CONFIG_SECURITY_LEVEL
-	lldbg("security level: %d\n", get_security_level());
+	// lldbg("security level: %d\n", get_security_level());
 #endif
 	/* Print assert detail information and dump state,
 	 * but if the OS is seucre state, do not print assertion failed logs.

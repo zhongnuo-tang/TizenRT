@@ -714,7 +714,7 @@ void os_start(void)
 	if (clock_initialize != NULL)
 #endif
 	{
-		clock_initialize();
+		// clock_initialize();
 	}
 #ifndef CONFIG_DISABLE_POSIX_TIMERS
 #ifdef CONFIG_HAVE_WEAKFUNCTIONS
@@ -766,8 +766,9 @@ void os_start(void)
 	 * cannot require upon any hardware-depending features such as
 	 * timers or interrupts.
 	 */
+lldbg("173\n");
 
-	net_setup();
+	// net_setup();
 
 #endif							/* CONFIG_NET */
 
@@ -776,6 +777,7 @@ void os_start(void)
 	 * service routines and starting the clock are some of the things
 	 * that are different for each  processor and hardware platform.
 	 */
+lldbg("18\n");
 
 	up_initialize();
 
@@ -817,6 +819,7 @@ void os_start(void)
 		if (i > 0)
 		{
 			/* Clone stdout, stderr, stdin from the CPU0 IDLE task. */
+lldbg("19\n");
 
 			DEBUGVERIFY(group_setuptaskfiles(&g_idletcb[i]));
 		}
@@ -850,6 +853,8 @@ void os_start(void)
 #endif /* CONFIG_SMP */
 
 #ifdef CONFIG_ARMV8M_TRUSTZONE
+lldbg("20\n");
+
 	up_init_secure_context();
 #endif
 	/* Bring Up the System ****************************************************/
@@ -860,8 +865,11 @@ void os_start(void)
 #endif
 
 	g_os_initstate = OSINIT_OSREADY;
+lldbg("21\n");
+
 	DEBUGVERIFY(os_bringup());
 	g_os_initstate = OSINIT_IDLELOOP;
+lldbg("22\n");
 
 	sched_unlock();
 
@@ -897,6 +905,8 @@ void os_start(void)
 		pm_idle();
 #endif
 		/* Perform any processor-specific idle state operations */
+lldbg("23\n");
+
 		up_idle();
 	}
 }

@@ -249,6 +249,15 @@ void LOGUART_PutChar_RAM(u8 c)
 	UARTLOG->LOGUART_UART_THRx[LOG_UART_IDX_FLAG[CPUID].idx] = c;
 }
 
+u8 LOGUART_Ready(void)
+{
+	/*check if tx fifo has available space to send*/
+	if (LOGUART_DEV->LOGUART_UART_LSR & LOG_UART_IDX_FLAG[2].not_full) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
 /**
  * @}
  */

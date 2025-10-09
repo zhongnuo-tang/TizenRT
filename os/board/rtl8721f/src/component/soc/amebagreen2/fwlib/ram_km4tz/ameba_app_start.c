@@ -30,7 +30,12 @@ static const char *TAG = "APP";
 
 extern int main(void);
 extern void NS_ENTRY BOOT_IMG3(void);
+extern void SOCPS_WakeFromPG_AP(void);
 
+void SOCPS_WakeFromPG_AP_Stub(void) {
+    // Minimal wake-up handling
+    // Or just return if you're not using sleep modes
+}
 u32 app_mpu_nocache_check(u32 mem_addr)
 {
 	mpu_region_config mpu_cfg;
@@ -97,6 +102,37 @@ void _init(void) {}
 #endif
 #endif
 
+
+extern unsigned int _sidle_stack;
+extern unsigned int _sint_heap;
+extern unsigned int _sext_heap;
+extern unsigned int __StackLimit;
+extern unsigned int __PsramStackLimit;
+
+#define IDLE_STACK ((uintptr_t)&_sidle_stack + CONFIG_IDLETHREAD_STACKSIZE - 4)
+#define HEAP_BASE  ((uintptr_t)&_sint_heap)
+#define HEAP_LIMIT ((uintptr_t)&__StackLimit)
+#define PSRAM_HEAP_BASE ((uintptr_t)&_sext_heap)
+#define PSRAM_HEAP_LIMIT ((uintptr_t)&__PsramStackLimit)
+
+const uintptr_t g_idle_topstack = IDLE_STACK;
+
+void os_heap_init(void)
+{
+	kregionx_start[0] = (void *)HEAP_BASE;
+	kregionx_size[0] = (size_t)(HEAP_LIMIT - HEAP_BASE);
+    
+#if CONFIG_KMM_REGIONS >= 2
+    /* External PSRAM heap */
+		kregionx_start[1] = (void *)PSRAM_HEAP_BASE;
+		kregionx_size[1] = (size_t)(PSRAM_HEAP_LIMIT - PSRAM_HEAP_BASE);
+#endif
+
+#if CONFIG_KMM_REGIONS >= 3
+    /* If you have 3 regions, define proper addresses here */
+    #error "3-region configuration not implemented"
+#endif
+}
 // The Main App entry point
 void app_start(void)
 {
@@ -132,7 +168,22 @@ void app_start(void)
 		}
 
 	}
+	os_heap_init();
+	mpu_init();
+	app_mpu_nocache_init();
+#ifdef CONFIG_STACK_COLORATION
+	/* Set the IDLE stack to the coloration value and jump into os_start() */
 
+	go_os_start((FAR void *)g_idle_topstack - CONFIG_IDLETHREAD_STACKSIZE, CONFIG_IDLETHREAD_STACKSIZE);
+#else
+	/* Call os_start() */
+
+	os_start();
+
+	/* Shoulnd't get here */
+
+	for (;;) ;
+#endif
 #ifndef CONFIG_WIFI_HOST_CONTROL
 #if defined (__GNUC__)
 	//extern void __libc_init_array(void);
@@ -144,4 +195,10 @@ void app_start(void)
 	main();
 #endif
 }
+IMAGE2_ENTRY_SECTION
+RAM_START_FUNCTION Img2EntryFun0 = {
+	app_start,
+	SOCPS_WakeFromPG_AP_Stub,
+	(u32) RomVectorTable
+};
 

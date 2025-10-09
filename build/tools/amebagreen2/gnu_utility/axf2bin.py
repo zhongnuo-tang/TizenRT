@@ -11,15 +11,11 @@ missing_modules = []
 for module in ['json5']:
     if importlib.util.find_spec(module) is None:
         missing_modules.append(module)
-if missing_modules:
-    error_message = (
-        "\n\033[1;31m ERROR \033[0m\n"
-        f"\033[1;31m➜ Miss module: {', '.join(missing_modules)}\033[0m\n"
-        f"\033[1;31m➜ Install by: pip install -r {os.path.dirname(os.path.dirname(__file__))}/requirements.txt\033[0m\n"
-        f"\033[1;31m{'-'*50}\033[0m"
-    )
-    print(error_message, file=sys.stderr)
-    sys.exit(1)
+# if missing_modules:
+#     error_message = (
+#     )
+#     print(error_message, file=sys.stderr)
+#     sys.exit(1)
 
 import argparse
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'image_process'))

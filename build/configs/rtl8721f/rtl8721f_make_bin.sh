@@ -41,20 +41,11 @@ cp $BINDIR/target_img2.axf $BINDIR/target_pure_img2.axf
 
 arm-none-eabi-strip $BINDIR/target_pure_img2.axf
 
-arm-none-eabi-objcopy -j .bluetooth_trace.text \
--Obinary $BINDIR/target_pure_img2.axf $BINDIR/APP.trace
+arm-none-eabi-objcopy -j .psram_image2.text.data -j .ARM.extab -j .ARM.exidx -Obinary $BINDIR/target_pure_img2.axf $BINDIR/psram_2.bin
+arm-none-eabi-objcopy -j .sram_image2.text.data -Obinary $BINDIR/target_pure_img2.axf $BINDIR/sram_2.bin
+arm-none-eabi-objcopy -j .xip_image2.text -Obinary $BINDIR/target_pure_img2.axf $BINDIR/xip_image2.bin
 
-arm-none-eabi-objcopy -j .sram_only.text.data \
--Obinary $BINDIR/target_pure_img2.axf $BINDIR/sram_only.bin
 
-arm-none-eabi-objcopy -j .psram_image2.text.data \
--Obinary $BINDIR/target_pure_img2.axf $BINDIR/psram_2.bin
-
-arm-none-eabi-objcopy -j .sram_image2.text.data \
--Obinary $BINDIR/target_pure_img2.axf $BINDIR/sram_2.bin
-
-arm-none-eabi-objcopy -j .xip_image2.text -j .ARM.extab -j .ARM.exidx \
--Obinary $BINDIR/target_pure_img2.axf $BINDIR/xip_image2.bin
 
 #For Bluetooth Trace
 if [ "${CONFIG_BT_EN}" == "y" ];then
@@ -85,7 +76,7 @@ $GNUUTL/prepend_header.sh $BINDIR/xip_image2.bin __flash_text_start__ $BINDIR/ta
 
 cat $BINDIR/xip_image2_prepend.bin $BINDIR/sram_2_prepend.bin $BINDIR/psram_2_prepend.bin > $BINDIR/km4tz_image2_all.bin
 
-# python $GNUUTL/axf2bin.py imagetool $BINDIR/km4tz_image2_all.bin
+#python $GNUUTL/axf2bin.py imagetool $BINDIR/km4tz_image2_all.bin
 
 
 
@@ -99,11 +90,11 @@ function copy_bootloader()
 	source ${CONFIG}
 
 	echo "========== Copy_bootloader =========="
-	if [ ! -f $BOOT_PATH/km4_boot_all.bin ];then
-		echo "No km4_boot_all.bin"
+	if [ ! -f $BOOT_PATH/amebagreen2_boot.bin ];then
+		echo "No amebagreen2_boot.bin"
 		exit 1
 	fi
-	cp $BOOT_PATH/km4_boot_all.bin $BINDIR/km4_boot_all.bin
+	cp $BOOT_PATH/amebagreen2_boot.bin $BINDIR/amebagreen2_boot.bin
 
 }
 
@@ -118,15 +109,16 @@ function concatenate_binary_without_signing()
 
  	echo "========== Concatenate_binary =========="
 
-	if [ ! -f $BINDIR/km0_km4_app.bin ] || [ ! -f $BINDIR/ap_image_all.bin ];then
-		echo "No km0_km4_app.bin or ap_image_all.bin"
+	if [ ! -f $BINDIR/km4ns_image2_all.bin ] || [ ! -f $BINDIR/km4tz_image2_all.bin ];then
+		echo "No km4ns_image2_all.bin or km4tz_image2_all.bin"
 		exit 1
 	fi
- 	cp $BINDIR/km0_km4_app.bin $GNUUTL/km4ns_image2_all.bin
- 	$GNUUTL/rmcert.sh $GNUUTL/km4ns_image2_all_temp.bin
- 	$GNUUTL/pad.sh $GNUUTL/km4ns_image2_all_temp.bin
- 	cat $GNUUTL/cert.bin $GNUUTL/km4ns_image2_all_temp.bin $BINDIR/km4tz_image2_all.bin > $BINDIR/amebagreen2_app.bin
- 	rm -rf $GNUUTL/km4ns_image2_all_temp.bin
+ 	#cp $BINDIR/km4ns_image2_all.bin $GNUUTL/km4ns_image2_all_temp.bin
+ 	# $GNUUTL/rmcert.sh $GNUUTL/km4ns_image2_all_temp.bin
+ 	# $GNUUTL/pad.sh $GNUUTL/km4ns_image2_all_temp.bin
+ 	# cat $GNUUTL/cert.bin $GNUUTL/km4ns_image2_all_temp.bin $BINDIR/km4tz_image2_all.bin > $BINDIR/amebagreen2_app.bin
+ 	cat $GNUUTL/app_cert.bin $GNUUTL/manifest_app.bin $GNUUTL/km4ns_image2_all.bin $BINDIR/km4tz_image2_all.bin > $BINDIR/amebagreen2_app.bin
+ 	#rm -rf $GNUUTL/km4ns_image2_all_temp.bin
 
 }
 
@@ -173,7 +165,7 @@ function copy_km0_km4_image()
 
 	source ${CONFIG}
 
-	echo "========== Copy ap_image_all into bin output folder=========="
+	echo "========== Copy km4ns_image2_all into bin output folder=========="
 	if [ ! -f $GNUUTL/km4ns_image2_all.bin ];then
 		echo "No km4ns_image2_all.bin"
 		exit 1

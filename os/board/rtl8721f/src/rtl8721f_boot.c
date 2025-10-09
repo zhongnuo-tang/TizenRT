@@ -98,23 +98,25 @@ extern void wlan_initialize(void);
 /************************************************************************************
  * Public Functions
  ************************************************************************************/
-#if 0
-static int up_check_prod(void)
-{
-	u8 prod_disable;
-	EFUSERead8(0, EFUSE_SEC_CONFIG_ADDR1, &prod_disable, L25EOUTVOLTAGE);
-	if (prod_disable == 0xff) {
-		return OK;
-	}
-	return ERROR;
-}
+#if 1
+// static int up_check_prod(void)
+// {
+// 	u8 prod_disable;
+// 	EFUSERead8(0, EFUSE_SEC_CONFIG_ADDR1, &prod_disable, L25EOUTVOLTAGE);
+// 	if (prod_disable == 0xff) {
+// 		return OK;
+// 	}
+// 	return ERROR;
+// }
 int up_check_prodswd(void)
 {
-	return up_check_prod();
+	// return up_check_prod();
+	return OK;
 }
 int up_check_proddownload(void)
 {
-	return up_check_prod();
+	// return up_check_prod();
+	return OK;
 }
 #endif
 
@@ -246,34 +248,34 @@ void board_initialize(void)
 	/*switch shell control to KM0 */
 	//InterruptDis(UART_LOG_IRQ);
 
-	amebagreen2_mount_partitions();
-	board_gpio_initialize();
-	board_i2c_initialize();
-	board_spi_initialize();
-	board_i2s_initialize();
+	// amebagreen2_mount_partitions();
+	// board_gpio_initialize();
+	// board_i2c_initialize();
+	// board_spi_initialize();
+	// board_i2s_initialize();
 #ifdef CONFIG_WATCHDOG
-	amebagreen2_wdg_initialize(CONFIG_WATCHDOG_DEVPATH, 5000);
+	// amebagreen2_wdg_initialize(CONFIG_WATCHDOG_DEVPATH, 5000);
 #endif
 #ifdef CONFIG_TIMER
-	int i;
-	char path[CONFIG_PATH_MAX];
-	for (i = 0; i < GTIMER_MAX; i++) {
-		snprintf(path, sizeof(path), "/dev/timer%d", i);
-		amebagreen2_timer_initialize(path, i);
-	}
+	// int i;
+	// char path[CONFIG_PATH_MAX];
+	// for (i = 0; i < GTIMER_MAX; i++) {
+	// 	snprintf(path, sizeof(path), "/dev/timer%d", i);
+	// 	amebagreen2_timer_initialize(path, i);
+	// }
 #endif
 
 #ifdef CONFIG_RTC_DRIVER
 	struct rtc_lowerhalf_s *rtclower;
 	int ret;
 
-	rtclower = (FAR struct rtc_lowerhalf_s *)amebagreen2_rtc_lowerhalf();
-	if (rtclower) {
-		ret = rtc_initialize(0, rtclower);
-		if (ret < 0) {
-			lldbg("Failed to register the RTC driver: %d\n", ret);
-		}
-	}
+	// rtclower = (FAR struct rtc_lowerhalf_s *)amebagreen2_rtc_lowerhalf();
+	// if (rtclower) {
+	// 	ret = rtc_initialize(0, rtclower);
+	// 	if (ret < 0) {
+	// 		lldbg("Failed to register the RTC driver: %d\n", ret);
+	// 	}
+	// }
 #endif
 #ifdef CONFIG_FTL_ENABLED
 	app_ftl_init();

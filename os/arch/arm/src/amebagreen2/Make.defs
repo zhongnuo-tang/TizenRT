@@ -93,7 +93,7 @@ CMN_CSRCS += up_ramvec_initialize.c up_ramvec_attach.c
 endif
 
 ifeq ($(CONFIG_ARMV8M_TRUSTZONE),y)
-CMN_ASRCS += up_secure_context.S
+#CMN_ASRCS += up_secure_context.S #FIXME
 endif
 
 ifeq ($(CONFIG_BUILD_PROTECTED),y)
@@ -152,7 +152,7 @@ CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os/freertos
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/wifi_config
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/wifi_fast_connect
 
-
+CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/usrcfg/rtl8721f/include
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/hal/src/
 
 CHIP_ASRCS  =
@@ -173,7 +173,7 @@ CHIP_CSRCS += amebagreen2_serial.c
 #CHIP_CSRCS += amebagreen2_spi.c
 
 ifeq ($(CONFIG_BOARDCTL_RESET),y)
-#CHIP_CSRCS += amebagreen2_systemreset.c
+CHIP_CSRCS += amebagreen2_systemreset.c
 endif
 ifeq ($(CONFIG_SYSTEM_REBOOT_REASON),y)
 #CMN_CSRCS += amebagreen2_reboot_reason.c #FIXME
@@ -182,7 +182,7 @@ ifeq ($(CONFIG_BINARY_SIGNING),y)
 #CMN_CSRCS += amebagreen2_signature.c
 endif
 
-ifeq ($(CONFIG_AMEBALITE_TRUSTZONE),y)
+ifeq ($(CONFIG_AMEBAGREEN2_TRUSTZONE),y)
 #CHIP_CSRCS += amebagreen2_nsc.c
 
 # trustzone library

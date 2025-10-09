@@ -18,6 +18,6 @@
 #include "ameba_intfcfg.h"
 
 /* wifi configuration*/
-#include "ameba_wificfg_common.h"
+// #include "ameba_wificfg_common.h"
 
 #endif

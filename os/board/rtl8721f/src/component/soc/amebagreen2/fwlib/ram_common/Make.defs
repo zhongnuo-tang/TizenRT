@@ -77,8 +77,10 @@ CSRCS += ameba_i2c.c \
 	ameba_codec.c \
 	ameba_pll.c \
 	ameba_arch.c \
+	ameba_loguart.c \
+	ameba_captouch.c \
+	ameba_mpu_ram.c \
 	#ameba_ftl.c \
-	#ameba_mpu_ram.c \
 	#ameba_pmc_com.c \
 	#ameba_prs.c \
 	#ameba_sport.c \

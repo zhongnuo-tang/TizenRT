@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2023 Samsung Electronics All Rights Reserved.
+ * Copyright 2025 Samsung Electronics All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,17 @@ extern uint32_t _sbss;
 extern uint32_t _ebss;
 extern uint32_t _sdata;
 extern uint32_t _edata;
+extern uint32_t __data_start__;
+extern uint32_t __data_end__;
 
-void *variable_region_start_addr[MEM_VAR_REGION_COUNT] = {&_sbss, &_sdata, &__bss_start__};
-void *variable_region_end_addr[MEM_VAR_REGION_COUNT] = {&_ebss, &_edata, &__bss_end__};
+void *variable_region_start_addr[MEM_VAR_REGION_COUNT] = {
+    &_sbss,                    /* BSS section start */
+    &_sdata,                   /* Data section start */ 
+    &__bss_start__             /* Alternative BSS start */
+};
+
+void *variable_region_end_addr[MEM_VAR_REGION_COUNT] = {
+    &_ebss,                    /* BSS section end */
+    &_edata,                   /* Data section end */
+    &__bss_end__               /* Alternative BSS end */
+};

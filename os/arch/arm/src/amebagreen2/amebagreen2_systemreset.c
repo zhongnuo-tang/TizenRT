@@ -56,110 +56,53 @@
 #include <tinyara/config.h>
 
 #include <stdint.h>
-#include <time.h>
-#include <debug.h>
-#include <tinyara/arch.h>
-#include <arch/board/board.h>
 
-#include "nvic.h"
-#include "clock/clock.h"
-#include "up_internal.h"
+#include <tinyara/board.h>
+
 #include "up_arch.h"
 
-#include "chip.h"
-
-/*----------------------------------------------------------------------------
-  Clock Variable definitions
- *----------------------------------------------------------------------------*/
-extern uint32_t SystemCoreClock;
-
 /****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-/* The desired timer interrupt frequency is provided by the definition
- * CLK_TCK (see include/time.h).  CLK_TCK defines the desired number of
- * system clock ticks per second.  That value is a user configurable setting
- * that defaults to 100 (100 ticks per second = 10 MS interval).
- *
- */
-
-/* The size of the reload field is 24 bits.  Verify that the reload value
- * will fit in the reload register.
- */
-
-#define SYSTICK_RELOAD ((SystemCoreClock / CLK_TCK) - 1)
-
-#if SYSTICK_RELOAD > 0x00ffffff
-#  error SYSTICK_RELOAD exceeds the range of the RELOAD register
-#endif
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Function:  amebagreen2_timerisr
+ * Name: up_systemreset
  *
  * Description:
- *   The timer ISR will perform a variety of services for various portions
- *   of the systems.
+ *   Internal, reset logic.
  *
  ****************************************************************************/
-
-int up_timerisr(int irq, uint32_t *regs)
+static void up_systemreset(void)
 {
-  lldbg("enter\n");
-    /* Process timer interrupt */
-    sched_process_timer();
-    
-    return 0;
+	sys_reset();
+
+	/* Wait for the reset */
+	for (;;) {
+	}
 }
+/****************************************************************************
+ * Public functions
+ ****************************************************************************/
 
 /****************************************************************************
- * Function:  up_timer_initialize
+ * Name: board_reset
  *
  * Description:
- *   This function is called during start-up to initialize
- *   the timer interrupt.
+ *   Reset board.  This function may or may not be supported by a
+ *   particular board architecture.
+ *
+ * Input Parameters:
+ *   status - Status information provided with the reset event.  This
+ *     meaning of this status information is board-specific.  If not used by
+ *     a board, the value zero may be provided in calls to board_reset.
+ *
+ * Returned Value:
+ *   If this function returns, then it was not possible to power-off the
+ *   board due to some constraints.  The return value int this case is a
+ *   board-specific reason for the failure to shutdown.
  *
  ****************************************************************************/
-
-void up_timer_initialize(void)
+#ifdef CONFIG_BOARDCTL_RESET
+int board_reset(int status)
 {
-  lldbg("enter up_timer_initialize \n");
-  
-  /* Add delay to see if timing is issue */
-  up_mdelay(10);
-  
-#ifdef CONFIG_ARCH_IRQPRIO
-  lldbg("Configuring IRQ priority\n");
-  up_prioritize_irq(AMEBAGREEN2_IRQ_SYSTICK, NVIC_SYSH_PRIORITY_DEFAULT);
-#else
-  lldbg("Configuring NVIC priority\n");
-  uint32_t regval;
-  regval = getreg32(NVIC_SYSH12_15_PRIORITY);
-  lldbg("NVIC priority reg before: 0x%x\n", regval);
-  regval &= ~NVIC_SYSH_PRIORITY_PR15_MASK;
-  regval |= (NVIC_SYSH_PRIORITY_MIN << NVIC_SYSH_PRIORITY_PR15_SHIFT);
-  putreg32(regval, NVIC_SYSH12_15_PRIORITY);
-  lldbg("NVIC priority reg after: 0x%d\n", getreg32(NVIC_SYSH12_15_PRIORITY));
-#endif
+	up_systemreset();
 
-  lldbg("Disabling SysTick\n");
-  putreg32(0, NVIC_SYSTICK_CTRL);
-  putreg32(0, NVIC_SYSTICK_CURRENT);
-
-  // lldbg("Setting SysTick reload: %u\n", SYSTICK_RELOAD);
-  putreg32(SYSTICK_RELOAD, NVIC_SYSTICK_RELOAD);
-
-  lldbg("Attaching timer ISR\n");
-  (void)irq_attach(AMEBAGREEN2_IRQ_SYSTICK, (xcpt_t)up_timerisr, NULL);
-
-  lldbg("Enabling SysTick\n");
-  putreg32((NVIC_SYSTICK_CTRL_CLKSOURCE | NVIC_SYSTICK_CTRL_TICKINT |
-            NVIC_SYSTICK_CTRL_ENABLE), NVIC_SYSTICK_CTRL);
-  
-  lldbg("SysTick CTRL: %d\n", getreg32(NVIC_SYSTICK_CTRL));
-  lldbg("exit up_timer_initialize\n");
+	return 0;
 }
+#endif
