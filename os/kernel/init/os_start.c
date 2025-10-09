@@ -662,7 +662,7 @@ DelayMs(10);
 	g_idletcb[0].cmn.adj_stack_ptr = (void *)(g_idle_topstack - 4);
 lldbg("596\n");
 DelayMs(10);
-	// DEBUGASSERT(up_getsp() >= (uint32_t)g_idletcb[0].cmn.stack_alloc_ptr && up_getsp() <= (uint32_t)g_idletcb[0].cmn.adj_stack_ptr);
+	DEBUGASSERT(up_getsp() >= (uint32_t)g_idletcb[0].cmn.stack_alloc_ptr && up_getsp() <= (uint32_t)g_idletcb[0].cmn.adj_stack_ptr);
 
 	/* The memory manager is available */
 

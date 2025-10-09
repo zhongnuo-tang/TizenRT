@@ -256,8 +256,8 @@ SECTIONS
     /* TIZENRT: Stack at end of internal RAM */
     .idle_stack (NOLOAD):
     {
-        /* Place stack at the very END of internal RAM */
-        _sidle_stack = ABSOLUTE(ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM) - CONFIG_IDLETHREAD_STACKSIZE);
+         . = ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM) - CONFIG_IDLETHREAD_STACKSIZE;
+        _sidle_stack = ABSOLUTE(.);
         . = . + CONFIG_IDLETHREAD_STACKSIZE;
         . = ALIGN(4);
     } > KM4TZ_BD_RAM
@@ -302,8 +302,7 @@ ASSERT(__flash_text_start__ == ORIGIN(KM4TZ_IMG2_XIP), "__flash_text_start__ is 
 ASSERT(__psram_image2_start__ == ORIGIN(KM4TZ_BD_PSRAM), "__psram_image2_start__ is changed.")
 
 /* TIZENRT: Safety assertions */
-ASSERT(_sint_heap < _sidle_stack, "Internal heap overlaps with stack!")
-ASSERT((_sidle_stack - _sint_heap) > 1024, "Too little space between heap and stack!")
+ASSERT(__StackLimit >= _sint_heap, "region data overflowed with stack and heap")
 
 /* Heap size calculations */
 __bdram_heap_buffer_size__ = _sidle_stack - _sint_heap;

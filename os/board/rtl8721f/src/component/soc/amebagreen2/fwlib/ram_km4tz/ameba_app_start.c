@@ -114,11 +114,7 @@ extern unsigned int __PsramStackLimit;
 #define HEAP_LIMIT ((uintptr_t)&__StackLimit)
 #define PSRAM_HEAP_BASE ((uintptr_t)&_sext_heap)
 #define PSRAM_HEAP_LIMIT ((uintptr_t)&__PsramStackLimit)
-// sidle stack 2004fc00
-//CONFIG_IDLETHREAD_STACKSIZE 1024
-//_sint_heap 20019960
-//__StackLimit 20050000
-//_sext_heap 60000020
+
 const uintptr_t g_idle_topstack = IDLE_STACK;
 
 void os_heap_init(void){
