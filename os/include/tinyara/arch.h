@@ -2098,7 +2098,7 @@ void up_cpu_pause_all(void);
 
 void up_cpu_resume_all(void);
 
-#ifdef CONFIG_PM
+#ifdef CONFIG_CPU_HOTPLUG
 /****************************************************************************
  * Name: up_cpu_hotplug
  *
@@ -2119,8 +2119,41 @@ void up_cpu_resume_all(void);
  *   by primary core which conducts PM logic (ie. for PM + SMP).
  *
  ****************************************************************************/
-void up_cpu_hotplug(int cpu);
-#endif /* CONFIG_PM */
+int up_cpu_hotplug(int cpu);
+
+/****************************************************************************
+ * Name: up_cpu_hotplugreq
+ *
+ * Description:
+ *   Check if there is a pending hotplug request for the specified CPU.
+ *
+ * Input Parameters:
+ *   cpu - The CPU index to check
+ *
+ * Returned Value:
+ *   true if there is a pending hotplug request, false otherwise
+ *
+ ****************************************************************************/
+bool up_cpu_hotplugreq(int cpu);
+
+/****************************************************************************
+ * Name: up_cpu_hotplugabort
+ *
+ * Description:
+ *   Abort a pending hotplug request for the specified CPU.
+ *
+ * Input Parameters:
+ *   cpu - The CPU index for which to abort the hotplug request
+ *
+ * Returned Value:
+ *   OK (0) on success
+ *
+ * Assumptions:
+ *   Called from within a critical section with proper synchronization
+ *
+ ****************************************************************************/
+int up_cpu_hotplugabort(int cpu);
+#endif /* CONFIG_CPU_HOTPLUG */
 
 /****************************************************************************
  * Name: up_cpu_gating
@@ -2279,68 +2312,6 @@ int up_rtc_getdatetime(FAR struct tm *tp);
 #ifdef CONFIG_RTC
 int up_rtc_settime(FAR const struct timespec *tp);
 #endif
-
-#ifdef CONFIG_PM
-/****************************************************************************
- * Name: up_pm_board_sleep
- *
- * Description:
- *   Perform IDLE state power management.
- *
- * Input Parameters:
- *   wakeuphandler - The wakeuphandler function that must be called after each board wakeup.
- *
- * Returned Value:
- *   None.
- *
- ****************************************************************************/
-
-void up_pm_board_sleep(void (*wakeuphandler)(clock_t, pm_wakeup_reason_code_t));
-
-/****************************************************************************
- * Name: up_set_dvfs
- *
- * Description:
- *   BSP operation called from wrapper API pm_dvfs() to reduce the clock
- *   frequency of CPU core. It can be applied on some scenario which when low
- *	 loading activity is expected, we can invoke this API to wind down
- *   CPU cores with high operating frequency, to enhance the effectiveness
- *	 for power saving.
- *
- * Input Parameters:
- *   div_lvl - voltage frequency scaling level
- *
- * Returned Value:
- *   None.
- *
- ****************************************************************************/
-#ifdef CONFIG_PM_DVFS
-void up_set_dvfs(int div_lvl);
-#endif
-
-/****************************************************************************
- * Name: up_set_pm_timer
- *
- * Description:
- *   This function starts the hw timer registered as a wakeup source
- *   for power management. If the board is asleep at the expiration time
- *   of the set timer, the board is awakened by the hw timer interrupt.
- *
- *   NOTE: This timer is automatically canceled when the board wakes up
- *   for other wakeup source, even if the time is not expired.
- *
- * Input Parameters:
- *   interval_us - time to wake up in microseconds.
- *
- * Returned Value:
- *   None.
- *
- ****************************************************************************/
-#ifdef CONFIG_PM_TIMEDWAKEUP
-void up_set_pm_timer(unsigned int interval_us);
-#endif
-
-#endif /* CONFIG_PM */
 
 /****************************************************************************
  * Board-specific button interfaces exported by the board-specific logic
