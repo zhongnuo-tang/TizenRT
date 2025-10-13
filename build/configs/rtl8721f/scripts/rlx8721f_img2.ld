@@ -51,7 +51,7 @@
 
 OUTPUT_ARCH(arm)
 ENTRY(app_start)
-
+ 
 MEMORY
 {
     EMPTY_SECTION (rwx) : ORIGIN = 0x00000000, LENGTH = 0x00000000 - 0x00000000
@@ -97,7 +97,7 @@ MEMORY
     BTRACE (rx) : ORIGIN = 0xC8800000, LENGTH = 0xC9000000 - 0xC8800000
     CTRACE (rx) : ORIGIN = 0xCA000000, LENGTH = 0xCA7FFFFF - 0xCA000000
 }
-
+ 
 __ipc_memory_start__ = ORIGIN(KM4NS_IPC_RAM);
 __km4ns_flash_text_start__ = ORIGIN(KM4NS_IMG2_XIP);
 __km4ns_flash_text_end__ = ORIGIN(KM4NS_IMG2_XIP) + LENGTH(KM4NS_IMG2_XIP);
@@ -110,7 +110,7 @@ __km4tz_img3_text_end__ = ORIGIN(KM4TZ_IMG3_XIP) + LENGTH(KM4TZ_IMG3_XIP);
 __km4tz_bd_ram_start__ = ORIGIN(KM4TZ_BD_RAM) - 0x20;
 __km4tz_bd_psram_start__ = ORIGIN(KM4TZ_BD_PSRAM) - 0x20;
 __non_secure_psram_end__ = (0x60400000);
-
+ 
 SECTIONS
 {
     /* xip part */
@@ -123,7 +123,7 @@ SECTIONS
         . = ALIGN(32);
         __flash_text_end__ = .;
     } > KM4TZ_IMG2_XIP
-
+ 
     /* sram part */
     .sram_image2.text.data ORIGIN(KM4TZ_BD_RAM):
     {
@@ -140,14 +140,14 @@ SECTIONS
         __sram_image2_end__ = .;
         . = ALIGN(32);
     } > KM4TZ_BD_RAM
-
+ 
     /* image2: normal image start */
     .psram_image2.text.data ORIGIN(KM4TZ_BD_PSRAM):
     {
         __psram_image2_start__ = .;
         __psram_image2_end__ = .;
     } > KM4TZ_BD_PSRAM
-
+ 
     /* text section */
     .xip_image2.text :
     {
@@ -155,10 +155,10 @@ SECTIONS
         *(.img2_custom_signature*)
         *(.image2.net.ram.text*)
         *(.timesensitive.text*)
-
+ 
         *(.text*)
         *(.rodata*)
-
+ 
         . = ALIGN (4);
         __cmd_table_start__ = .;
         KEEP(*(.cmd.table.data*))
@@ -171,7 +171,7 @@ SECTIONS
         __git_ver_table_start__ = .;
         KEEP(*(.git.ver.data))
         __git_ver_table_end__ = .;
-
+ 
         /* Add This for C++ support */
         . = ALIGN(4);
         __c_plus_plus_support_start__ = .;
@@ -190,23 +190,23 @@ SECTIONS
         __fini_array_end = .;
         __c_plus_plus_support_end__ = .;
         __image2_backtrace_end__ = .;
-
+ 
         . = ALIGN (32);
     } > KM4TZ_IMG2_XIP
-
+ 
     /* C++ .ARM.extab/.ARM.exidx address shall same as *(.text*) */
     .ARM.extab :
     {
         *(.ARM.extab* .gnu.linkonce.armextab.*)
     } > KM4TZ_BD_RAM
-
+ 
     .ARM.exidx :
     {
         __exidx_start = .;
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
         __exidx_end = .;
     } > KM4TZ_BD_RAM
-
+ 
     .sram_image2.text.data :
     {
         *(.timesensitive.data*)
@@ -215,7 +215,7 @@ SECTIONS
         /*cache line size aligned in order to avoid MMU remap err*/
         . = ALIGN(32);
     } > KM4TZ_BD_RAM
-
+ 
     
     /* TIZENRT REQUIREMENT: BSS section with start/end markers */
     .ram_image2.bss (NOLOAD):
@@ -225,9 +225,9 @@ SECTIONS
 		*(.bss*)
 		*(COMMON)
 		__bss_end__ = .;
-		_ebss = ABSOLUTE(.);           /* TIZENRT: End+1 of .bss section */
+        _ebss = ABSOLUTE(.);           /* TIZENRT: End+1 of .bss section */
+        
 	} > KM4TZ_BD_RAM
-    
     .ram_image2.bd.data (NOLOAD):
 	{
 		. = ALIGN (32);
@@ -236,7 +236,7 @@ SECTIONS
 		. = ALIGN (32);
 		__ram_bd_end__ = .;
 	} > KM4TZ_BD_RAM
-
+ 
     .ram_image2.nocache.data (NOLOAD):
 	{
 		. = ALIGN (32);
@@ -246,53 +246,41 @@ SECTIONS
 		__ram_nocache_end__ = .;
 	} > KM4TZ_BD_RAM
 
+ 
     /* TIZENRT: Internal RAM heap */
 	.bdram_heap.start (NOLOAD):
 	{
         _sint_heap = ABSOLUTE(.);      /* TIZENRT: Start of heap in internal RAM */
 		__bdram_heap_buffer_start__ = .;
 	} > KM4TZ_BD_RAM
-
-    /* TIZENRT: Stack at end of internal RAM */
-    .idle_stack (NOLOAD):
-    {
-         . = ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM) - CONFIG_IDLETHREAD_STACKSIZE;
-        _sidle_stack = ABSOLUTE(.);
-        . = . + CONFIG_IDLETHREAD_STACKSIZE;
-        . = ALIGN(4);
-    } > KM4TZ_BD_RAM
-
+ 
     /* TIZENRT: PSRAM heap */
 	.psram_heap.start (NOLOAD):
 	{
         _sext_heap = ABSOLUTE(.);      /* TIZENRT: Start of heap in external RAM */
 		__psram_heap_buffer_start__ = .;
 	} > KM4TZ_BD_PSRAM
-
+ 
     .bluetooth_trace.text :
 	{
 		__btrace_start__ = .;
 		*(.BTTRACE)
 		__btrace_end__ = .;
 	} > BTRACE
-
+ 
 	.coex_trace.text :
 	{
 		__ctrace_start__ = .;
 		*(.COEXTRACE)
 		__ctrace_end__ = .;
 	} > CTRACE
-
-    /* TIZENRT: Stack and heap limits - split by memory region */
-    .stack_heap_limits_internal (NOLOAD):
-    {
-        __StackLimit = ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM);
-    } > KM4TZ_BD_RAM
-
+ 
     .stack_heap_limits_psram (NOLOAD):
     {
         __PsramStackLimit = ORIGIN(KM4TZ_BD_PSRAM) + LENGTH(KM4TZ_BD_PSRAM);
     } > KM4TZ_BD_PSRAM
+	_sidle_stack = ABSOLUTE(ORIGIN(KM4TZ_MSP_RAM_NS) + LENGTH(KM4TZ_MSP_RAM_NS)) - CONFIG_IDLETHREAD_STACKSIZE;
+	__StackLimit = ABSOLUTE(ORIGIN(KM4TZ_BD_RAM) + LENGTH(KM4TZ_BD_RAM));
 }
 
 /* Assertions */
@@ -306,7 +294,7 @@ ASSERT(__StackLimit >= _sint_heap, "region data overflowed with stack and heap")
 
 /* Heap size calculations */
 __bdram_heap_buffer_size__ = _sidle_stack - _sint_heap;
-__psram_heap_buffer_size__ = ORIGIN(KM4TZ_BD_PSRAM) + LENGTH(KM4TZ_BD_PSRAM) - __psram_heap_buffer_start__;
+/*__psram_heap_buffer_size__ = ORIGIN(KM4TZ_BD_PSRAM) + LENGTH(KM4TZ_BD_PSRAM) - __psram_heap_buffer_start__;*/
 SECTIONS
 {
     PROVIDE(__retrieve_ap_buffer_size__ = 0xf40);
