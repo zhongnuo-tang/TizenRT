@@ -382,8 +382,13 @@ void PSRAM_CTRL_Init(void)
 	psram_ctrl->TPR2 = (PDE_CS_H_CNT(CAL_PDEX_CS_H_CNT(40, PsramInfo.Psram_PDE_TIME)) | \
 						PDX_CS_H_CNT(CAL_PDEX_CS_H_CNT(40, PsramInfo.Psram_PDX_TIME)));
 
-	if (PsramInfo.Psram_Vendor == MEM_PSRAM_WB) {
-		if (PsramInfo.Psram_DQ16 == PSRAM_DEVICE_DQ16) {
+	/*disable CGATE_EN_PDEX,  let pdex clk freerun.*/
+	if ((EFUSE_GetChipVersion()) == SYSCFG_CUT_VERSION_A) {
+		psram_ctrl->ICG_EN &= ~BIT_CGATE_EN_PDEX;
+	}
+
+	if (PsramInfo.Psram_Vendor == MCM_PSRAM_VENDOR_WB) {
+		if (PsramInfo.Psram_DQ16 == MCM_PSRAM_DQ16) {
 			/*0x134 set page size , channel number and cmd type*/
 			psram_ctrl->DEVICE_INFO = BIT_DATA_UNIT_4B | BIT_DQ16_DATA_CH | BIT_JEDEC_P2CMF | BIT_PSRAM | ATOM_SIZE(0x2) | BIT_RD_PAGE_EN | \
 									  BIT_WR_PAGE_EN | PAGE_SIZE(PsramInfo.Psram_Page_size);
@@ -929,14 +934,8 @@ NON_DRAM_TEXT_SECTION
 void PSRAM_HalfSleep_PDEX(u32 NewState)
 {
 	u32 psram_ctrl;
-	u32 chipinfo = 0;
-	SPIC_TypeDef *psram_type = PSRAMC_DEV;
+	u32 psramtype = 0;
 	RRAM_TypeDef *rram = RRAM_DEV;
-
-	/*disable CGATE_EN_PDEX,  let pdex clk freerun*/
-	if ((SYSCFG_RLVersion()) == SYSCFG_CUT_VERSION_A) {
-		psram_type->ICG_EN &= ~BIT_CGATE_EN_PDEX;
-	}
 
 	/*polling pdex_ack, avoid pdex_cmd conflict*/
 	PSRAM_CHECK_WITH_TIMEOUT((LSYS_GET_PSRAM_PDEX_REQ(HAL_READ32(SYSTEM_CTRL_BASE, REG_LSYS_PSRAMC_FLASH_CTRL)) == 0x0), 0xFFFFFF);
