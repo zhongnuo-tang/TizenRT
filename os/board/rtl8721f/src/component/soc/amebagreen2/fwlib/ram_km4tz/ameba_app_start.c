@@ -27,7 +27,7 @@ extern void arm_gic_set_CUTVersion(uint32_t CUTVersion);
 #endif
 
 static const char *TAG = "APP";
-
+static u32 g_mpu_nregion_allocated;
 extern int main(void);
 extern void NS_ENTRY BOOT_IMG3(void);
 extern void SOCPS_WakeFromPG_AP(void);
@@ -91,7 +91,7 @@ u32 app_mpu_nocache_init(void)
 	if (mpu_cfg.region_size >= 32) {
 		mpu_region_cfg(mpu_entry, &mpu_cfg);
 	}
-
+	g_mpu_nregion_allocated = mpu_entry + 1;
 	return 0;
 }
 
@@ -102,7 +102,8 @@ void _init(void) {}
 #endif
 #endif
 
-
+SRAM_ONLY_DATA_SECTION
+HAL_VECTOR_FUN RamVectorTable[95] ALIGNMTO(512) = {0};
 extern unsigned int _sidle_stack;
 extern unsigned int _sint_heap;
 extern unsigned int _sext_heap;
@@ -142,7 +143,8 @@ void app_start(void)
 	/* enable non-secure cache */
 	Cache_Enable(ENABLE);
 #endif
-
+	lldbg("%d %x\n",__LINE__,up_getsp());
+	
 	/* Rom Bss NS Initial */
 	_memset((void *) __rom_bss_start_ns__, 0, (__rom_bss_end_ns__ - __rom_bss_start_ns__));
 	/* Image2 Bss Initial */
@@ -151,14 +153,21 @@ void app_start(void)
 	RBSS_UDELAY_DIV = 5;
 
 	/* When TZ not enabled, re-init pendsv/svcall/systick in the non-secure vector table for OS.*/
-	SCB->VTOR = (u32)RomVectorTable;
-
-#ifdef CONFIG_TRUSTZONE
+	// SCB->VTOR = (u32)RomVectorTable;
+	_memset(RamVectorTable, 0, sizeof(RamVectorTable));
+	_memcpy(RamVectorTable, RomVectorTable, sizeof(RamVectorTable));
+	RamVectorTable[0] = (HAL_VECTOR_FUN)MSP_RAM_HP_NS;
+	SCB->VTOR = (u32)RamVectorTable;
+	// __set_MSP(MSP_RAM_HP_NS);
+	lldbg("%d %x\n",__LINE__,SCB->VTOR);
+	lldbg("%d %x\n",__LINE__,up_getsp());
+	lldbg("NS MSP: %x\n", __get_MSP());
+//#ifdef CONFIG_TRUSTZONE
 	BOOT_IMG3();
 
 	cmse_address_info_t cmse_address_info = cmse_TT((void *)app_start);
 	RTK_LOGI(TAG, "IMG2 SECURE STATE: %d\n", cmse_address_info.flags.secure);
-#endif
+//#endif
 	data_flash_highspeed_setup();
 	SystemCoreClockUpdate();
 	//RTK_LOGI(TAG, "AP CPU CLK: %lu Hz \n", SystemCoreClock);
@@ -170,11 +179,24 @@ void app_start(void)
 		}
 
 	}
+		// force SP align to 8 byte not 4 byte (initial SP is 4 byte align)
+	__asm(
+		"mov r0, sp\n"
+		"bic r0, r0, #7\n"
+		"mov sp, r0\n"
+	);
 	os_heap_init();
 	XTAL_INIT();
 	mpu_init();
 	app_mpu_nocache_init();
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+#ifdef CONFIG_ARMV8M_MPU
+	/* Initialize number of mpu regions for board specific purpose */
+	mpu_set_nregion_board_specific(g_mpu_nregion_allocated);
 
+	up_mpuinitialize();
+#endif
+#endif
 #ifdef CONFIG_STACK_COLORATION
 	/* Set the IDLE stack to the coloration value and jump into os_start() */
 
