@@ -117,7 +117,7 @@ function concatenate_binary_without_signing()
  	# $GNUUTL/rmcert.sh $GNUUTL/km4ns_image2_all_temp.bin
  	# $GNUUTL/pad.sh $GNUUTL/km4ns_image2_all_temp.bin
  	# cat $GNUUTL/cert.bin $GNUUTL/km4ns_image2_all_temp.bin $BINDIR/km4tz_image2_all.bin > $BINDIR/amebagreen2_app.bin
- 	cat $GNUUTL/app_cert.bin $GNUUTL/manifest_app.bin $GNUUTL/km4ns_image2_all.bin $BINDIR/km4tz_image2_all.bin > $BINDIR/amebagreen2_app.bin
+ 	cat $GNUUTL/app_cert.bin $GNUUTL/manifest_app.bin $GNUUTL/km4ns_image2_all.bin $BINDIR/km4tz_image2_all.bin $BINDIR/km4tz_image3_all.bin > $BINDIR/amebagreen2_app.bin
  	#rm -rf $GNUUTL/km4ns_image2_all_temp.bin
 
 }
@@ -156,6 +156,24 @@ function copy_flashloader()
 #*****************************************************************************#
 #              COPY km0_km4_image_all into bin output folder                       #
 #*****************************************************************************#
+function copy_km4_image3()
+{
+	if [ ! -f ${CONFIG} ];then
+		echo "No .config file"
+		exit 1
+	fi
+
+	source ${CONFIG}
+	
+	echo "========== Copy km4tz_image3_all into bin output folder=========="
+	if [ ! -f $GNUUTL/km4tz_image3_all.bin ];then
+		echo "No km4tz_image3_all.bin"
+		exit 1
+	fi
+	cp $GNUUTL/km4tz_image3_all.bin $BINDIR/km4tz_image3_all.bin
+	# if [ "${CONFIG_AMEBAGREEN2_TRUSTZONE}" == "y" ];then
+	# fi
+}
 function copy_km0_km4_image()
 {
 	if [ ! -f ${CONFIG} ];then
@@ -197,6 +215,7 @@ function remove_large_binary_temp()
 copy_bootloader;
 copy_flashloader;
 copy_km0_km4_image;
+copy_km4_image3;
 if [ "${CONFIG_BINARY_SIGNING}" == "y" ];then
 	concatenate_binary_with_signing;
 
