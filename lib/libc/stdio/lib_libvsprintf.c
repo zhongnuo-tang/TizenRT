@@ -987,9 +987,11 @@ str_lpad:
 			prec--;
 		}
 
-		while (c) {
-			putc(buf[--c], stream);
-		}
+		int temp = c;
+		while (temp) {
+			temp -= 1;
+			putc(buf[temp], stream);
+		}    
 
 tail:
 

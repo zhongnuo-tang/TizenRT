@@ -67,8 +67,8 @@ MEMORY
     KM4TZ_ROMBSS_RAM_S (rw) : ORIGIN = 0x30000000, LENGTH = 0x30000600 - 0x30000000
     KM4TZ_MSP_RAM_S (rw) : ORIGIN = 0x30000600, LENGTH = 0x30001000 - 0x30000600
     KM4TZ_ROMBSS_RAM_NS (rw) : ORIGIN = 0x20001000, LENGTH = 0x20002400 - 0x20001000
-    KM4TZ_MSP_RAM_NS (rw) : ORIGIN = 0x20002400, LENGTH = 0x20003000 - 0x20002400
     KM4NS_ROMBSS_MMU (rw) : ORIGIN = 0x20001000, LENGTH = 0x20002400 - 0x20001000
+    KM4TZ_MSP_RAM_NS (rw) : ORIGIN = 0x20002400, LENGTH = 0x20003000 - 0x20002400
     KM4NS_ROMBSS_RAM (rw) : ORIGIN = 0x20003000, LENGTH = 0x20004400 - 0x20003000
     KM4NS_MSP_RAM (rw) : ORIGIN = 0x20004600, LENGTH = 0x20005000 - 0x20004600
     KM4NS_IPC_RAM (rwx) : ORIGIN = 0x20004400, LENGTH = 0x20004600 - 0x20004400
@@ -227,7 +227,6 @@ SECTIONS
 	} > KM4TZ_BD_RAM
 
     /*-----------------*/
-    
 	.ram_image2.bss (NOLOAD):
 	{
         _sbss = ABSOLUTE(.);
@@ -247,7 +246,6 @@ SECTIONS
 		. = ALIGN (32);
 		__ram_bd_end__ = .;
 	} > KM4TZ_BD_RAM
- 
 	.ram_image2.nocache.data (NOLOAD):
 	{
 		. = ALIGN (32);
@@ -304,8 +302,6 @@ ASSERT(__psram_image2_start__ == ORIGIN(KM4TZ_BD_PSRAM), "__psram_image2_start__
 /* TIZENRT: Safety assertions */
 ASSERT(__StackLimit >= _sint_heap, "region data overflowed with stack and heap")
 
-/* Heap size calculations */
-__bdram_heap_buffer_size__ = _sidle_stack - _sint_heap;
 /*__psram_heap_buffer_size__ = ORIGIN(KM4TZ_BD_PSRAM) + LENGTH(KM4TZ_BD_PSRAM) - __psram_heap_buffer_start__;*/
 SECTIONS
 {

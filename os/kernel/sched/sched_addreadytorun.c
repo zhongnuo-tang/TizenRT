@@ -116,15 +116,24 @@
  *   the head of the ready-to-run list is changed.
  *
  ****************************************************************************/
+extern FAR struct task_tcb_s  g_idletcb[CONFIG_SMP_NCPUS];
 
 #ifndef CONFIG_SMP
 bool sched_addreadytorun(FAR struct tcb_s *btcb)
 {
 	FAR struct tcb_s *rtcb = this_task();
 	bool ret;
+	// void *caller = __builtin_return_address(0);
+    // lldbg("Caller address: %p\n", caller);
+	// lldbg("rtcb %x , btcb %x\n", *rtcb, *btcb);
+	// lldbg("btcb->stack_base_ptr %x,rtcb->stack_base_ptr %x \n",btcb->stack_base_ptr,rtcb->stack_base_ptr);
+	// lldbg("btcb->adj_stack_ptr %x,rtcb->adj_stack_ptr %x\n",btcb->adj_stack_ptr,rtcb->adj_stack_ptr);
+	// lldbg("btcb->adj_stack_size %x, rtcb->adj_stack_size %x\n",btcb->adj_stack_size,rtcb->adj_stack_size);
 
+	// lldbg("this_task() -> %p, &g_idletcb[0] = %p, g_readytorun.head = %p\n", this_task(), &g_idletcb[0], g_readytorun.head);
+	// lldbg("g_idletcb[0].stack_alloc_ptr=%08x g_idletcb[0].stack_base_ptr=%08x adj_stack_ptr=%08x\n",g_idletcb[0].cmn.stack_alloc_ptr,g_idletcb[0].cmn.stack_base_ptr, g_idletcb[0].cmn.adj_stack_ptr);
 #ifdef CONFIG_SW_STACK_OVERFLOW_DETECTION
-	sched_checkstackoverflow(rtcb);
+	// sched_checkstackoverflow(rtcb);
 #endif
 	/* Check if pre-emption is disabled for the current running task and if
 	 * the new ready-to-run task would cause the current running task to be

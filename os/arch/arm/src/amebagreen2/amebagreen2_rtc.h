@@ -17,7 +17,7 @@
  ****************************************************************************/
 /****************************************************************************
  *
- *   Copyright (C) 2020 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2021 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,101 +53,59 @@
  * Included Files
  ****************************************************************************/
 
+#ifndef __ARCH_ARM_SRC_amebagreen2_RTC_H
+#define __ARCH_ARM_SRC_amebagreen2_RTC_H
+
 #include <tinyara/config.h>
-
-#include <stdint.h>
-#include <time.h>
-#include <debug.h>
-#include <tinyara/arch.h>
-#include <arch/board/board.h>
-
-#include "nvic.h"
-#include "clock/clock.h"
-#include "up_internal.h"
-#include "up_arch.h"
 
 #include "chip.h"
 
-/*----------------------------------------------------------------------------
-  Clock Variable definitions
- *----------------------------------------------------------------------------*/
-extern uint32_t SystemCoreClock;
+#ifdef CONFIG_RTC
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Preprocessor Definitions
  ****************************************************************************/
 
-/* The desired timer interrupt frequency is provided by the definition
- * CLK_TCK (see include/time.h).  CLK_TCK defines the desired number of
- * system clock ticks per second.  That value is a user configurable setting
- * that defaults to 100 (100 ticks per second = 10 MS interval).
- *
- */
+#ifdef CONFIG_RTC_DATETIME
+#error CONFIG_RTC_DATETIME should not be selected with this driver
+#endif
 
-/* The size of the reload field is 24 bits.  Verify that the reload value
- * will fit in the reload register.
- */
-
-#define SYSTICK_RELOAD ((SystemCoreClock / CLK_TCK) - 1)
-
-#if SYSTICK_RELOAD > 0x00ffffff
-#  error SYSTICK_RELOAD exceeds the range of the RELOAD register
+#ifdef CONFIG_RTC_PERIODIC
+#error CONFIG_RTC_PERIODIC should not be selected with this driver
 #endif
 
 /****************************************************************************
- * Private Functions
+ * Private Types
  ****************************************************************************/
 
 /****************************************************************************
- * Function:  amebagreen2_timerisr
- *
- * Description:
- *   The timer ISR will perform a variety of services for various portions
- *   of the systems.
- *
+ * Public Data
  ****************************************************************************/
-
-int up_timerisr(int irq, uint32_t *regs)
-{
-    /* Process timer interrupt */
-    sched_process_timer();
-    
-    return 0;
-}
 
 /****************************************************************************
- * Function:  up_timer_initialize
- *
- * Description:
- *   This function is called during start-up to initialize
- *   the timer interrupt.
- *
+ * Public Function Prototypes
  ****************************************************************************/
 
-void up_timer_initialize(void)
-{
-  //lldbg("enter up_timer_initialize \n");
-  
-  /* Add delay to see if timing is issue */
-  up_mdelay(10);
-  
-#ifdef CONFIG_ARCH_IRQPRIO
-  up_prioritize_irq(AMEBAGREEN2_IRQ_SYSTICK, NVIC_SYSH_PRIORITY_DEFAULT);
+#ifndef __ASSEMBLY__
+
+#undef EXTERN
+#if defined(__cplusplus)
+#define EXTERN extern "C"
+extern "C" {
 #else
-  uint32_t regval;
-  regval = getreg32(NVIC_SYSH12_15_PRIORITY);
-  regval &= ~NVIC_SYSH_PRIORITY_PR15_MASK;
-  regval |= (NVIC_SYSH_PRIORITY_MIN << NVIC_SYSH_PRIORITY_PR15_SHIFT);
-  putreg32(regval, NVIC_SYSH12_15_PRIORITY);
+#define EXTERN extern
 #endif
 
-  putreg32(0, NVIC_SYSTICK_CTRL);
-  putreg32(0, NVIC_SYSTICK_CURRENT);
+#ifdef CONFIG_RTC_DRIVER
+struct rtc_lowerhalf_s;
+FAR struct rtc_lowerhalf_s *amebagreen2_rtc_lowerhalf(void);
+#endif
 
-  putreg32(SYSTICK_RELOAD, NVIC_SYSTICK_RELOAD);
-
-  (void)irq_attach(AMEBAGREEN2_IRQ_SYSTICK, (xcpt_t)up_timerisr, NULL);
-
-  putreg32((NVIC_SYSTICK_CTRL_CLKSOURCE | NVIC_SYSTICK_CTRL_TICKINT |
-            NVIC_SYSTICK_CTRL_ENABLE), NVIC_SYSTICK_CTRL);
+#undef EXTERN
+#if defined(__cplusplus)
 }
+#endif
+#endif							/* __ASSEMBLY__ */
+
+#endif							/* CONFIG_RTC */
+#endif							/* __ARCH_ARM_SRC_amebagreen2_RTC_H */

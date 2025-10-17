@@ -119,7 +119,7 @@ bool sched_removereadytorun(FAR struct tcb_s *rtcb)
 	tasklist = TLIST_HEAD(rtcb->task_state);
 
 #ifdef CONFIG_SW_STACK_OVERFLOW_DETECTION
-	sched_checkstackoverflow(rtcb);
+	// sched_checkstackoverflow(rtcb);
 #endif
 
 	/* Check if the TCB to be removed is at the head of the ready to run list.

@@ -34,6 +34,9 @@
 #ifdef CONFIG_AMEBALITE_TRUSTZONE
 #include <arch/chip/amebalite_nsc.h>
 #endif
+#ifdef CONFIG_AMEBAGREEN2_TRUSTZONE
+#include <arch/chip/amebagreen2_nsc.h>
+#endif
 #include <device_lock.h>
 
 static uint8_t *ns_buf = NULL;

@@ -1,0 +1,424 @@
+diff --git a/build/configs/rtl8721f/flat_apps/defconfig b/build/configs/rtl8721f/flat_apps/defconfig
+index b9ac679d6..3b0d7692b 100644
+--- a/build/configs/rtl8721f/flat_apps/defconfig
++++ b/build/configs/rtl8721f/flat_apps/defconfig
+@@ -120,7 +120,7 @@ CONFIG_ARMV8M_HAVE_ICACHE=y
+ CONFIG_ARMV8M_HAVE_DCACHE=y
+ # CONFIG_ARMV8M_LAZYFPU is not set
+ CONFIG_ARMV8M_USEBASEPRI=y
+-CONFIG_ARMV8M_TRUSTZONE=n
++CONFIG_ARMV8M_TRUSTZONE=y
+ CONFIG_ARMV8M_ICACHE=y
+ CONFIG_ARMV8M_DCACHE=y
+ # CONFIG_ARMV8M_DCACHE_WRITETHROUGH is not set
+@@ -179,7 +179,7 @@ CONFIG_RTL8721F_SERIAL_FIFO=y
+ #
+ # Realtek RTL8721F TrustZone Support
+ #
+-# CONFIG_AMEBAGREEN2_TRUSTZONE is not set
++CONFIG_AMEBAGREEN2_TRUSTZONE=y
+ 
+ #
+ # CONFIG Link Option
+@@ -258,9 +258,8 @@ CONFIG_BOOT_RUNFROMSDRAM=y
+ #
+ # Boot Memory Configuration
+ #
+-CONFIG_RAM_KREGIONx_START="0x20006020,0x60000020,"
+-CONFIG_RAM_KREGIONx_SIZE="303136,3297248,"
+-CONFIG_RAM_KREGIONx_HEAP_INDEX="0,1,"
++CONFIG_RAM_KREGIONx_START="0x20006020,"
++CONFIG_RAM_KREGIONx_SIZE="303136,"
+ # CONFIG_DDR is not set
+ # CONFIG_ARCH_HAVE_SDRAM is not set
+ 
+@@ -1031,8 +1030,8 @@ CONFIG_MTD_SMART_JOURNALING=y
+ CONFIG_MM_KERNEL_HEAP=y
+ # CONFIG_REALLOC_DISABLE_NEIGHBOR_EXTENSION is not set
+ # CONFIG_MM_SMALL is not set
+-CONFIG_KMM_REGIONS=2
+-CONFIG_KMM_NHEAPS=2
++CONFIG_KMM_REGIONS=1
++CONFIG_KMM_NHEAPS=1
+ # CONFIG_GRAN is not set
+ CONFIG_MM_ASSERT_ON_FAIL=y
+ # CONFIG_MM_DUMP_CORRPUTED_HEAP is not set
+@@ -1083,7 +1082,7 @@ CONFIG_DEBUG_LOGDUMP_ERROR=y
+ CONFIG_DEBUG_BLE=y
+ CONFIG_DEBUG_BLE_ERROR=y
+ # CONFIG_DEBUG_PM is not set
+-# CONFIG_DEBUG_SCHED is not set
++CONFIG_DEBUG_SCHED=y
+ # CONFIG_DEBUG_TASH is not set
+ 
+ #
+diff --git a/build/configs/rtl8721f/flat_dev_ddr/defconfig b/build/configs/rtl8721f/flat_dev_ddr/defconfig
+index 1a8ea1763..eb9677b89 100644
+--- a/build/configs/rtl8721f/flat_dev_ddr/defconfig
++++ b/build/configs/rtl8721f/flat_dev_ddr/defconfig
+@@ -208,7 +208,7 @@ CONFIG_AMEBASMART_BLE_SCATTERNET=y
+ #
+ # Realtek RTL8730E TrustZone Support
+ #
+-CONFIG_AMEBASMART_TRUSTZONE=y
++CONFIG_AMEBAGREEN2_TRUSTZONE=y
+ 
+ #
+ # Realtek RTL8730E KM4/KM0 Status Check Timer
+diff --git a/build/configs/rtl8721f/scripts/rlx8721f_img2.ld b/build/configs/rtl8721f/scripts/rlx8721f_img2.ld
+index 3935d770a..3d50bcbc9 100644
+--- a/build/configs/rtl8721f/scripts/rlx8721f_img2.ld
++++ b/build/configs/rtl8721f/scripts/rlx8721f_img2.ld
+@@ -67,8 +67,8 @@ MEMORY
+     KM4TZ_ROMBSS_RAM_S (rw) : ORIGIN = 0x30000000, LENGTH = 0x30000600 - 0x30000000
+     KM4TZ_MSP_RAM_S (rw) : ORIGIN = 0x30000600, LENGTH = 0x30001000 - 0x30000600
+     KM4TZ_ROMBSS_RAM_NS (rw) : ORIGIN = 0x20001000, LENGTH = 0x20002400 - 0x20001000
+-    KM4TZ_MSP_RAM_NS (rw) : ORIGIN = 0x20002400, LENGTH = 0x20003000 - 0x20002400
+     KM4NS_ROMBSS_MMU (rw) : ORIGIN = 0x20001000, LENGTH = 0x20002400 - 0x20001000
++    KM4TZ_MSP_RAM_NS (rw) : ORIGIN = 0x20002400, LENGTH = 0x20003000 - 0x20002400
+     KM4NS_ROMBSS_RAM (rw) : ORIGIN = 0x20003000, LENGTH = 0x20004400 - 0x20003000
+     KM4NS_MSP_RAM (rw) : ORIGIN = 0x20004600, LENGTH = 0x20005000 - 0x20004600
+     KM4NS_IPC_RAM (rwx) : ORIGIN = 0x20004400, LENGTH = 0x20004600 - 0x20004400
+@@ -227,7 +227,6 @@ SECTIONS
+ 	} > KM4TZ_BD_RAM
+ 
+     /*-----------------*/
+-    
+ 	.ram_image2.bss (NOLOAD):
+ 	{
+         _sbss = ABSOLUTE(.);
+@@ -247,7 +246,6 @@ SECTIONS
+ 		. = ALIGN (32);
+ 		__ram_bd_end__ = .;
+ 	} > KM4TZ_BD_RAM
+- 
+ 	.ram_image2.nocache.data (NOLOAD):
+ 	{
+ 		. = ALIGN (32);
+@@ -304,8 +302,6 @@ ASSERT(__psram_image2_start__ == ORIGIN(KM4TZ_BD_PSRAM), "__psram_image2_start__
+ /* TIZENRT: Safety assertions */
+ ASSERT(__StackLimit >= _sint_heap, "region data overflowed with stack and heap")
+ 
+-/* Heap size calculations */
+-__bdram_heap_buffer_size__ = _sidle_stack - _sint_heap;
+ /*__psram_heap_buffer_size__ = ORIGIN(KM4TZ_BD_PSRAM) + LENGTH(KM4TZ_BD_PSRAM) - __psram_heap_buffer_start__;*/
+ SECTIONS
+ {
+diff --git a/lib/libc/stdio/lib_libvsprintf.c b/lib/libc/stdio/lib_libvsprintf.c
+index 5dd8d1481..4b125ca9c 100644
+--- a/lib/libc/stdio/lib_libvsprintf.c
++++ b/lib/libc/stdio/lib_libvsprintf.c
+@@ -987,9 +987,11 @@ str_lpad:
+ 			prec--;
+ 		}
+ 
+-		while (c) {
+-			putc(buf[--c], stream);
+-		}
++		int temp = c;
++		while (temp) {
++			temp -= 1;
++			putc(buf[temp], stream);
++		}    
+ 
+ tail:
+ 
+diff --git a/os/arch/arm/src/amebagreen2/Make.defs b/os/arch/arm/src/amebagreen2/Make.defs
+index 201e1c413..7ff53e5f8 100644
+--- a/os/arch/arm/src/amebagreen2/Make.defs
++++ b/os/arch/arm/src/amebagreen2/Make.defs
+@@ -93,7 +93,7 @@ CMN_CSRCS += up_ramvec_initialize.c up_ramvec_attach.c
+ endif
+ 
+ ifeq ($(CONFIG_ARMV8M_TRUSTZONE),y)
+-#CMN_ASRCS += up_secure_context.S #FIXME
++CMN_ASRCS += up_secure_context.S #FIXME
+ endif
+ 
+ ifeq ($(CONFIG_BUILD_PROTECTED),y)
+@@ -166,7 +166,7 @@ CHIP_CSRCS += amebagreen2_timer_lowerhalf.c
+ CHIP_CSRCS += amebagreen2_serial.c
+ #CHIP_CSRCS += amebagreen2_enet.c
+ #CHIP_CSRCS += amebagreen2_rtc_lowerhalf.c
+-#CHIP_CSRCS += amebagreen2_rtc.c
++CHIP_CSRCS += amebagreen2_rtc.c
+ #CHIP_CSRCS += amebagreen2_watchdog_lowerhalf.c
+ #CHIP_CSRCS += amebagreen2_i2c.c
+ ##CHIP_CSRCS += amebagreen2_i2s.c
+@@ -183,7 +183,7 @@ ifeq ($(CONFIG_BINARY_SIGNING),y)
+ endif
+ 
+ ifeq ($(CONFIG_AMEBAGREEN2_TRUSTZONE),y)
+-#CHIP_CSRCS += amebagreen2_nsc.c
++CHIP_CSRCS += amebagreen2_nsc.c
+ 
+ # trustzone library
+ ifeq ($(CONFIG_ARCH_FPU),y)
+diff --git a/os/arch/arm/src/amebagreen2/amebagreen2_timerisr.c b/os/arch/arm/src/amebagreen2/amebagreen2_timerisr.c
+index c2e460e4c..729e1c3de 100644
+--- a/os/arch/arm/src/amebagreen2/amebagreen2_timerisr.c
++++ b/os/arch/arm/src/amebagreen2/amebagreen2_timerisr.c
+@@ -109,7 +109,6 @@ extern uint32_t SystemCoreClock;
+ 
+ int up_timerisr(int irq, uint32_t *regs)
+ {
+-  //lldbg("enter\n");
+     /* Process timer interrupt */
+     sched_process_timer();
+     
+diff --git a/os/board/rtl8721f/src/component/soc/amebagreen2/fwlib/ram_common/Make.defs b/os/board/rtl8721f/src/component/soc/amebagreen2/fwlib/ram_common/Make.defs
+index c2638a6c5..a0a815ec3 100644
+--- a/os/board/rtl8721f/src/component/soc/amebagreen2/fwlib/ram_common/Make.defs
++++ b/os/board/rtl8721f/src/component/soc/amebagreen2/fwlib/ram_common/Make.defs
+@@ -49,7 +49,7 @@
+ #
+ ############################################################################
+ ifeq ($(CONFIG_AMEBAGREEN2_TRUSTZONE),y)
+-CSRCS += ameba_ota.c
++#CSRCS += ameba_ota.c
+ endif
+ 
+ ifeq ($(CONFIG_AMEBAGREEN2_USBDEVICE),y)
+diff --git a/os/board/rtl8721f/src/component/soc/amebagreen2/fwlib/ram_km4tz/ameba_app_start.c b/os/board/rtl8721f/src/component/soc/amebagreen2/fwlib/ram_km4tz/ameba_app_start.c
+index 5f573d709..fc7eff946 100644
+--- a/os/board/rtl8721f/src/component/soc/amebagreen2/fwlib/ram_km4tz/ameba_app_start.c
++++ b/os/board/rtl8721f/src/component/soc/amebagreen2/fwlib/ram_km4tz/ameba_app_start.c
+@@ -50,6 +50,33 @@ u32 app_mpu_nocache_check(u32 mem_addr)
+ 		return FALSE;
+ 	}
+ }
++SRAM_ONLY_DATA_SECTION
++HAL_VECTOR_FUN RamVectorTable[95] ALIGNMTO(512) = {0};
++#ifdef CONFIG_PLATFORM_TIZENRT_OS
++void exception_common(void);
++#endif
++void VectorTableOverride(void)
++{
++#if 0
++	NewVectorTable[3] = (HAL_VECTOR_FUN)INT_HardFault_Patch;
++	NewVectorTable[4] = (HAL_VECTOR_FUN)INT_MemFault_Patch;
++	NewVectorTable[5] = (HAL_VECTOR_FUN)INT_BusFault_Patch;
++	NewVectorTable[6] = (HAL_VECTOR_FUN)INT_UsageFault_Patch;
++#endif
++#ifdef CONFIG_PLATFORM_TIZENRT_OS
++	int i;
++	for(i=3;i<MAX_VECTOR_TABLE_NUM;i++) {
++		RamVectorTable[i] = exception_common;
++	}
++	//NewVectorTable[AMEBALITE_IRQ_HARDFAULT] = (HAL_VECTOR_FUN)HardFault_Handler_ram;
++	//NewVectorTable[AMEBALITE_IRQ_MEMFAULT] = (HAL_VECTOR_FUN)MemManage_Handler_ram;
++	//NewVectorTable[AMEBALITE_IRQ_BUSFAULT] = (HAL_VECTOR_FUN)BusFault_Handler_ram;
++	//NewVectorTable[AMEBALITE_IRQ_USAGEFAULT] = (HAL_VECTOR_FUN)UsageFault_Handler_ram;
++	// NewVectorTable[7] = (HAL_VECTOR_FUN)SecureFault_Handler_ram;
++	SCB->VTOR = (uint32_t)RamVectorTable;
++#endif
++}
++
+ 
+ /*AP have 8 secure mpu entrys & 8 nonsecure mpu entrys*/
+ u32 app_mpu_nocache_init(void)
+@@ -67,7 +94,7 @@ u32 app_mpu_nocache_init(void)
+ 	mpu_cfg.sh = MPU_NON_SHAREABLE;
+ 	mpu_cfg.attr_idx = MPU_MEM_ATTR_IDX_NC;
+ 	mpu_region_cfg(mpu_entry, &mpu_cfg);
+-
++	lldbg("mpu_entry %x\n",mpu_entry);
+ 	/* Currently, open share rom cache for better throughput and fix issue https://jira.realtek.com/browse/RSWLANDIOT-11327 */
+ 	/* close share rom cache. Delay rom section should be cacheable for accurate
+ 	   delay so it is not included. */
+@@ -82,6 +109,7 @@ u32 app_mpu_nocache_init(void)
+ 
+ 	/* set nocache region */
+ 	mpu_entry = mpu_entry_alloc();
++	lldbg("mpu_entry %x\n",mpu_entry);
+ 	mpu_cfg.region_base = (uint32_t)__ram_nocache_start__;
+ 	mpu_cfg.region_size = __ram_nocache_end__ - __ram_nocache_start__;
+ 	mpu_cfg.xn = MPU_EXEC_ALLOW;
+@@ -102,8 +130,7 @@ void _init(void) {}
+ #endif
+ #endif
+ 
+-SRAM_ONLY_DATA_SECTION
+-HAL_VECTOR_FUN RamVectorTable[95] ALIGNMTO(512) = {0};
++
+ extern unsigned int _sidle_stack;
+ extern unsigned int _sint_heap;
+ extern unsigned int _sext_heap;
+@@ -143,7 +170,6 @@ void app_start(void)
+ 	/* enable non-secure cache */
+ 	Cache_Enable(ENABLE);
+ #endif
+-	lldbg("%d %x\n",__LINE__,up_getsp());
+ 	
+ 	/* Rom Bss NS Initial */
+ 	_memset((void *) __rom_bss_start_ns__, 0, (__rom_bss_end_ns__ - __rom_bss_start_ns__));
+@@ -158,16 +184,12 @@ void app_start(void)
+ 	_memcpy(RamVectorTable, RomVectorTable, sizeof(RamVectorTable));
+ 	RamVectorTable[0] = (HAL_VECTOR_FUN)MSP_RAM_HP_NS;
+ 	SCB->VTOR = (u32)RamVectorTable;
+-	// __set_MSP(MSP_RAM_HP_NS);
+-	lldbg("%d %x\n",__LINE__,SCB->VTOR);
+-	lldbg("%d %x\n",__LINE__,up_getsp());
+-	lldbg("NS MSP: %x\n", __get_MSP());
+-//#ifdef CONFIG_TRUSTZONE
++	VectorTableOverride();
++#ifdef CONFIG_AMEBAGREEN2_TRUSTZONE
+ 	BOOT_IMG3();
+-
+ 	cmse_address_info_t cmse_address_info = cmse_TT((void *)app_start);
+ 	RTK_LOGI(TAG, "IMG2 SECURE STATE: %d\n", cmse_address_info.flags.secure);
+-//#endif
++#endif
+ 	data_flash_highspeed_setup();
+ 	SystemCoreClockUpdate();
+ 	//RTK_LOGI(TAG, "AP CPU CLK: %lu Hz \n", SystemCoreClock);
+@@ -179,13 +201,14 @@ void app_start(void)
+ 		}
+ 
+ 	}
+-		// force SP align to 8 byte not 4 byte (initial SP is 4 byte align)
+-	__asm(
+-		"mov r0, sp\n"
+-		"bic r0, r0, #7\n"
+-		"mov sp, r0\n"
+-	);
+ 	os_heap_init();
++	// 	// force SP align to 8 byte not 4 byte (initial SP is 4 byte align)
++	// __asm(
++	// 	"mov r0, sp\n"
++	// 	"bic r0, r0, #7\n"
++	// 	"mov sp, r0\n"
++	// );
++
+ 	XTAL_INIT();
+ 	mpu_init();
+ 	app_mpu_nocache_init();
+diff --git a/os/board/rtl8721f/src/libs/cmse_implib.lib b/os/board/rtl8721f/src/libs/cmse_implib.lib
+index e63aab34e..19fd6ea19 100644
+Binary files a/os/board/rtl8721f/src/libs/cmse_implib.lib and b/os/board/rtl8721f/src/libs/cmse_implib.lib differ
+diff --git a/os/kernel/init/os_start.c b/os/kernel/init/os_start.c
+index 299ca856f..01018b5f6 100644
+--- a/os/kernel/init/os_start.c
++++ b/os/kernel/init/os_start.c
+@@ -382,7 +382,7 @@ uint8_t g_os_initstate;  /* See enum os_initstate_e */
+  * initialization task is responsible for bringing up the rest of the system.
+  */
+ 
+-static FAR struct task_tcb_s  g_idletcb[CONFIG_SMP_NCPUS];
++FAR struct task_tcb_s  g_idletcb[CONFIG_SMP_NCPUS];
+ 
+ /* This is the name of the idle task */
+ 
+@@ -426,7 +426,9 @@ void os_start(void)
+ 	int i;
+ 
+ 	slldbg("Entry\n");
+-
++	for (int i = 0; i < 1<<24; i++){
++		asm("nop");
++	}
+ 	g_os_initstate = OSINIT_BOOT;
+ 
+ 	/* Initialize RTOS Data ************************************************** */
+@@ -655,14 +657,14 @@ void os_start(void)
+ 	g_lastpid = CONFIG_SMP_NCPUS - 1;
+ 
+ 	/* Fill the stack information to Idle task's tcb */
+-lldbg("595\n");
+-DelayMs(10);
+ 	g_idletcb[0].cmn.adj_stack_size = CONFIG_IDLETHREAD_STACKSIZE;
+ 	g_idletcb[0].cmn.stack_alloc_ptr = (void *)(g_idle_topstack - CONFIG_IDLETHREAD_STACKSIZE);
+ 	g_idletcb[0].cmn.adj_stack_ptr = (void *)(g_idle_topstack - 4);
+-lldbg("596\n");
+-DelayMs(10);
+ 	DEBUGASSERT(up_getsp() >= (uint32_t)g_idletcb[0].cmn.stack_alloc_ptr && up_getsp() <= (uint32_t)g_idletcb[0].cmn.adj_stack_ptr);
++	lldbg("g_idle_topstack %x\n",g_idle_topstack);
++	lldbg("g_idletcb[0].cmn.adj_stack_size %d\n",g_idletcb[0].cmn.adj_stack_size);
++	lldbg("g_idletcb[0].cmn.stack_alloc_ptr %x\n",g_idletcb[0].cmn.stack_alloc_ptr);
++	lldbg("g_idletcb[0].cmn.adj_stack_ptr %x\n",g_idletcb[0].cmn.adj_stack_ptr);
+ 
+ 	/* The memory manager is available */
+ 
+@@ -716,7 +718,7 @@ DelayMs(10);
+ 	if (clock_initialize != NULL)
+ #endif
+ 	{
+-		// clock_initialize();
++		clock_initialize();
+ 	}
+ #ifndef CONFIG_DISABLE_POSIX_TIMERS
+ #ifdef CONFIG_HAVE_WEAKFUNCTIONS
+@@ -821,7 +823,6 @@ lldbg("18\n");
+ 		if (i > 0)
+ 		{
+ 			/* Clone stdout, stderr, stdin from the CPU0 IDLE task. */
+-lldbg("19\n");
+ 
+ 			DEBUGVERIFY(group_setuptaskfiles(&g_idletcb[i]));
+ 		}
+@@ -907,7 +908,6 @@ lldbg("22\n");
+ 		pm_idle();
+ #endif
+ 		/* Perform any processor-specific idle state operations */
+-lldbg("23\n");
+ 
+ 		up_idle();
+ 	}
+diff --git a/os/kernel/sched/sched_addreadytorun.c b/os/kernel/sched/sched_addreadytorun.c
+index a133be867..c06aa5e7b 100644
+--- a/os/kernel/sched/sched_addreadytorun.c
++++ b/os/kernel/sched/sched_addreadytorun.c
+@@ -116,15 +116,24 @@
+  *   the head of the ready-to-run list is changed.
+  *
+  ****************************************************************************/
++extern FAR struct task_tcb_s  g_idletcb[CONFIG_SMP_NCPUS];
+ 
+ #ifndef CONFIG_SMP
+ bool sched_addreadytorun(FAR struct tcb_s *btcb)
+ {
+ 	FAR struct tcb_s *rtcb = this_task();
+ 	bool ret;
+-
++	// void *caller = __builtin_return_address(0);
++    // lldbg("Caller address: %p\n", caller);
++	// lldbg("rtcb %x , btcb %x\n", *rtcb, *btcb);
++	// lldbg("btcb->stack_base_ptr %x,rtcb->stack_base_ptr %x \n",btcb->stack_base_ptr,rtcb->stack_base_ptr);
++	// lldbg("btcb->adj_stack_ptr %x,rtcb->adj_stack_ptr %x\n",btcb->adj_stack_ptr,rtcb->adj_stack_ptr);
++	// lldbg("btcb->adj_stack_size %x, rtcb->adj_stack_size %x\n",btcb->adj_stack_size,rtcb->adj_stack_size);
++
++	// lldbg("this_task() -> %p, &g_idletcb[0] = %p, g_readytorun.head = %p\n", this_task(), &g_idletcb[0], g_readytorun.head);
++	// lldbg("g_idletcb[0].stack_alloc_ptr=%08x g_idletcb[0].stack_base_ptr=%08x adj_stack_ptr=%08x\n",g_idletcb[0].cmn.stack_alloc_ptr,g_idletcb[0].cmn.stack_base_ptr, g_idletcb[0].cmn.adj_stack_ptr);
+ #ifdef CONFIG_SW_STACK_OVERFLOW_DETECTION
+-	sched_checkstackoverflow(rtcb);
++	// sched_checkstackoverflow(rtcb);
+ #endif
+ 	/* Check if pre-emption is disabled for the current running task and if
+ 	 * the new ready-to-run task would cause the current running task to be
+diff --git a/os/kernel/sched/sched_removereadytorun.c b/os/kernel/sched/sched_removereadytorun.c
+index 2de43756c..2dacf2d40 100644
+--- a/os/kernel/sched/sched_removereadytorun.c
++++ b/os/kernel/sched/sched_removereadytorun.c
+@@ -119,7 +119,7 @@ bool sched_removereadytorun(FAR struct tcb_s *rtcb)
+ 	tasklist = TLIST_HEAD(rtcb->task_state);
+ 
+ #ifdef CONFIG_SW_STACK_OVERFLOW_DETECTION
+-	sched_checkstackoverflow(rtcb);
++	// sched_checkstackoverflow(rtcb);
+ #endif
+ 
+ 	/* Check if the TCB to be removed is at the head of the ready to run list.
+diff --git a/os/se/ameba/security_ameba_wrapper_tz.c b/os/se/ameba/security_ameba_wrapper_tz.c
+index 02c751946..cfbe0fc9f 100644
+--- a/os/se/ameba/security_ameba_wrapper_tz.c
++++ b/os/se/ameba/security_ameba_wrapper_tz.c
+@@ -34,6 +34,9 @@
+ #ifdef CONFIG_AMEBALITE_TRUSTZONE
+ #include <arch/chip/amebalite_nsc.h>
+ #endif
++#ifdef CONFIG_AMEBAGREEN2_TRUSTZONE
++#include <arch/chip/amebagreen2_nsc.h>
++#endif
+ #include <device_lock.h>
+ 
+ static uint8_t *ns_buf = NULL;

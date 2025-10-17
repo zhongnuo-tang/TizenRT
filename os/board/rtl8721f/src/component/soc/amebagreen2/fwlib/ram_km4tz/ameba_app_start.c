@@ -50,6 +50,33 @@ u32 app_mpu_nocache_check(u32 mem_addr)
 		return FALSE;
 	}
 }
+SRAM_ONLY_DATA_SECTION
+HAL_VECTOR_FUN RamVectorTable[95] ALIGNMTO(512) = {0};
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+void exception_common(void);
+#endif
+void VectorTableOverride(void)
+{
+#if 0
+	NewVectorTable[3] = (HAL_VECTOR_FUN)INT_HardFault_Patch;
+	NewVectorTable[4] = (HAL_VECTOR_FUN)INT_MemFault_Patch;
+	NewVectorTable[5] = (HAL_VECTOR_FUN)INT_BusFault_Patch;
+	NewVectorTable[6] = (HAL_VECTOR_FUN)INT_UsageFault_Patch;
+#endif
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+	int i;
+	for(i=3;i<MAX_VECTOR_TABLE_NUM;i++) {
+		RamVectorTable[i] = exception_common;
+	}
+	//NewVectorTable[AMEBALITE_IRQ_HARDFAULT] = (HAL_VECTOR_FUN)HardFault_Handler_ram;
+	//NewVectorTable[AMEBALITE_IRQ_MEMFAULT] = (HAL_VECTOR_FUN)MemManage_Handler_ram;
+	//NewVectorTable[AMEBALITE_IRQ_BUSFAULT] = (HAL_VECTOR_FUN)BusFault_Handler_ram;
+	//NewVectorTable[AMEBALITE_IRQ_USAGEFAULT] = (HAL_VECTOR_FUN)UsageFault_Handler_ram;
+	// NewVectorTable[7] = (HAL_VECTOR_FUN)SecureFault_Handler_ram;
+	SCB->VTOR = (uint32_t)RamVectorTable;
+#endif
+}
+
 
 /*AP have 8 secure mpu entrys & 8 nonsecure mpu entrys*/
 u32 app_mpu_nocache_init(void)
@@ -67,7 +94,7 @@ u32 app_mpu_nocache_init(void)
 	mpu_cfg.sh = MPU_NON_SHAREABLE;
 	mpu_cfg.attr_idx = MPU_MEM_ATTR_IDX_NC;
 	mpu_region_cfg(mpu_entry, &mpu_cfg);
-
+	lldbg("mpu_entry %x\n",mpu_entry);
 	/* Currently, open share rom cache for better throughput and fix issue https://jira.realtek.com/browse/RSWLANDIOT-11327 */
 	/* close share rom cache. Delay rom section should be cacheable for accurate
 	   delay so it is not included. */
@@ -82,6 +109,7 @@ u32 app_mpu_nocache_init(void)
 
 	/* set nocache region */
 	mpu_entry = mpu_entry_alloc();
+	lldbg("mpu_entry %x\n",mpu_entry);
 	mpu_cfg.region_base = (uint32_t)__ram_nocache_start__;
 	mpu_cfg.region_size = __ram_nocache_end__ - __ram_nocache_start__;
 	mpu_cfg.xn = MPU_EXEC_ALLOW;
@@ -102,8 +130,7 @@ void _init(void) {}
 #endif
 #endif
 
-SRAM_ONLY_DATA_SECTION
-HAL_VECTOR_FUN RamVectorTable[95] ALIGNMTO(512) = {0};
+
 extern unsigned int _sidle_stack;
 extern unsigned int _sint_heap;
 extern unsigned int _sext_heap;
@@ -143,7 +170,6 @@ void app_start(void)
 	/* enable non-secure cache */
 	Cache_Enable(ENABLE);
 #endif
-	lldbg("%d %x\n",__LINE__,up_getsp());
 	
 	/* Rom Bss NS Initial */
 	_memset((void *) __rom_bss_start_ns__, 0, (__rom_bss_end_ns__ - __rom_bss_start_ns__));
@@ -158,16 +184,12 @@ void app_start(void)
 	_memcpy(RamVectorTable, RomVectorTable, sizeof(RamVectorTable));
 	RamVectorTable[0] = (HAL_VECTOR_FUN)MSP_RAM_HP_NS;
 	SCB->VTOR = (u32)RamVectorTable;
-	// __set_MSP(MSP_RAM_HP_NS);
-	lldbg("%d %x\n",__LINE__,SCB->VTOR);
-	lldbg("%d %x\n",__LINE__,up_getsp());
-	lldbg("NS MSP: %x\n", __get_MSP());
-//#ifdef CONFIG_TRUSTZONE
+	VectorTableOverride();
+#ifdef CONFIG_AMEBAGREEN2_TRUSTZONE
 	BOOT_IMG3();
-
 	cmse_address_info_t cmse_address_info = cmse_TT((void *)app_start);
 	RTK_LOGI(TAG, "IMG2 SECURE STATE: %d\n", cmse_address_info.flags.secure);
-//#endif
+#endif
 	data_flash_highspeed_setup();
 	SystemCoreClockUpdate();
 	//RTK_LOGI(TAG, "AP CPU CLK: %lu Hz \n", SystemCoreClock);
@@ -179,13 +201,14 @@ void app_start(void)
 		}
 
 	}
-		// force SP align to 8 byte not 4 byte (initial SP is 4 byte align)
-	__asm(
-		"mov r0, sp\n"
-		"bic r0, r0, #7\n"
-		"mov sp, r0\n"
-	);
 	os_heap_init();
+	// 	// force SP align to 8 byte not 4 byte (initial SP is 4 byte align)
+	// __asm(
+	// 	"mov r0, sp\n"
+	// 	"bic r0, r0, #7\n"
+	// 	"mov sp, r0\n"
+	// );
+
 	XTAL_INIT();
 	mpu_init();
 	app_mpu_nocache_init();

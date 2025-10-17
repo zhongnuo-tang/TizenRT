@@ -382,7 +382,7 @@ uint8_t g_os_initstate;  /* See enum os_initstate_e */
  * initialization task is responsible for bringing up the rest of the system.
  */
 
-static FAR struct task_tcb_s  g_idletcb[CONFIG_SMP_NCPUS];
+FAR struct task_tcb_s  g_idletcb[CONFIG_SMP_NCPUS];
 
 /* This is the name of the idle task */
 
@@ -426,7 +426,9 @@ void os_start(void)
 	int i;
 
 	slldbg("Entry\n");
-
+	for (int i = 0; i < 1<<24; i++){
+		asm("nop");
+	}
 	g_os_initstate = OSINIT_BOOT;
 
 	/* Initialize RTOS Data ************************************************** */
@@ -655,14 +657,14 @@ void os_start(void)
 	g_lastpid = CONFIG_SMP_NCPUS - 1;
 
 	/* Fill the stack information to Idle task's tcb */
-lldbg("595\n");
-DelayMs(10);
 	g_idletcb[0].cmn.adj_stack_size = CONFIG_IDLETHREAD_STACKSIZE;
 	g_idletcb[0].cmn.stack_alloc_ptr = (void *)(g_idle_topstack - CONFIG_IDLETHREAD_STACKSIZE);
 	g_idletcb[0].cmn.adj_stack_ptr = (void *)(g_idle_topstack - 4);
-lldbg("596\n");
-DelayMs(10);
 	DEBUGASSERT(up_getsp() >= (uint32_t)g_idletcb[0].cmn.stack_alloc_ptr && up_getsp() <= (uint32_t)g_idletcb[0].cmn.adj_stack_ptr);
+	lldbg("g_idle_topstack %x\n",g_idle_topstack);
+	lldbg("g_idletcb[0].cmn.adj_stack_size %d\n",g_idletcb[0].cmn.adj_stack_size);
+	lldbg("g_idletcb[0].cmn.stack_alloc_ptr %x\n",g_idletcb[0].cmn.stack_alloc_ptr);
+	lldbg("g_idletcb[0].cmn.adj_stack_ptr %x\n",g_idletcb[0].cmn.adj_stack_ptr);
 
 	/* The memory manager is available */
 
@@ -716,7 +718,7 @@ DelayMs(10);
 	if (clock_initialize != NULL)
 #endif
 	{
-		// clock_initialize();
+		clock_initialize();
 	}
 #ifndef CONFIG_DISABLE_POSIX_TIMERS
 #ifdef CONFIG_HAVE_WEAKFUNCTIONS
@@ -821,7 +823,6 @@ lldbg("18\n");
 		if (i > 0)
 		{
 			/* Clone stdout, stderr, stdin from the CPU0 IDLE task. */
-lldbg("19\n");
 
 			DEBUGVERIFY(group_setuptaskfiles(&g_idletcb[i]));
 		}
@@ -867,11 +868,9 @@ lldbg("20\n");
 #endif
 
 	g_os_initstate = OSINIT_OSREADY;
-lldbg("21\n");
 
 	DEBUGVERIFY(os_bringup());
 	g_os_initstate = OSINIT_IDLELOOP;
-lldbg("22\n");
 
 	sched_unlock();
 
@@ -907,7 +906,6 @@ lldbg("22\n");
 		pm_idle();
 #endif
 		/* Perform any processor-specific idle state operations */
-lldbg("23\n");
 
 		up_idle();
 	}

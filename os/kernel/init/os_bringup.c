@@ -200,7 +200,7 @@ static inline void os_pgworker(void)
 	 * resolve page faults in other threads
 	 */
 
-	svdbg("Starting paging thread\n");
+	lldbg("Starting paging thread\n");
 
 	g_pgworker = kernel_thread("pgfill", CONFIG_PAGING_DEFPRIO, CONFIG_PAGING_STACKSIZE, (main_t)pg_worker, (FAR char *const *)NULL);
 	DEBUGASSERT(g_pgworker > 0);
@@ -330,7 +330,7 @@ static inline void os_do_appstart(void)
 #endif
 
 #ifdef CONFIG_LOG_DUMP
-	svdbg("Starting log_dump thread\n");
+	lldbg("Starting log_dump thread\n");
 
 	pid = kernel_thread(LOG_DUMP_NAME, CONFIG_LOG_DUMP_PRIO, LOG_DUMP_STACKSIZE, log_dump, NULL);
 	if (pid < 0) {
@@ -346,16 +346,16 @@ static inline void os_do_appstart(void)
 #endif
 
 #if defined(CONFIG_SYSTEM_PREAPP_INIT) && !defined(CONFIG_APP_BINARY_SEPARATION)
-	svdbg("Starting application init task\n");
+	lldbg("Starting application init task\n");
 
 	pid = task_create("appinit", PRI_PREAPP, CONFIG_SYSTEM_PREAPP_STACKSIZE, preapp_start, (FAR char *const *)NULL);
 	if (pid < 0) {
-		svdbg("Failed to create application init thread\n");
+		lldbg("Failed to create application init thread\n");
 	}
 #endif
 
 #ifdef CONFIG_BINARY_MANAGER
-	svdbg("Starting binary manager thread\n");
+	lldbg("Starting binary manager thread\n");
 
 	pid = kernel_thread(BINARY_MANAGER_NAME, BINARY_MANAGER_PRIORITY, BINARY_MANAGER_STACKSIZE, binary_manager, NULL);
 	if (pid < 0) {
@@ -380,7 +380,7 @@ static inline void os_do_appstart(void)
 	 * entrypoint from the header at the beginning of the user-space blob.
 	 */
 
-	svdbg("Starting application main task\n");
+	lldbg("Starting application main task\n");
 
 #if defined(CONFIG_USER_ENTRYPOINT)
 	pid = task_create("appmain", PRI_USER_MAIN, CONFIG_USERMAIN_STACKSIZE, (main_t)CONFIG_USER_ENTRYPOINT, (FAR char *const *)NULL);

@@ -239,7 +239,7 @@ void board_initialize(void)
 	ipc_table_init(IPCAP_DEV);
 	InterruptRegister(IPC_INTHandler, IPC_CPU0_IRQ, (u32)IPCAP_DEV, INT_PRI5);
 	InterruptEn(IPC_CPU0_IRQ, INT_PRI5);
-
+	lldbg("enter\n");
 #if 0 //def CONFIG_MBED_TLS_ENABLED
 	app_mbedtls_rom_init();
 #endif
@@ -286,6 +286,7 @@ void board_initialize(void)
 #ifdef CONFIG_amebagreen2_BLE
 	bt_ipc_api_init_host();
 #endif
+lldbg("exit\n");
 }
 #else
 #error "CONFIG_BOARD_INITIALIZE MUST ENABLE"

@@ -93,7 +93,7 @@ CMN_CSRCS += up_ramvec_initialize.c up_ramvec_attach.c
 endif
 
 ifeq ($(CONFIG_ARMV8M_TRUSTZONE),y)
-#CMN_ASRCS += up_secure_context.S #FIXME
+CMN_ASRCS += up_secure_context.S #FIXME
 endif
 
 ifeq ($(CONFIG_BUILD_PROTECTED),y)
@@ -166,7 +166,7 @@ CHIP_CSRCS += amebagreen2_timer_lowerhalf.c
 CHIP_CSRCS += amebagreen2_serial.c
 #CHIP_CSRCS += amebagreen2_enet.c
 #CHIP_CSRCS += amebagreen2_rtc_lowerhalf.c
-#CHIP_CSRCS += amebagreen2_rtc.c
+CHIP_CSRCS += amebagreen2_rtc.c
 #CHIP_CSRCS += amebagreen2_watchdog_lowerhalf.c
 #CHIP_CSRCS += amebagreen2_i2c.c
 ##CHIP_CSRCS += amebagreen2_i2s.c
@@ -183,7 +183,7 @@ ifeq ($(CONFIG_BINARY_SIGNING),y)
 endif
 
 ifeq ($(CONFIG_AMEBAGREEN2_TRUSTZONE),y)
-#CHIP_CSRCS += amebagreen2_nsc.c
+CHIP_CSRCS += amebagreen2_nsc.c
 
 # trustzone library
 ifeq ($(CONFIG_ARCH_FPU),y)

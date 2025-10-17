@@ -49,7 +49,7 @@
 #
 ############################################################################
 ifeq ($(CONFIG_AMEBAGREEN2_TRUSTZONE),y)
-CSRCS += ameba_ota.c
+#CSRCS += ameba_ota.c
 endif
 
 ifeq ($(CONFIG_AMEBAGREEN2_USBDEVICE),y)
