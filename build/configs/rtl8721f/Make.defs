@@ -120,8 +120,8 @@ ifeq ($(CONFIG_FRAME_POINTER),y)
   ARCHOPTIMIZATION += -fomit-frame-pointer -mapcs -mno-sched-prolog
 endif
 
-ARCHCFLAGS = -fno-builtin -fno-common -mcpu=cortex-m33 -mfpu=fpv5-sp-d16
-ARCHCXXFLAGS = -fno-builtin -mcpu=cortex-m33 -mfpu=fpv5-sp-d16
+ARCHCFLAGS = -fno-builtin -fno-common -mfpu=fpv5-sp-d16
+ARCHCXXFLAGS = -fno-builtin -mfpu=fpv5-sp-d16
 ARCHWARNINGS = -Wall -Wstrict-prototypes -Wshadow -Wundef -Wno-implicit-function-declaration -Wno-unused-function -Wno-unused-but-set-variable
 ARCHWARNINGSXX = -Wall -Wshadow -Wundef
 # only version 4.9 supports color diagnostics
