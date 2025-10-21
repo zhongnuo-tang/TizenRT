@@ -202,16 +202,12 @@ void app_start(void)
 
 	}
 	os_heap_init();
-	// 	// force SP align to 8 byte not 4 byte (initial SP is 4 byte align)
-	// __asm(
-	// 	"mov r0, sp\n"
-	// 	"bic r0, r0, #7\n"
-	// 	"mov sp, r0\n"
-	// );
 
 	XTAL_INIT();
 	mpu_init();
 	app_mpu_nocache_init();
+	/* Let NP run */
+	HAL_WRITE32(SYSTEM_CTRL_BASE, REG_LSYS_BOOT_CFG, HAL_READ32(SYSTEM_CTRL_BASE, REG_LSYS_BOOT_CFG) | LSYS_BIT_BOOT_CPU1_RUN);
 #ifdef CONFIG_PLATFORM_TIZENRT_OS
 #ifdef CONFIG_ARMV8M_MPU
 	/* Initialize number of mpu regions for board specific purpose */

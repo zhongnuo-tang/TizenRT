@@ -80,7 +80,7 @@ include component/soc/amebagreen2/hal/src/Make.defs
 include component/usrcfg/rtl8721f/Make.defs
 
 #include component/lwip/api/Make.defs
-# include component/os_dep/Make.defs
+include component/os_dep/Make.defs
 # include component/wifi/Make.defs
 # include component/wifi/inic/Make.defs
 # include component/wifi/driver/src/core/Make.defs

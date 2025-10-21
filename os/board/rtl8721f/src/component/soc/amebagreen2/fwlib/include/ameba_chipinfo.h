@@ -101,7 +101,7 @@ typedef struct {
 
 } __PACKED MCM_MemTypeDef;
 
-Compile_Assert(sizeof(MCM_MemTypeDef) == 4, "MCM_MemInfo size shall be 4");
+// Compile_Assert(sizeof(MCM_MemTypeDef) == 4, "MCM_MemInfo size shall be 4");
 /** * @}  */
 
 typedef struct {

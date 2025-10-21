@@ -838,6 +838,7 @@ static int rtl8721f_up_setup(struct uart_dev_s *dev)
 		irq_unregister(RTL8721F_UART_LOG_IRQ - RTL8721F_IRQ_FIRST);
 		InterruptRegister((IRQ_FUN)rtl8721f_log_uart_irq, RTL8721F_UART_LOG_IRQ - RTL8721F_IRQ_FIRST, (int)NULL, INT_PRI_LOWEST);
 		InterruptEn(RTL8721F_UART_LOG_IRQ - RTL8721F_IRQ_FIRST, INT_PRI_LOWEST);
+		LOGUART_INTCoreConfig(LOGUART_DEV, LOGUART_BIT_INTR_MASK_AP, ENABLE);
 	} else {
 		sdrv[uart_index_get(priv->tx)]->uart_idx = uart_index_get(priv->tx);
 		serial_init((serial_t *) sdrv[uart_index_get(priv->tx)], priv->tx, priv->rx);

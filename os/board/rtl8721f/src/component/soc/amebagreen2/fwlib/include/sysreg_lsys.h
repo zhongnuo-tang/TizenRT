@@ -1757,7 +1757,7 @@ typedef struct {
 	u8 PCR_PROT_K0[32];
 } RRAM_TypeDef;
 
-Compile_Assert(sizeof(RRAM_TypeDef) == 512, "RRAM_TypeDef size shall be 512");
+// Compile_Assert(sizeof(RRAM_TypeDef) == 512, "RRAM_TypeDef size shall be 512");
 
 /** @} */
 

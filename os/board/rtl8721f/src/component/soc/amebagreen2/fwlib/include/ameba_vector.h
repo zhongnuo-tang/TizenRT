@@ -46,6 +46,7 @@
 /** @defgroup IRQ_Exported_Types IRQ Exported Types
   * @{
   */
+#include "ameba_vector_table.h"
 typedef void (*HAL_VECTOR_FUN)(void);
 typedef u32(*IRQ_FUN)(void *Data);
 typedef u32(*Fault_Patch)(uint32_t *MSP, uint32_t lr, uint32_t fault_id);
@@ -75,11 +76,11 @@ extern _LONG_CALL_ void Systick_irqfunc_set(void (*pfunc)(void));
 extern _LONG_CALL_ void *Systick_irqfunc_get(void);
 
 
-#define InterruptRegister			irq_register
-#define InterruptUnRegister			irq_unregister
+#define InterruptRegister			irq_register_ram
+#define InterruptUnRegister			irq_unregister_ram
 
-#define InterruptEn(a,b)			irq_enable(a)
-#define InterruptDis(a)				irq_disable(a)
+#define InterruptEn(a,b)			irq_enable_ram(a)
+#define InterruptDis(a)				irq_disable_ram(a)
 /**
   * @}
   */
