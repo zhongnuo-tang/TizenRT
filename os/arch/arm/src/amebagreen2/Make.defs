@@ -137,8 +137,6 @@ ARCH_SRCDIR = $(TOPDIR)/arch/$(CONFIG_ARCH)/src/
 CFLAGS+= -mcmse
 
 CFLAGS += -I$(ARCH_SRCDIR)/armv8-m
-CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os/tizenrt
-CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os_dep
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/include
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/fwlib/include
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/hal/include
@@ -146,12 +144,15 @@ CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/f
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os/freertos
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/app/monitor/include
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/swlib
-#CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/api
+
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/driver/include
+#CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/api
+CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/common
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/driver/src/intf
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/wifi_config
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/wifi_fast_connect
-
+CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os/os_wrapper/include
+CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os/tizenrt
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/usrcfg/rtl8721f/include
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/hal/src/
 

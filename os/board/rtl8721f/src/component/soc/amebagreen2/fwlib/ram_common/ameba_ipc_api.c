@@ -5,7 +5,7 @@
  */
 
 #include "ameba_soc.h"
-
+#include "os_wrapper.h"
 static const char *const TAG = "IPC";
 #ifndef CONFIG_PLATFORM_TIZENRT_OS
 SemaphoreHandle_t ipc_Semaphore[IPC_TX_CHANNEL_NUM];

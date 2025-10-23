@@ -80,7 +80,7 @@ include component/soc/amebagreen2/hal/src/Make.defs
 include component/usrcfg/rtl8721f/Make.defs
 
 #include component/lwip/api/Make.defs
-# include component/os_dep/Make.defs
+#include component/os_dep/Make.defs
 # include component/wifi/Make.defs
 # include component/wifi/inic/Make.defs
 # include component/wifi/driver/src/core/Make.defs
@@ -88,6 +88,8 @@ include component/usrcfg/rtl8721f/Make.defs
 # include component/ssl/mbedtls_ram_map/rom/Make.defs
 # include component/mbed/targets/hal/rtl8721f/Make.defs
 # include component/os/tizenrt/Make.defs
+include component/wifi/common/Make.defs
+include component/os/os_wrapper/Make.defs
 
 ifeq ($(CONFIG_amebagreen2_WIFI),y)
 include component/wifi/api/Make.defs
@@ -134,6 +136,7 @@ CFLAGS += -I$(TOPDIR)/arch/$(CONFIG_ARCH)/src/armv8-m
 # CFLAGS += -I$(TARGETDIR)/cmsis
 # CFLAGS += -I$(TARGETDIR)/cmsis-dsp/Include
 # CFLAGS += -I$(TARGETDIR)/cmsis-dsp/PrivateInclude
+CFLAGS += -I$(COMPONENT_DIR)/os/os_wrapper/include
 CFLAGS += -I$(TARGETDIR)/fwlib/
 CFLAGS += -I$(TARGETDIR)/fwlib/include
 CFLAGS += -I$(TARGETDIR)/fwlib/include/rom
@@ -157,7 +160,7 @@ CFLAGS += -I$(COMPONENT_DIR)/usrcfg/rtl8721f/include
 # CFLAGS += -I$(COMPONENT_DIR)/wifi/wpa_supplicant/src/crypto
 # CFLAGS += -I$(COMPONENT_DIR)/lwip/api
 # CFLAGS += -I$(COMPONENT_DIR)/ssl/mbedtls_ram_map/rom
-
+CFLAGS += -I$(COMPONENT_DIR)/wifi/common
 CFLAGS += -I$(COMPONENT_DIR)/os/tizenrt
 # CFLAGS += -I$(DIR_MBED)
 CFLAGS += -I$(DIR_OSDEP)
