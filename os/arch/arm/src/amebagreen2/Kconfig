@@ -1,0 +1,316 @@
+#
+# For a description of the syntax of this configuration file,
+# see kconfig-language at https://www.kernel.org/doc/Documentation/kbuild/kconfig-language.txt
+#
+
+comment "AMEBAGREEN2 Configuration Options"
+
+choice
+	prompt "AMEBAGREEN2 Chip Selection"
+	default ARCH_CHIP_RTL8721F
+	depends on ARCH_CHIP_AMEBAGREEN2
+
+config ARCH_CHIP_RTL8721F
+	bool "RTL8721F"
+	select ARCH_CORTEXM33
+	select ARCH_HAVE_FPU
+	select AMEBALITE_WIFI
+	select ARMV8M_HAVE_ICACHE
+	select ARMV8M_HAVE_DCACHE
+
+endchoice
+
+menu "Realtek RTL8721F Peripheral Support"
+
+config BOARD_HAVE_SPI0
+	bool
+	default n
+
+config BOARD_HAVE_SPI0_CS
+	bool
+	default n
+
+config BOARD_HAVE_SPI1
+	bool
+	default n
+
+config BOARD_HAVE_SPI1_CS
+	bool
+	default n
+
+config BOARD_HAVE_I2C0
+	bool
+	default n
+
+config BOARD_HAVE_I2C1
+	bool
+	default n
+
+config BOARD_HAVE_I2C2
+	bool
+	default n
+
+config BOARD_HAVE_I2S2
+	bool
+	default n
+
+config BOARD_HAVE_I2S3
+	bool
+	default n
+
+config RTL8721F_UART
+	bool "UART"
+	default n
+
+config RTL8721F_UART0
+	bool "UART 0"
+	default n
+	select RTL8721F_UART
+	select ARCH_HAVE_UART0
+	select ARCH_HAVE_SERIAL_TERMIOS
+
+config RTL8721F_UART1
+	bool "UART 1"
+	default n
+	select RTL8721F_UART
+	select ARCH_HAVE_UART1
+	select ARCH_HAVE_SERIAL_TERMIOS
+
+config RTL8721F_UART2
+	bool "UART 2"
+	default n
+	select RTL8721F_UART
+	select ARCH_HAVE_UART2
+	select ARCH_HAVE_SERIAL_TERMIOS
+
+config RTL8721F_UART3
+	bool "UART 3"
+	default n
+	select RTL8721F_UART
+	select ARCH_HAVE_UART3
+	select ARCH_HAVE_SERIAL_TERMIOS
+
+config RTL8721F_UART4
+	bool "UART 4"
+	default n
+	select RTL8721F_UART
+	select ARCH_HAVE_UART4
+	select ARCH_HAVE_SERIAL_TERMIOS
+	select SERIAL_CONSOLE
+
+config RTL8721F_SERIAL_FIFO
+	bool "UART SERIAL FIFO"
+	default n
+
+config AMEBAGREEN2_BOR
+	bool "AMEBAGREEN2_BOR"
+	default n
+
+if AMEBAGREEN2_BOR
+config AMEBAGREEN2_THRESHOLD_FALL
+	int "BOR falling threshold"
+	default 14
+	range 10 16
+	---help---
+		10: 2.90V, 11: 2.86V, 12: 2.81V, 13: 2.76V, 14: 2.72V, 15: 2.67V, 16: 2.63V
+config AMEBAGREEN2_THRESHOLD_RISE
+	int "BOR rising threshold"
+	default 11
+	range 8 14
+	---help---
+		8: 2.98V, 9: 2.92V, 10: 2.87V, 11: 2.83V, 12: 2.78V, 13: 2.74V, 14: 2.69V
+endif
+
+config AMEBAGREEN2_SPI
+	bool "AMEBAGREEN2_SPI"
+	default n
+
+if AMEBAGREEN2_SPI
+config AMEBAGREEN2_SPI0
+	bool "SPI0"
+	depends on BOARD_HAVE_SPI0
+	default n
+config AMEBAGREEN2_SPI1
+	bool "SPI1"
+	depends on BOARD_HAVE_SPI1
+	default n
+config AMEBAGREEN2_SPI_EXCHANGE
+	bool "Enable AMEBAGREEN2 SPI EXCHANGE"
+	default n
+config AMEBAGREEN2_SPI_DMA
+	bool "SPI DMA"
+	default n
+	---help---
+		Use DMA to improve SPI transfer performance.
+config SPI_CS
+	bool "SPI Multi-slaves"
+	default n
+if AMEBAGREEN2_SPI0
+config AMEBAGREEN2_SPI0_CS
+	bool "SPI0 Multi-slaves CS pins"
+	default n
+	depends on SPI_CS && BOARD_HAVE_SPI0_CS
+endif
+if AMEBAGREEN2_SPI1
+config AMEBAGREEN2_SPI1_CS
+	bool "SPI1 Multi-slaves CS pins"
+	default n
+	depends on SPI_CS && BOARD_HAVE_SPI1_CS
+endif
+endif
+
+config AMEBAGREEN2_I2C
+	bool "AMEBAGREEN2_I2C"
+	default n
+
+if AMEBAGREEN2_I2C
+
+config AMEBAGREEN2_I2C0
+	bool "I2C_0"
+	depends on BOARD_HAVE_I2C0
+	default n
+config AMEBAGREEN2_I2C1
+	bool "I2C_1"
+	depends on BOARD_HAVE_I2C1
+	default n
+config AMEBAGREEN2_I2C2
+	bool "I2C_2"
+	depends on BOARD_HAVE_I2C2
+	default n
+
+config AMEBAGREEN2_I2C_DYNTIMEO
+	bool "[AMEBAGREEN2 I2C]Use dynamic timeouts"
+	default n
+if AMEBAGREEN2_I2C_DYNTIMEO
+config AMEBAGREEN2_I2C_DYNTIMEO_USECPERBYTE
+	int "[AMEBAGREEN2 I2C]Timeout Microseconds per Byte"
+	default 500
+	depends on AMEBAGREEN2_I2C_DYNTIMEO
+
+config AMEBAGREEN2_I2C_DYNTIMEO_STARTSTOP
+	int "[AMEBAGREEN2 I2C]Timeout for Start/Stop (Milliseconds)"
+	default 1000
+	depends on AMEBAGREEN2_I2C_DYNTIMEO
+endif
+config AMEBAGREEN2_I2CTIMEOSEC
+	int "[AMEBAGREEN2 I2C]Timeout seconds"
+	default 0
+	depends on !AMEBAGREEN2_I2C_DYNTIMEO
+
+config AMEBAGREEN2_I2CTIMEOMS
+	int "[AMEBAGREEN2 I2C]Timeout Milliseconds"
+	default 500
+	depends on !AMEBAGREEN2_I2C_DYNTIMEO
+
+config AMEBAGREEN2_I2CTIMEOTICKS
+	int "[AMEBAGREEN2 I2C]Timeout for Done and Stop (ticks)"
+	default 500
+	depends on !AMEBAGREEN2_I2C_DYNTIMEO
+endif
+
+config AMEBAGREEN2_I2S
+	bool "Amebasmart I2S"
+	default n
+
+if AMEBAGREEN2_I2S
+config AMEBAGREEN2_I2S2
+	bool "I2S_2"
+	depends on BOARD_HAVE_I2S2
+	default n
+config AMEBAGREEN2_I2S3
+	bool "I2S_3"
+	depends on BOARD_HAVE_I2S3
+	default n
+
+config AMEBAGREEN2_I2S_RX
+	bool "Enable I2S RX"
+	default n
+
+config AMEBAGREEN2_I2S_TX
+	bool "Enable I2S TX"
+	default n
+
+if AMEBAGREEN2_I2S_TX
+config AMEBAGREEN2_I2S_TXCL
+	int "I2S TX Channel Length"
+	default 32
+	range 8 32
+endif
+endif
+
+endmenu
+
+menu "Realtek RTL8721F WIFI Support"
+
+config AMEBAGREEN2_WIFI
+	bool "Enable Amebasmart WIFI"
+	default n
+
+endmenu
+
+menu "Realtek RTL8721F BLE Support"
+
+config AMEBAGREEN2_BLE
+	bool "Enable Amebasmart BLE"
+	default n
+	select AMEBAGREEN2_FTL
+
+if AMEBAGREEN2_BLE
+config AMEBAGREEN2_FTL
+	bool "Enable FTL"
+	default n
+
+config AMEBAGREEN2_BLE_DEBUG
+	bool "Enable BLE Debug"
+	default n
+
+config AMEBAGREEN2_BLE_PERIPHERAL
+	bool "Enable Amebasmart BLE Peripheral"
+	default n
+
+config AMEBAGREEN2_BLE_CENTRAL
+	bool "Enable Amebasmart BLE Central"
+	default n
+
+if AMEBAGREEN2_BLE_CENTRAL && AMEBAGREEN2_BLE_PERIPHERAL
+	config AMEBAGREEN2_BLE_SCATTERNET
+		bool "Enable Amebasmart BLE Scatternet"
+		default n
+endif
+
+endif
+
+endmenu
+
+menu "Realtek RTL8721F TrustZone Support"
+
+config AMEBAGREEN2_TRUSTZONE
+	bool "Enable Amebasmart TrustZone"
+	default n
+
+endmenu
+
+menu "CONFIG Link Option"
+
+config IMG2_FLASH
+    bool "Run IMG2(Application) in FLASH"
+    default y
+
+config IMG2_SRAM
+    bool "Run IMG2(Application) in SRAM"
+    default n
+
+config IMG2_PSRAM
+    bool "Run IMG2(Application) in PSRAM"
+    default n
+endmenu
+
+menu "Realtek RTL8721F KM4/KM0 Status Check Timer"
+
+config AMEBAGREEN2_NP_LP_CHECK_INTERVAL
+	int "Timer Interval (Microseconds)"
+	default 5000000
+	---help---
+		Interval for hardware timer to check KM4/KM0 status
+
+endmenu
