@@ -179,6 +179,7 @@ CFLAGS += -I$(TARGETDIR)/hal/include
 CFLAGS += -I$(TOPDIR)/net/netmgr
 
 ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
+CFLAGS += -I$(DIR_BT)/rtk_stack/platform/amebagreen2/lib/
 endif
 
 ifeq ($(CONFIG_FTL_ENABLED),y)

@@ -205,3 +205,8 @@ EXTRA_LIBS += $(TOPDIR)/board/rtl8721f/src/libs/lib_wpa_lite.a
 EXTRA_LIBS += $(TOPDIR)/board/rtl8721f/src/libs/lib_wps.a
 
 endif
+
+# Bluetooth
+ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
+EXTRA_LIBS += ${TOPDIR}/board/rtl8721f/src/libs/btgap.a
+endif
