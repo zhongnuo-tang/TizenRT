@@ -113,12 +113,12 @@ function concatenate_binary_without_signing()
 		echo "No km4ns_image2_all.bin or km4tz_image2_all.bin"
 		exit 1
 	fi
- 	#cp $BINDIR/km4ns_image2_all.bin $GNUUTL/km4ns_image2_all_temp.bin
- 	# $GNUUTL/rmcert.sh $GNUUTL/km4ns_image2_all_temp.bin
+ 	cp $BINDIR/km4ns_image2_all.bin $GNUUTL/km4ns_image2_all_temp.bin
+ 	$GNUUTL/rmcert.sh $GNUUTL/km4ns_image2_all_temp.bin
  	# $GNUUTL/pad.sh $GNUUTL/km4ns_image2_all_temp.bin
- 	# cat $GNUUTL/cert.bin $GNUUTL/km4ns_image2_all_temp.bin $BINDIR/km4tz_image2_all.bin > $BINDIR/amebagreen2_app.bin
  	cat $GNUUTL/app_cert.bin $GNUUTL/manifest_app.bin $GNUUTL/km4ns_image2_all.bin $BINDIR/km4tz_image2_all.bin $BINDIR/km4tz_image3_all.bin > $BINDIR/amebagreen2_app.bin
- 	#rm -rf $GNUUTL/km4ns_image2_all_temp.bin
+ 	#cat $GNUUTL/app_cert.bin $GNUUTL/manifest_app.bin $GNUUTL/km4ns_image2_all.bin $BINDIR/km4tz_image2_all.bin $BINDIR/km4tz_image3_all.bin > $BINDIR/amebagreen2_app.bin
+ 	rm -rf $GNUUTL/km4ns_image2_all_temp.bin
 
 }
 
