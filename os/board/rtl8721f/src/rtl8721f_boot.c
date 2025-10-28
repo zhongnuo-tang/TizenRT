@@ -243,7 +243,7 @@ void board_initialize(void)
 
 	//InterruptDis(UART_LOG_IRQ);
 
-	// amebagreen2_mount_partitions();
+	amebagreen2_mount_partitions();
 	// board_gpio_initialize();
 	// board_i2c_initialize();
 	// board_spi_initialize();
