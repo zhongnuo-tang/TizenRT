@@ -91,26 +91,26 @@ include component/usrcfg/rtl8721f/Make.defs
 include component/wifi/common/Make.defs
 include component/os/os_wrapper/Make.defs
 
-ifeq ($(CONFIG_amebagreen2_WIFI),y)
+ifeq ($(CONFIG_AMEBAGREEN2_WIFI),y)
 include component/wifi/api/Make.defs
 include component/wifi/promisc/Make.defs
 include component/wifi/wpa_supplicant/wpa_supplicant/Make.defs
 include component/soc/amebagreen2/misc/Make.defs
 endif
 
-ifeq ($(CONFIG_amebagreen2_BLE),y)
+ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
 include component/bluetooth/api/Make.defs
 include component/bluetooth/api/ipc/Make.defs
 include component/bluetooth/os/tizenrt/Make.defs
 include component/bluetooth/example/utils/Make.defs
-ifeq ($(CONFIG_amebagreen2_BLE_PERIPHERAL),y)
+ifeq ($(CONFIG_AMEBAGREEN2_BLE_PERIPHERAL),y)
 include component/bluetooth/example/ble_peripheral/Make.defs
 endif
-ifeq ($(CONFIG_amebagreen2_BLE_CENTRAL),y)
+ifeq ($(CONFIG_AMEBAGREEN2_BLE_CENTRAL),y)
 include component/bluetooth/example/ble_central/Make.defs
 include component/bluetooth/profile/client/Make.defs
 endif
-ifeq ($(CONFIG_amebagreen2_BLE_SCATTERNET),y)
+ifeq ($(CONFIG_AMEBAGREEN2_BLE_SCATTERNET),y)
 include component/bluetooth/example/ble_scatternet/Make.defs
 endif
 endif
@@ -123,7 +123,7 @@ DIR_WIFI = 	$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/src/component/wifi
 DIR_OSDEP = 	$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/src/component/os_dep
 DIR_OS = 	$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/src/component/os
 # DIR_MBED = 	$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/src/component/mbed/targets/hal/rtl8721f
-ifeq ($(CONFIG_amebagreen2_BLE),y)
+ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
 DIR_BT = 	$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/src/component/bluetooth
 endif
 
@@ -172,7 +172,7 @@ CFLAGS += -I$(TARGETDIR)/hal/include
 # CFLAGS += -I$(TARGETDIR)/mbed/targets/hal/rtl8721f
 # CFLAGS += -I$(TOPDIR)/net/netmgr
 
-ifeq ($(CONFIG_amebagreen2_BLE),y)
+ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
 CFLAGS += -I$(DIR_BT)/inc
 CFLAGS += -I$(DIR_BT)/profile/client
 endif

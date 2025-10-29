@@ -86,7 +86,7 @@ extern FAR struct gpio_lowerhalf_s *amebagreen2_gpio_lowerhalf(u32 pinname, u32 
 #ifdef CONFIG_PRODCONFIG
 extern u32 EFUSERead8(u32 CtrlSetting, u32 Addr, u8 *Data, u8 L25OutVoltage);
 #endif
-#if defined(CONFIG_AUDIO_I2SCHAR) && defined(CONFIG_amebagreen2_I2S)
+#if defined(CONFIG_AUDIO_I2SCHAR) && defined(CONFIG_AMEBAGREEN2_I2S)
 extern int i2schar_devinit(void);
 #endif
 
@@ -122,7 +122,7 @@ int up_check_proddownload(void)
 
 void board_i2s_initialize(void)
 {
-#if defined(CONFIG_AUDIO_I2SCHAR) && defined(CONFIG_amebagreen2_I2S)
+#if defined(CONFIG_AUDIO_I2SCHAR) && defined(CONFIG_AMEBAGREEN2_I2S)
 	i2schar_devinit();
 #endif
 }
@@ -275,10 +275,10 @@ void board_initialize(void)
 #ifdef CONFIG_FTL_ENABLED
 	app_ftl_init();
 #endif
-#ifdef CONFIG_amebagreen2_WIFI
+#ifdef CONFIG_AMEBAGREEN2_WIFI
 	wlan_initialize();
 #endif
-#ifdef CONFIG_amebagreen2_BLE
+#ifdef CONFIG_AMEBAGREEN2_BLE
 	bt_ipc_api_init_host();
 #endif
 }
