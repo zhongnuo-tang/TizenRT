@@ -182,6 +182,7 @@ CFLAGS += -I$(TOPDIR)/net/netmgr
 ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
 CFLAGS += -I$(DIR_BT)/rtk_stack/platform/amebagreen2/lib/
 CFLAGS += -I$(DIR_BT)/driver/platform/amebagreen2/inc/
+CFLAGS += -I$(DIR_BT)/driver/inc/hci/
 endif
 
 ifeq ($(CONFIG_FTL_ENABLED),y)
