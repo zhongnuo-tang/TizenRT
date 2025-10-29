@@ -102,6 +102,8 @@ endif
 ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
 include component/bluetooth/driver/platform/amebagreen2/hci/Make.defs
 include component/bluetooth/osif/Make.defs
+include component/bluetooth/api/Make.defs
+include component/bluetooth/api/rtk_stack/Make.defs
 ifeq ($(CONFIG_AMEBAGREEN2_BLE_PERIPHERAL),y)
 include component/bluetooth/example/ble_peripheral/Make.defs
 endif
@@ -185,6 +187,8 @@ CFLAGS += -I$(DIR_BT)/rtk_stack/platform/amebagreen2/lib/
 CFLAGS += -I$(DIR_BT)/driver/platform/amebagreen2/inc/
 CFLAGS += -I$(DIR_BT)/driver/inc/hci/
 CFLAGS += -I$(DIR_BT)/osif/
+CFLAGS += -I$(DIR_BT)/api/include/
+CFLAGS += -I$(DIR_BT)/api/rtk_stack/
 endif
 
 ifeq ($(CONFIG_FTL_ENABLED),y)
