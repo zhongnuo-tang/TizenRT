@@ -14,7 +14,7 @@ config ARCH_CHIP_RTL8721F
 	bool "RTL8721F"
 	select ARCH_CORTEXM33
 	select ARCH_HAVE_FPU
-	select AMEBALITE_WIFI
+	select AMEBAGREEN2_WIFI
 	select ARMV8M_HAVE_ICACHE
 	select ARMV8M_HAVE_DCACHE
 
@@ -209,7 +209,7 @@ config AMEBAGREEN2_I2CTIMEOTICKS
 endif
 
 config AMEBAGREEN2_I2S
-	bool "Amebasmart I2S"
+	bool "AmebaGreen2 I2S"
 	default n
 
 if AMEBAGREEN2_I2S
@@ -243,7 +243,7 @@ endmenu
 menu "Realtek RTL8721F WIFI Support"
 
 config AMEBAGREEN2_WIFI
-	bool "Enable Amebasmart WIFI"
+	bool "Enable AmebaGreen2 WIFI"
 	default n
 
 endmenu
@@ -251,7 +251,7 @@ endmenu
 menu "Realtek RTL8721F BLE Support"
 
 config AMEBAGREEN2_BLE
-	bool "Enable Amebasmart BLE"
+	bool "Enable AmebaGreen2 BLE"
 	default n
 	select AMEBAGREEN2_FTL
 
@@ -265,16 +265,16 @@ config AMEBAGREEN2_BLE_DEBUG
 	default n
 
 config AMEBAGREEN2_BLE_PERIPHERAL
-	bool "Enable Amebasmart BLE Peripheral"
+	bool "Enable AmebaGreen2 BLE Peripheral"
 	default n
 
 config AMEBAGREEN2_BLE_CENTRAL
-	bool "Enable Amebasmart BLE Central"
+	bool "Enable AmebaGreen2 BLE Central"
 	default n
 
 if AMEBAGREEN2_BLE_CENTRAL && AMEBAGREEN2_BLE_PERIPHERAL
 	config AMEBAGREEN2_BLE_SCATTERNET
-		bool "Enable Amebasmart BLE Scatternet"
+		bool "Enable AmebaGreen2 BLE Scatternet"
 		default n
 endif
 
@@ -285,7 +285,7 @@ endmenu
 menu "Realtek RTL8721F TrustZone Support"
 
 config AMEBAGREEN2_TRUSTZONE
-	bool "Enable Amebasmart TrustZone"
+	bool "Enable AmebaGreen2 TrustZone"
 	default n
 
 endmenu
