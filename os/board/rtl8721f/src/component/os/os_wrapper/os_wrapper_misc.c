@@ -232,8 +232,6 @@ static int wrapper_IrqFun(int irq, FAR void *context, FAR void *arg)
 	return OK;
 }
 
-/* AmebaGreen2 compile cannot find this define so hardcoded here */
-#define __NVIC_PRIO_BITS 3	/**< Number of priority bits implemented in the NVIC */
 BOOL irq_register_ram(IRQ_FUN IrqFun, IRQn_Type IrqNum, u32 Data, u32 Priority)
 {
 	if (IrqNum < 0) {
