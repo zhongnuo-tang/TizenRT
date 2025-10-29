@@ -249,7 +249,7 @@ void board_initialize(void)
 	// board_spi_initialize();
 	// board_i2s_initialize();
 #ifdef CONFIG_WATCHDOG
-	// amebagreen2_wdg_initialize(CONFIG_WATCHDOG_DEVPATH, 5000);
+	amebagreen2_wdg_initialize(CONFIG_WATCHDOG_DEVPATH, 5000);
 #endif
 #ifdef CONFIG_TIMER
 	// int i;

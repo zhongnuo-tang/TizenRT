@@ -140,7 +140,7 @@ typedef struct {
 	u16 Window; 		/*!< WDG parameter specifies window protection of WDG, the value cannot be changed when WDG is Enabled
 								This parameter must be set to a value in the 0-65535 range */
 
-	u16 Timeout; 		/*!< WDG parameter specifies WDG timeout count in units of ms
+	u32 Timeout; 		/*!< WDG parameter specifies WDG timeout count in units of ms
 								This parameter must be set to a value in the 1-65535 range */
 
 	u16 EICNT; 			/*!< WDG parameter specifies WDG early interrupt trigger threshold
@@ -192,6 +192,7 @@ typedef struct {
 _LONG_CALL_ void WDG_Wait_Busy(WDG_TypeDef *WDG);
 _LONG_CALL_ void WDG_StructInit(WDG_InitTypeDef *WDG_InitStruct);
 _LONG_CALL_ void WDG_Init(WDG_TypeDef *WDG, WDG_InitTypeDef *WDG_InitStruct);
+_LONG_CALL_ void WDG_Init_ram(WDG_TypeDef *WDG, WDG_InitTypeDef *WDG_InitStruct);
 _LONG_CALL_ void WDG_Enable(WDG_TypeDef *WDG);
 _LONG_CALL_ void WDG_Timeout(WDG_TypeDef *WDG, u32 Timeout);
 _LONG_CALL_ void WDG_Refresh(WDG_TypeDef *WDG);

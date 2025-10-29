@@ -206,6 +206,10 @@ void app_start(void)
 	XTAL_INIT();
 	mpu_init();
 	app_mpu_nocache_init();
+	if ((Get_OSC131_STATE() & RTC_BIT_FIRST_PON) == 1) {
+		SDM32K_Enable();
+		SYSTIMER_Init(); /* 0.2ms */
+	}
 	/* Let NP run */
 	HAL_WRITE32(SYSTEM_CTRL_BASE, REG_LSYS_BOOT_CFG, HAL_READ32(SYSTEM_CTRL_BASE, REG_LSYS_BOOT_CFG) | LSYS_BIT_BOOT_CPU1_RUN);
 #ifdef CONFIG_PLATFORM_TIZENRT_OS

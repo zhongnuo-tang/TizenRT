@@ -45,6 +45,36 @@ IRQn_Type WdgIrqNum = CPU1_WDG_IRQ;
 #endif
 /** @} */
 
+void WDG_Init_ram(WDG_TypeDef *WDG, WDG_InitTypeDef *WDG_InitStruct)
+{
+	u32 prescaler = 0;
+
+	if (IS_IWDG_PERIPH(WDG)) {
+		prescaler = 0x63;
+	} else {
+		prescaler = 0x5D;
+	}
+
+	WDG_Wait_Busy(WDG);
+
+	/*Enable Register access*/
+	WDG->WDG_MKEYR = WDG_ACCESS_EN;
+
+	if (WDG_InitStruct->EIMOD) {
+		WDG->WDG_CR = WDG_BIT_EIE | WDG_EICNT(WDG_InitStruct->EICNT);
+	} else {
+		WDG->WDG_CR = 0;
+	}
+  u16 time = WDG_InitStruct->Timeout/1000*348;
+
+	WDG->WDG_RLR = WDG_PRER(prescaler) | WDG_RELOAD(time);
+	WDG->WDG_WINR = WDG_WINDOW(WDG_InitStruct->Window);
+
+	/*Disable Register access*/
+	WDG->WDG_MKEYR = 0xFFFF;
+
+}
+
 /** @defgroup MBED_WDG_Exported_Functions MBED_WDG Exported Functions
   * @{
   */
@@ -65,7 +95,7 @@ void watchdog_init(uint32_t timeout_ms)
 	WDG_InitStruct.EICNT = timeout_ms > 100 ? 100 : timeout_ms / 2;
 	WDG_InitStruct.EIMOD     = ENABLE;
 
-	WDG_Init(WDGDev, &WDG_InitStruct);
+	WDG_Init_ram(WDGDev, &WDG_InitStruct);
 }
 
 /**
@@ -87,7 +117,6 @@ void watchdog_start(void)
 void watchdog_stop(void)
 {
 	printf("Once enabled, watchdog cannot be disabled.\n");
-	assert_param(0);
 }
 
 /**
