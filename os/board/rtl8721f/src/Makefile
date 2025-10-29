@@ -100,16 +100,11 @@ include component/os/tizenrt/Make.defs # Temporary, only for testing, should be 
 endif
 
 ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
-include component/bluetooth/api/Make.defs
-include component/bluetooth/api/ipc/Make.defs
-include component/bluetooth/os/tizenrt/Make.defs
-include component/bluetooth/example/utils/Make.defs
 ifeq ($(CONFIG_AMEBAGREEN2_BLE_PERIPHERAL),y)
 include component/bluetooth/example/ble_peripheral/Make.defs
 endif
 ifeq ($(CONFIG_AMEBAGREEN2_BLE_CENTRAL),y)
 include component/bluetooth/example/ble_central/Make.defs
-include component/bluetooth/profile/client/Make.defs
 endif
 ifeq ($(CONFIG_AMEBAGREEN2_BLE_SCATTERNET),y)
 include component/bluetooth/example/ble_scatternet/Make.defs
@@ -184,8 +179,6 @@ CFLAGS += -I$(TARGETDIR)/hal/include
 CFLAGS += -I$(TOPDIR)/net/netmgr
 
 ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
-CFLAGS += -I$(DIR_BT)/inc
-CFLAGS += -I$(DIR_BT)/profile/client
 endif
 
 ifeq ($(CONFIG_FTL_ENABLED),y)
