@@ -7,7 +7,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #include <atcmd_service.h>
+#endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #include <rtk_bt_common.h>
 #include <bt_utils.h>
 #include <rtk_bt_def.h>
