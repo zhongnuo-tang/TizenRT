@@ -14,7 +14,7 @@ config FLASH_START_ADDR
 
 config FLASH_SIZE
     int
-    default 8388608
+    default 16777216
     help
         A size of flash (in bytes).
         This is fixed value, so user doesn't need to change it.
