@@ -304,13 +304,3 @@ config IMG2_PSRAM
     bool "Run IMG2(Application) in PSRAM"
     default n
 endmenu
-
-menu "Realtek RTL8721F KM4/KM0 Status Check Timer"
-
-config AMEBAGREEN2_NP_LP_CHECK_INTERVAL
-	int "Timer Interval (Microseconds)"
-	default 5000000
-	---help---
-		Interval for hardware timer to check KM4/KM0 status
-
-endmenu
