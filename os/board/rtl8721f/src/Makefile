@@ -104,6 +104,7 @@ include component/bluetooth/driver/platform/amebagreen2/hci/Make.defs
 include component/bluetooth/osif/Make.defs
 include component/bluetooth/api/Make.defs
 include component/bluetooth/api/rtk_stack/Make.defs
+include component/bluetooth/rtk_stack/platform/common/Make.defs
 include component/bluetooth/rtk_coex/Make.defs
 include component/bluetooth/example/bt_atcmd/Make.defs
 include component/bluetooth/example/gatt_service/client/Make.defs
@@ -198,6 +199,7 @@ CFLAGS += -I$(DIR_BT)/rtk_stack/inc/bluetooth/gap/
 CFLAGS += -I$(DIR_BT)/rtk_stack/inc/bluetooth/profile/
 CFLAGS += -I$(DIR_BT)/rtk_stack/inc/platform/
 CFLAGS += -I$(DIR_BT)/rtk_stack/inc/stack/
+CFLAGS += -I$(DIR_BT)/rtk_stack/platform/common/
 CFLAGS += -I$(DIR_BT)/rtk_coex/
 CFLAGS += -I$(DIR_BT)/example/bt_atcmd/
 CFLAGS += -I$(DIR_BT)/example/gatt_service/client/
