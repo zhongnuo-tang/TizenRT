@@ -659,6 +659,9 @@ void os_start(void)
 	g_idletcb[0].cmn.adj_stack_size = CONFIG_IDLETHREAD_STACKSIZE;
 	g_idletcb[0].cmn.stack_alloc_ptr = (void *)(g_idle_topstack - CONFIG_IDLETHREAD_STACKSIZE);
 	g_idletcb[0].cmn.adj_stack_ptr = (void *)(g_idle_topstack - 4);
+#if CONFIG_SET_IDLE_STACK_BASEPTR
+	g_idletcb[0].cmn.stack_base_ptr  = g_idletcb[0].cmn.stack_alloc_ptr;
+#endif /* CONFIG_SET_IDLE_STACK_BASEPTR */
 
 	DEBUGASSERT(up_getsp() >= (uint32_t)g_idletcb[0].cmn.stack_alloc_ptr && up_getsp() <= (uint32_t)g_idletcb[0].cmn.adj_stack_ptr);
 
