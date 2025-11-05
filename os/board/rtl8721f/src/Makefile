@@ -123,6 +123,10 @@ include component/bluetooth/example/ble_scatternet/Make.defs
 endif
 endif
 
+ifeq ($(CONFIG_AMEBAGREEN2_FTL),y)
+include component/file_system/ftl/Make.defs
+endif
+
 ARCH_SRCDIR = 	$(TOPDIR)/arch/$(CONFIG_ARCH)/src
 BOARD_SRCDIR = 	$(TOPDIR)/board
 PROJ_DIR = 	$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/src/amebagreen2 #put autoconf for km4tz here
@@ -210,8 +214,8 @@ CFLAGS += -I$(DIR_BT)/example/gatt_service/client/
 CFLAGS += -I$(DIR_BT)/example/gatt_service/server/
 endif
 
-ifeq ($(CONFIG_FTL_ENABLED),y)
-CFLAGS += -I$(COMPONENT_DIR)/filesystem/ftl
+ifeq ($(CONFIG_AMEBAGREEN2_FTL),y)
+CFLAGS += -I$(COMPONENT_DIR)/file_system/ftl
 endif
 
 #CFLAGS += -DARM_CORE_CM4
