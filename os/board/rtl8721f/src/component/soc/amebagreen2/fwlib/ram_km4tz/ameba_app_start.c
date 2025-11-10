@@ -123,7 +123,7 @@ u32 app_mpu_nocache_init(void)
 	return 0;
 }
 
-#ifndef CONFIG_WIFI_HOST_CONTROL
+#if !(!defined (CONFIG_WHC_INTF_IPC) && defined (CONFIG_WHC_DEV))
 #if defined (__GNUC__)
 /* Add This for C++ support to avoid compile error */
 void _init(void) {}
@@ -166,7 +166,7 @@ void os_heap_init(void){
 // The Main App entry point
 void app_start(void)
 {
-#if !defined(CONFIG_WIFI_HOST_CONTROL) || defined(CONFIG_FULLMAC_NEW_VERSION) // When fullmac support XIP, need enable Cache and cannot share cache to TCM
+#if !defined(CONFIG_FULLMAC_IN_SINGLE_DIE) // When fullmac support XIP, need enable Cache and cannot share cache to TCM
 	/* enable non-secure cache */
 	Cache_Enable(ENABLE);
 #endif
@@ -207,7 +207,6 @@ void app_start(void)
 	}
 	os_heap_init();
 
-	XTAL_INIT();
 	mpu_init();
 	app_mpu_nocache_init();
 	if ((Get_OSC131_STATE() & RTC_BIT_FIRST_PON) == 1) {

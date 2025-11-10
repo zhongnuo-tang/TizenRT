@@ -317,6 +317,10 @@ void SPDIO_Device_DeInit(void)
 	SDIO_INTConfig(SDIO_WIFI, 0xffff, DISABLE);
 	SDIO_INTClearAll(SDIO_WIFI);
 
-	// Reset SDIO DMA
-	SDIO_DMA_Reset(SDIO_WIFI);
+	/* step1: abort rx request */
+	SDIO_AbortRxReq(SDIO);
+	/* step2: reset SDIO DMA */
+	SDIO_DMA_Reset(SDIO);
+	/* step3: disable fen & cke */
+	RCC_PeriphClockCmd(APBPeriph_SDD, APBPeriph_SDD_CLOCK, DISABLE);
 }
