@@ -38,10 +38,13 @@ typedef struct timer_list	_timer;
 #define rtw_timer_list timer_list
 
 #define AP_CSA_TO	(102)
-#define REAUTH_TO	(800) //(50)
+#ifdef CONFIG_SUPPLICANT_SME
+#define REAUTH_TO	(1500)
+#else
+#define REAUTH_TO	(800)
+#endif
 #define REASSOC_TO	(300) //(50)
-#define REAUTH_LIMIT	(4)
-#define REASSOC_LIMIT	(4)
+#define SAE_REAUTH_TO	(800)
 
 void init_timer(struct timer_list *timer, const char *name);
 void mod_timer(struct timer_list *timer, uint32_t delay_time_ms);

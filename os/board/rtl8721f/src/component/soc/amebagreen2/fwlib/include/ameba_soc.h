@@ -9,7 +9,7 @@
 
 #ifndef CONFIG_BUILD_ROM
 /* ram headers */
-//#include "platform_autoconf.h"
+#include "../../../../../amebagreen2/platform_autoconf.h"
 #endif
 
 /* rom headers */

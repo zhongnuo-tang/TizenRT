@@ -25,7 +25,7 @@ _list timer_table;
 
 static int timer_used_num;
 int max_timer_used_num;
-static const char *TAG = "TIMER";
+static const char *const TAG = "TIMER";
 
 void init_timer_wrapper(void)
 {
@@ -42,22 +42,22 @@ void deinit_timer_wrapper(void)
 		RTK_LOGI(TAG, "del timer entry %d\n", timer_used_num);
 	}
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	irqstate_t flags = tizenrt_critical_enter();
 #else
-	rtos_critical_enter();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+	rtos_critical_enter(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 
-	while (rtw_end_of_queue_search(&timer_table, get_next(&timer_table)) == _FALSE) {
+	while (rtw_end_of_queue_search(&timer_table, get_next(&timer_table)) == FALSE) {
 		plist = get_next(&timer_table);
 		rtw_list_delete(plist);
 	}
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	tizenrt_critical_exit(flags);
 #else
-	rtos_critical_exit();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+	rtos_critical_exit(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 }
 
 void timer_wrapper(rtos_timer_t timer_hdl)
@@ -65,14 +65,14 @@ void timer_wrapper(rtos_timer_t timer_hdl)
 	_list *plist;
 	struct timer_list *timer_entry = NULL;
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	irqstate_t flags = tizenrt_critical_enter();
 #else
-	rtos_critical_enter();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+	rtos_critical_enter(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 
 	plist = get_next(&timer_table);
-	while ((rtw_end_of_queue_search(&timer_table, plist)) == _FALSE) {
+	while ((rtw_end_of_queue_search(&timer_table, plist)) == FALSE) {
 		timer_entry = LIST_CONTAINOR(plist, struct timer_list, list);
 		if (timer_entry->timer_hdl == timer_hdl) {
 			break;
@@ -80,11 +80,11 @@ void timer_wrapper(rtos_timer_t timer_hdl)
 		plist = get_next(plist);
 	}
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	tizenrt_critical_exit(flags);
 #else
-	rtos_critical_exit();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+	rtos_critical_exit(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 
 	if (plist == &timer_table) {
 		RTK_LOGE(TAG, "Fail to find the timer_entry in timer table.\n");
@@ -104,28 +104,26 @@ void init_timer(struct timer_list *timer, const char *name)
 	if (timer->timer_hdl == NULL) {
 		rtos_timer_create_static(&timer->timer_hdl,
 								 (const char *)name,	// Just a text name, not used by the RTOS kernel.
-								 (uint32_t)NULL,	// Uniq id used to identify which timer expire..
+								 NULL,	// Uniq id used to identify which timer expire..
 								 RTOS_MAX_DELAY, // Timer Period, not 0
-								 _FALSE, // Whether timer will auto-load themselves when expires
+								 FALSE, // Whether timer will auto-load themselves when expires
 								 timer_wrapper); // Timer callback
 
 		if (timer->timer_hdl == NULL) {
 			RTK_LOGE(TAG, "Fail to init timer.\n");
 		} else {
-
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 			irqstate_t flags = tizenrt_critical_enter();
 #else
-			rtos_critical_enter();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
-
+			rtos_critical_enter(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 			rtw_list_insert_head(&timer->list, &timer_table);
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 			tizenrt_critical_exit(flags);
 #else
-			rtos_critical_exit();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+			rtos_critical_exit(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 
 			timer_used_num ++;
 			if (timer_used_num > max_timer_used_num) {
@@ -140,15 +138,15 @@ void init_timer(struct timer_list *timer, const char *name)
 void mod_timer(struct timer_list *timer, u32 delay_time_ms)
 {
 	if (timer->timer_hdl == NULL) {
-		RTK_LOGS(TAG, "ModTimer: not init.\n");
+		RTK_LOGS(TAG, RTK_LOG_ERROR, "ModTimer: not init.\n");
 	} else if (rtos_timer_is_timer_active(timer->timer_hdl) == TRUE) {
 		rtos_timer_stop(timer->timer_hdl, RTOS_TIMER_MAX_DELAY);
 	}
 
 	//Set Timer period
 	if (timer->timer_hdl != NULL)
-		if (rtos_timer_change_period(timer->timer_hdl, delay_time_ms, RTOS_TIMER_MAX_DELAY) == FAIL) {
-			RTK_LOGS(TAG, "ModTimer fail\n");
+		if (rtos_timer_change_period(timer->timer_hdl, delay_time_ms, RTOS_TIMER_MAX_DELAY) == RTK_FAIL) {
+			RTK_LOGS(TAG, RTK_LOG_ERROR, "ModTimer fail\n");
 		}
 }
 
@@ -161,29 +159,28 @@ void  cancel_timer_ex(struct timer_list *timer)
 		return;
 	}
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	irqstate_t flags = tizenrt_critical_enter();
 #else
-	rtos_critical_enter();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+	rtos_critical_enter(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 
 	plist = get_next(&timer_table);
-	while ((rtw_end_of_queue_search(&timer_table, plist)) == _FALSE) {
+	while ((rtw_end_of_queue_search(&timer_table, plist)) == FALSE) {
 		timer_entry = LIST_CONTAINOR(plist, struct timer_list, list);
 		if (timer_entry->timer_hdl == timer->timer_hdl) {
 			break;
 		}
 		plist = get_next(plist);
 	}
-
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	tizenrt_critical_exit(flags);
 #else
-	rtos_critical_exit();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+	rtos_critical_exit(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 
 	if (plist == &timer_table) {
-		RTK_LOGS(TAG, "CancelTimer Fail(%x)\n", (unsigned int)timer->timer_hdl);
+		RTK_LOGS(TAG, RTK_LOG_ERROR, "CancelTimer Fail(%x)\n", (unsigned int)timer->timer_hdl);
 	} else {
 		rtos_timer_stop(timer->timer_hdl, RTOS_TIMER_MAX_DELAY);
 	}
@@ -198,14 +195,14 @@ void  del_timer_sync(struct timer_list *timer)
 		return;
 	}
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	irqstate_t flags = tizenrt_critical_enter();
 #else
-	rtos_critical_enter();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+	rtos_critical_enter(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 
 	plist = get_next(&timer_table);
-	while ((rtw_end_of_queue_search(&timer_table, plist)) == _FALSE) {
+	while ((rtw_end_of_queue_search(&timer_table, plist)) == FALSE) {
 		timer_entry = LIST_CONTAINOR(plist, struct timer_list, list);
 		if (timer_entry->timer_hdl == timer->timer_hdl) {
 			rtw_list_delete(plist);
@@ -214,14 +211,14 @@ void  del_timer_sync(struct timer_list *timer)
 		plist = get_next(plist);
 	}
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	tizenrt_critical_exit(flags);
 #else
-	rtos_critical_exit();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+	rtos_critical_exit(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 
 	if (plist == &timer_table) {
-		RTK_LOGS(TAG, "DelTimer Fail\n");
+		RTK_LOGS(TAG, RTK_LOG_ERROR, "DelTimer Fail\n");
 	} else {
 		rtos_timer_delete_static(timer->timer_hdl, RTOS_TIMER_MAX_DELAY);
 		timer->timer_hdl = NULL;

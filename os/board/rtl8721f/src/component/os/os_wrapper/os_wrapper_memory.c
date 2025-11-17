@@ -8,9 +8,9 @@
 #include "ameba.h"
 #include "os_wrapper.h"
 
-/* For Smart, need to align malloc to 64bytes (cache line size of AP) for cache operations */
-#define ALIGN 64
-#define ALIGN_MASK 0x003f
+/* For Green2, need to align malloc to 32bytes (cache line size of AP) for cache operations */
+#define ALIGN 32
+#define ALIGN_MASK 0x001f
 
 void *rtos_mem_malloc(uint32_t size)
 {

@@ -91,7 +91,7 @@ extern u32 EFUSERead8(u32 CtrlSetting, u32 Addr, u8 *Data, u8 L25OutVoltage);
 extern int i2schar_devinit(void);
 #endif
 
-extern void wlan_initialize(void);
+extern void wifi_init(void);
 /************************************************************************************
  * Private Functions
  ************************************************************************************/
@@ -236,6 +236,10 @@ void board_initialize(void)
 	ipc_table_init(IPCAP_DEV);
 	InterruptRegister(IPC_INTHandler, IPC_CPU0_IRQ, (u32)IPCAP_DEV, INT_PRI5);
 	InterruptEn(IPC_CPU0_IRQ, INT_PRI5);
+	/* Set delay function & critical function for hw ipc sema */
+	/* TODO */
+	// IPC_patch_function(&rtos_critical_enter, &rtos_critical_exit);
+	// IPC_SEMDelayStub(rtos_time_delay_ms);
 #if 0 //def CONFIG_MBED_TLS_ENABLED
 	app_mbedtls_rom_init();
 #endif
@@ -275,7 +279,7 @@ void board_initialize(void)
 	app_ftl_init();
 #endif
 #ifdef CONFIG_AMEBAGREEN2_WIFI
-	wlan_initialize();
+	wifi_init();
 #endif
 #ifdef CONFIG_AMEBAGREEN2_BLE
 	bt_ipc_api_init_host();

@@ -17,11 +17,7 @@
 
 #include <os_wrapper.h>
 #include <stdio.h>
-#ifdef CONFIG_PLATFORM_TIZENRT_OS
-#include "ameba_tizenrt_pmu.h"
-#else
 #include <ameba_pmu.h>
-#endif //CONFIG_PLATFORM_TIZENRT_OS
 #include <rtw_atomic.h>
 
 void ATOMIC_SET(ATOMIC_T *v, int i)
@@ -48,20 +44,18 @@ void ATOMIC_ADD(ATOMIC_T *v, int i)
 	atomic_fetch_add(v, i);
 #else
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	irqstate_t flags = tizenrt_critical_enter();
 #else
-	rtos_critical_enter();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
-
+	rtos_critical_enter(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	v->counter += i;
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	tizenrt_critical_exit(flags);
 #else
-	rtos_critical_exit();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
-
+	rtos_critical_exit(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 #endif
 }
 
@@ -71,20 +65,17 @@ void ATOMIC_SUB(ATOMIC_T *v, int i)
 	atomic_fetch_sub(v, i);
 #else
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	irqstate_t flags = tizenrt_critical_enter();
 #else
-	rtos_critical_enter();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
-
+	rtos_critical_enter(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	v->counter -= i;
-
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	tizenrt_critical_exit(flags);
 #else
-	rtos_critical_exit();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
-
+	rtos_critical_exit(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 #endif
 }
 
@@ -106,21 +97,19 @@ int ATOMIC_SUB_RETURN(ATOMIC_T *v, int i)
 #else
 	int temp;
 
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	irqstate_t flags = tizenrt_critical_enter();
 #else
-	rtos_critical_enter();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
-
+	rtos_critical_enter(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	temp = v->counter;
 	temp -= i;
 	v->counter = temp;
-
-#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 	tizenrt_critical_exit(flags);
 #else
-	rtos_critical_exit();
-#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS) && defined(ARM_CORE_CA32)
+	rtos_critical_exit(RTOS_CRITICAL_WIFI);
+#endif //#if defined(CONFIG_PLATFORM_TIZENRT_OS)
 
 	return temp;
 #endif

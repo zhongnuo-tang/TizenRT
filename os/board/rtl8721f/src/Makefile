@@ -76,12 +76,12 @@ endif
 include Make.defs
 include component/soc/amebagreen2/fwlib/ram_km4tz/Make.defs
 include component/soc/amebagreen2/fwlib/ram_common/Make.defs
+include component/soc/common/diagnose/Make.defs
 include component/soc/amebagreen2/hal/src/Make.defs
 include component/usrcfg/rtl8721f/Make.defs
 
-#include component/lwip/api/Make.defs
+include component/lwip/api/Make.defs
 #include component/os_dep/Make.defs
-# include component/wifi/Make.defs
 # include component/wifi/inic/Make.defs
 # include component/wifi/driver/src/core/Make.defs
 # include component/wifi/driver/src/core/option/Make.defs
@@ -92,10 +92,12 @@ include component/wifi/common/Make.defs
 include component/os/os_wrapper/Make.defs
 
 ifeq ($(CONFIG_AMEBAGREEN2_WIFI),y)
+include component/wifi/Make.defs
 include component/wifi/api/Make.defs
-include component/wifi/promisc/Make.defs
+include component/wifi/rtk_app/wifi_feature_disable/Make.defs
+include component/wifi/rtk_app/wifi_init/Make.defs
 include component/wifi/wpa_supplicant/wpa_supplicant/Make.defs
-include component/soc/amebagreen2/misc/Make.defs
+include component/os/tizenrt/Make.defs # Temporary, only for testing, should be covered either under wifi or ble
 endif
 
 ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
@@ -117,7 +119,7 @@ endif
 
 ARCH_SRCDIR = 	$(TOPDIR)/arch/$(CONFIG_ARCH)/src
 BOARD_SRCDIR = 	$(TOPDIR)/board
-PROJ_DIR = 	$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/src/amebagreen2_gcc_project
+PROJ_DIR = 	$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/src/amebagreen2 #put autoconf for km4tz here
 COMPONENT_DIR = $(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/src/component
 DIR_WIFI = 	$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/src/component/wifi
 DIR_OSDEP = 	$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/src/component/os_dep
@@ -132,7 +134,7 @@ TARGETDIR = 	$(COMPONENT_DIR)/soc/amebagreen2
 CFLAGS += -I$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/include
 CFLAGS += -I$(DIR)/../include
 CFLAGS += -I$(TOPDIR)/arch/$(CONFIG_ARCH)/src/armv8-m
-# CFLAGS += -I$(PROJ_DIR)/inc/inc_km4
+CFLAGS += -I$(PROJ_DIR) # for autoconfs
 # CFLAGS += -I$(TARGETDIR)/bootloader
 # CFLAGS += -I$(TARGETDIR)/cmsis
 # CFLAGS += -I$(TARGETDIR)/cmsis-dsp/Include
@@ -148,6 +150,7 @@ CFLAGS += -I$(TARGETDIR)/fwlib/include/cmsis/source
 # CFLAGS += -I$(TARGETDIR)/swlib
 # CFLAGS += -I$(TARGETDIR)/misc
 # CFLAGS += -I$(COMPONENT_DIR)/os_dep
+CFLAGS += -I$(COMPONENT_DIR)/usrcfg/common
 CFLAGS += -I$(COMPONENT_DIR)/usrcfg/rtl8721f/include
 
 # CFLAGS += -I$(COMPONENT_DIR)/wifi
@@ -159,19 +162,27 @@ CFLAGS += -I$(COMPONENT_DIR)/usrcfg/rtl8721f/include
 # CFLAGS += -I$(COMPONENT_DIR)/wifi/driver/include
 # CFLAGS += -I$(COMPONENT_DIR)/wifi/driver/src/core/option
 # CFLAGS += -I$(COMPONENT_DIR)/wifi/wpa_supplicant/src/crypto
-# CFLAGS += -I$(COMPONENT_DIR)/lwip/api
+CFLAGS += -I$(COMPONENT_DIR)/lwip/api
 # CFLAGS += -I$(COMPONENT_DIR)/ssl/mbedtls_ram_map/rom
-CFLAGS += -I$(COMPONENT_DIR)/wifi/common
 CFLAGS += -I$(COMPONENT_DIR)/os/tizenrt
 # CFLAGS += -I$(DIR_MBED)
 CFLAGS += -I$(DIR_OSDEP)
-# CFLAGS += -I$(DIR_WIFI)/wpa_supplicant/src
-# CFLAGS += -I$(DIR_WIFI)/wifi_fast_connect
+CFLAGS += -I$(DIR_WIFI)/api
+CFLAGS += -I$(DIR_WIFI)/common
+CFLAGS += -I$(DIR_WIFI)/driver/halcommon_rom
+CFLAGS += -I$(DIR_WIFI)/driver/include
+CFLAGS += -I$(DIR_WIFI)/driver/intf
+CFLAGS += -I$(DIR_WIFI)/whc
+CFLAGS += -I$(DIR_WIFI)/whc/whc_host_rtos
+CFLAGS += -I$(DIR_WIFI)/whc/whc_host_rtos/ipc
+CFLAGS += -I$(DIR_WIFI)/wpa_supplicant/src
+CFLAGS += -I$(DIR_WIFI)/wpa_supplicant/wpa_lite
+CFLAGS += -I$(DIR_WIFI)/wpa_supplicant/wpa_lite/rom
 CFLAGS += -I$(TARGETDIR)/hal/src
 CFLAGS += -I$(TARGETDIR)/hal/include
 # CFLAGS += -I$(TARGETDIR)/mbed/hal_ext
 # CFLAGS += -I$(TARGETDIR)/mbed/targets/hal/rtl8721f
-# CFLAGS += -I$(TOPDIR)/net/netmgr
+CFLAGS += -I$(TOPDIR)/net/netmgr
 
 ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
 CFLAGS += -I$(DIR_BT)/inc

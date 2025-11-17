@@ -12,13 +12,25 @@ int rtos_critical_is_in_interrupt(void)
 	return up_interrupt_context();
 }
 
-void rtos_critical_enter(void)
+void rtos_critical_enter(uint32_t component_id)
 {
 	/* TIZEN_RT_NOT_REQUIRED */
 	dbg("%s not implemented\n", __FUNCTION__);
 }
 
-void rtos_critical_exit(void)
+void rtos_critical_exit(uint32_t component_id)
+{
+	/* TIZEN_RT_NOT_REQUIRED */
+	dbg("%s not implemented\n", __FUNCTION__);
+}
+
+void __rtos_critical_enter_os(void)
+{
+	/* TIZEN_RT_NOT_REQUIRED */
+	dbg("%s not implemented\n", __FUNCTION__);
+}
+
+void __rtos_critical_exit_os(void)
 {
 	/* TIZEN_RT_NOT_REQUIRED */
 	dbg("%s not implemented\n", __FUNCTION__);
