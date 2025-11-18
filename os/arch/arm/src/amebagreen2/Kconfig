@@ -83,13 +83,6 @@ config RTL8721F_UART2
 	select ARCH_HAVE_UART2
 	select ARCH_HAVE_SERIAL_TERMIOS
 
-config RTL8721F_UART3
-	bool "UART 3"
-	default n
-	select RTL8721F_UART
-	select ARCH_HAVE_UART3
-	select ARCH_HAVE_SERIAL_TERMIOS
-
 config RTL8721F_UART4
 	bool "UART 4"
 	default n

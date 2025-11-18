@@ -391,7 +391,6 @@ void serial_init(serial_t *obj, PinName tx, PinName rx)
 
 	InterruptRegister((IRQ_FUN)uart_irqhandler, puart_adapter->IrqNum, (u32)puart_adapter, INT_PRI_MIDDLE);
 	InterruptEn(puart_adapter->IrqNum, INT_PRI_MIDDLE);
-	DiagPrintf("396");
 
 #ifdef CONFIG_MBED_ENABLED
 	// For stdio management
@@ -402,6 +401,21 @@ void serial_init(serial_t *obj, PinName tx, PinName rx)
 #endif
 	DiagPrintf("init done\n");
 
+}
+
+/**
+  * @brief  Initializes the UART device, include clock/function/interrupt/UART registers Pin only. (Samsung customised)
+  * @param  tx: Tx PinName according to pinmux spec.
+  * @param  rx: Rx PinName according to pinmux spec.
+  * @param  uart_idx: UART index
+  * @return none
+  */
+void serial_pin_init(PinName tx, PinName rx, u8 uart_idx) 
+{
+	pin_function(tx, PinMap_UART_TX[uart_idx]);
+	pin_function(rx, PinMap_UART_RX[uart_idx]);
+	pin_mode(tx, PullUp);
+	pin_mode(rx, PullUp);
 }
 
 /**
@@ -624,6 +638,24 @@ void serial_irq_set(serial_t *obj, SerialIrq irq, uint32_t enable)
 }
 
 /**
+  * @brief  Enable/Disable UART loopback mode.
+  * @param  obj: uart object define in application software.
+  * @param  enable: enable/disable the loopback mode
+  *             @arg 0 disable
+  *             @arg 1 enable
+  * @return none
+  */
+void serial_control_loopback(serial_t *obj, bool enable)
+{
+	UART_TypeDef* UARTx = UART_DEV_TABLE[obj->uart_idx].UARTx;
+	if (enable) {
+		UARTx->MCR |= BIT(4);
+	} else {
+		UARTx->MCR &= ~BIT(4);
+	}
+}
+
+/**
  * @brief Get one byte data through UART.
  * @param obj UART object defined in application software.
  * @return Received character.
@@ -690,6 +722,25 @@ int serial_writable(serial_t *obj)
 	PMBED_UART_ADAPTER puart_adapter = &(uart_adapter[obj->uart_idx]);
 
 	if (UART_Writable(puart_adapter->UARTx)) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+/**
+  * @brief  Check if transmit fifo is empty
+  * @param  obj: uart object define in application software.
+  * @return status value:
+  *          - 1: TRUE
+  *          - 0: FALSE
+  */
+int serial_tx_empty(serial_t *obj)
+{
+	PMBED_UART_ADAPTER puart_adapter = &(uart_adapter[obj->uart_idx]);
+	u32 reg_lsr = UART_LineStatusGet(puart_adapter->UARTx);
+
+	if (reg_lsr & RUART_BIT_TX_EMPTY) {
 		return 1;
 	} else {
 		return 0;
