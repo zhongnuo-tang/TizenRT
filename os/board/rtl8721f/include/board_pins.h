@@ -29,33 +29,24 @@
 
 /* UART pins configuration */
 #ifdef CONFIG_RTL8721F_UART0
-#define		UART0_TX	PA_3
-#define		UART0_RX	PA_2
-#endif
+#define		UART0_TX	PA_5
+#define		UART0_RX	PA_6
+#endif /* CONFIG_RTL8721F_UART0 */
 
 #ifdef CONFIG_RTL8721F_UART1
-#if defined(CONFIG_RTL8721F_BOARD_AIL) || defined(CONFIG_RTL8721F_BOARD_AILP) || defined(CONFIG_RTL8721F_BOARD_AILPW)
-#define		UART1_TX	PA_10
-#define		UART1_RX	PA_9
-#elif defined(CONFIG_RTL8721F_BOARD_AID)
-#define		UART1_TX	PA_5
-#define		UART1_RX	PA_4
-#else
-#error Not Supported, Please check the board type configure
-#endif
-#endif							// CONFIG_RTL8721F_UART1
+#define		UART1_TX	PA_25
+#define		UART1_RX	PA_26
+#endif /* CONFIG_RTL8721F_UART1 */
 
 #ifdef CONFIG_RTL8721F_UART2
-#define		UART2_TX	PB_22
-#define		UART2_RX	PB_21
-#define		UART2_RTS	PB_20
-#define		UART2_CTS	PB_19
-#endif
+#define		UART2_TX	PB_8
+#define		UART2_RX	PB_9
+#endif /* CONFIG_RTL8721F_UART2 */
 
 #ifdef CONFIG_RTL8721F_UART4
 #define		UART4_TX	PB_20
 #define		UART4_RX	PA_2
-#endif
+#endif /* CONFIG_RTL8721F_UART4 */
 
 /* SPI pins configuration */
 #ifdef CONFIG_AMEBAGREEN2_SPI
@@ -229,9 +220,9 @@
 #define		WAKEPIN_2	((u32)0x00000002)	/*!< see aon_wakepin */
 #define		WAKEPIN_3	((u32)0x00000003)	/*!< see aon_wakepin */
 
-#define IS_UART0_TX(tx) ((tx == PA_3) || (tx == PA_14) || (tx == PA_29) || (tx == PB_6))
-#define IS_UART1_TX(tx) ((tx == PA_5) || (tx == PA_10) || (tx == PA_25) || (tx == PB_11) || (tx == PB_30))
-#define IS_UART2_TX(tx) ((tx == PA_8) || (tx == PA_12) || (tx == PA_23) || (tx == PB_22))
+#define IS_UART0_TX(tx) (tx == PA_5)
+#define IS_UART1_TX(tx) (tx == PA_25)
+#define IS_UART2_TX(tx) (tx == PB_8)
 #define IS_UART4_TX(tx) (tx == PB_20)
 
 /* I2S2 pins configuration */

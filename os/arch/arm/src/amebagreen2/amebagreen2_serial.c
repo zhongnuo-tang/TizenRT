@@ -126,12 +126,6 @@
 #define CONSOLE                 UART2_DEV
 #define UART2_ASSIGNED  1
 #define HAVE_SERIAL_CONSOLE
-#elif defined(CONFIG_UART3_SERIAL_CONSOLE)
-#define CONSOLE_DEV             g_uart3port             /* UART3 is console */
-#define TTYS0_DEV               g_uart3port             /* UART3 is ttyS0 */
-#define CONSOLE                 UART3_DEV
-#define UART3_ASSIGNED  1
-#define HAVE_SERIAL_CONSOLE
 #elif defined(CONFIG_UART4_SERIAL_CONSOLE)
 #define CONSOLE_DEV             g_uart4port             /* UART4 is console */
 #define TTYS0_DEV               g_uart4port             /* UART4 is ttyS0 */
@@ -149,9 +143,6 @@
 #elif defined(CONFIG_RTL8721F_UART2)
 #define TTYS0_DEV               g_uart2port             /* UART2 is ttyS0 */
 #define UART2_ASSIGNED  1
-#elif defined(CONFIG_RTL8721F_UART3)
-#define TTYS0_DEV               g_uart3port             /* UART3 is ttyS0 */
-#define UART3_ASSIGNED  1
 #elif defined(CONFIG_RTL8721F_UART4)
 #define TTYS0_DEV               g_uart4port             /* UART4 is ttyS0 */
 #define UART4_ASSIGNED  1
@@ -168,9 +159,6 @@
 #elif defined(CONFIG_RTL8721F_UART2) && !defined(UART2_ASSIGNED)
 #define TTYS1_DEV               g_uart2port             /* UART2 is ttyS1 */
 #define UART2_ASSIGNED  1
-#elif defined(CONFIG_RTL8721F_UART3) && !defined(UART3_ASSIGNED)
-#define TTYS1_DEV               g_uart3port             /* UART3 is ttyS1 */
-#define UART3_ASSIGNED  1
 #elif defined(CONFIG_RTL8721F_UART4) && !defined(UART4_ASSIGNED)
 #define TTYS1_DEV               g_uart4port             /* UART4 is ttyS1 */
 #define UART4_ASSIGNED  1
@@ -187,9 +175,6 @@
 #elif defined(CONFIG_RTL8721F_UART2) && !defined(UART2_ASSIGNED)
 #define TTYS2_DEV               g_uart2port             /* UART2 is ttyS2 */
 #define UART2_ASSIGNED  1
-#elif defined(CONFIG_RTL8721F_UART3) && !defined(UART3_ASSIGNED)
-#define TTYS2_DEV               g_uart3port             /* UART3 is ttyS2 */
-#define UART3_ASSIGNED  1
 #elif defined(CONFIG_RTL8721F_UART4) && !defined(UART4_ASSIGNED)
 #define TTYS2_DEV               g_uart4port             /* UART4 is ttyS2 */
 #define UART4_ASSIGNED  1
@@ -320,10 +305,6 @@ static char g_uart1txbuffer[CONFIG_UART1_TXBUFSIZE];
 static char g_uart2rxbuffer[CONFIG_UART2_RXBUFSIZE];
 static char g_uart2txbuffer[CONFIG_UART2_TXBUFSIZE];
 #endif
-#ifdef CONFIG_RTL8721F_UART3
-static char g_uart3rxbuffer[CONFIG_UART3_RXBUFSIZE];
-static char g_uart3txbuffer[CONFIG_UART3_TXBUFSIZE];
-#endif
 #ifdef CONFIG_RTL8721F_UART4
 static char g_uart4rxbuffer[CONFIG_UART4_RXBUFSIZE];
 static char g_uart4txbuffer[CONFIG_UART4_TXBUFSIZE];
@@ -332,7 +313,6 @@ static char g_uart4txbuffer[CONFIG_UART4_TXBUFSIZE];
 #define RTL8721F_UART0_IRQ		(36)
 #define RTL8721F_UART1_IRQ		(37)
 #define RTL8721F_UART2_IRQ		(38)
-#define RTL8721F_UART3_BT_IRQ	(39)
 #define RTL8721F_UART_LOG_IRQ	(40)
 #define RTL8721F_IRQ_FIRST		(16)
 #ifdef CONFIG_RTL8721F_UART0
@@ -417,8 +397,6 @@ static struct rtl8721f_up_dev_s g_uart2priv = {
 	.irq = RTL8721F_UART2_IRQ,
 	.tx = UART2_TX,
 	.rx = UART2_RX,
-	.rts = UART2_RTS,
-	.cts = UART2_CTS,
 	.FlowControl = FlowControlNone,
 	.txint_enable = false,
 	.rxint_enable = false,
@@ -436,38 +414,6 @@ static uart_dev_t g_uart2port = {
 	},
 	.ops = &g_uart_ops,
 	.priv = &g_uart2priv,
-};
-#endif
-
-#ifdef CONFIG_RTL8721F_UART3
-static struct rtl8721f_up_dev_s g_uart3priv = {
-
-	.parity = CONFIG_UART3_PARITY,
-	.bits = CONFIG_UART3_BITS,
-#if (CONFIG_UART3_2STOP)
-	.stopbit = 2,
-#else
-	.stopbit = 1,
-#endif
-	.baud = CONFIG_UART3_BAUD,
-	.irq = RTL8721F_UART3_BT_IRQ,
-	.FlowControl = FlowControlNone,
-	.txint_enable = false,
-	.rxint_enable = false,
-};
-
-static uart_dev_t g_uart3port = {
-	.isconsole = false,
-	.recv = {
-		.size = CONFIG_UART3_RXBUFSIZE,
-		.buffer = g_uart3rxbuffer,
-	},
-	.xmit = {
-		.size = CONFIG_UART3_TXBUFSIZE,
-		.buffer = g_uart3txbuffer,
-	},
-	.ops = &g_uart_ops,
-	.priv = &g_uart3priv,
 };
 #endif
 
@@ -509,21 +455,24 @@ static uart_dev_t g_uart4port = {
  * Private Functions
  ****************************************************************************/
 
-static u32 uart_index_get(PinName tx)
+static inline u32 uart_index_get(PinName tx)
 {
 	if (IS_UART0_TX(tx)) {
-		return 0;
-	} else if (IS_UART1_TX(tx)) {
-		return 1;
-	} else if (IS_UART2_TX(tx)) {
-		return 2;
-	} else if (IS_UART4_TX(tx)) {
-		return 4;
-	} else {
-		assert_param(0);
+		return 0U;
+	}
+	if (IS_UART1_TX(tx)) {
+		return 1U;
+	}
+	if (IS_UART2_TX(tx)) {
+		return 2U;
+	}
+	if (IS_UART4_TX(tx)) {
+		return 4U;
 	}
 
-	return -1;
+	/* Should never get here for valid PinName values */
+	DEBUGASSERT(false);
+	return UINT32_MAX;
 }
 
 /****************************************************************************
@@ -867,8 +816,8 @@ static int rtl8721f_up_setup_pin(struct uart_dev_s *dev)
 {
 	struct rtl8721f_up_dev_s *priv = (struct rtl8721f_up_dev_s *)dev->priv;
 	DEBUGASSERT(priv);
-
-	serial_pin_init(priv->tx, priv->rx);
+	u8 uart_idx = uart_index_get(priv->tx);
+	serial_pin_init(priv->tx, priv->rx, uart_idx);
 	return OK;
 }
 
@@ -887,7 +836,7 @@ static void rtl8721f_up_shutdown(struct uart_dev_s *dev)
 	DEBUGASSERT(priv);
 	DEBUGASSERT(sdrv[uart_index_get(priv->tx)]);
 	serial_free(sdrv[uart_index_get(priv->tx)]);
-	rtw_free(sdrv[uart_index_get(priv->tx)]);
+	rtos_mem_free(sdrv[uart_index_get(priv->tx)]);
 	sdrv[uart_index_get(priv->tx)] = NULL;
 }
 
