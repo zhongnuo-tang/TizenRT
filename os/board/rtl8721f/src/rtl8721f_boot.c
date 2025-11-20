@@ -264,13 +264,13 @@ void board_initialize(void)
 	struct rtc_lowerhalf_s *rtclower;
 	int ret;
 
-	// rtclower = (FAR struct rtc_lowerhalf_s *)amebagreen2_rtc_lowerhalf();
-	// if (rtclower) {
-	// 	ret = rtc_initialize(0, rtclower);
-	// 	if (ret < 0) {
-	// 		lldbg("Failed to register the RTC driver: %d\n", ret);
-	// 	}
-	// }
+	rtclower = (FAR struct rtc_lowerhalf_s *)amebagreen2_rtc_lowerhalf();
+	if (rtclower) {
+		ret = rtc_initialize(0, rtclower);
+		if (ret < 0) {
+			lldbg("Failed to register the RTC driver: %d\n", ret);
+		}
+	}
 #endif
 #ifdef CONFIG_FTL_ENABLED
 	app_ftl_init();
