@@ -51,21 +51,21 @@
 /* SPI pins configuration */
 #ifdef CONFIG_AMEBAGREEN2_SPI
 #ifdef CONFIG_AMEBAGREEN2_SPI0
-#define		SPI0_MOSI	PB_4
-#define		SPI0_MISO	PB_3
-#define		SPI0_SCLK	PB_6
-#define		SPI0_CS0	PB_5
+#define		SPI0_MOSI  _PA_15
+#define		SPI0_MISO  _PA_16
+#define		SPI0_SCLK  _PA_14
+#define		SPI0_CS    _PA_17
 #if defined(CONFIG_SPI_CS) && defined(CONFIG_AMEBAGREEN2_SPI0_CS)
 #define		SPI0_CS1	PB_31
 #endif
 #endif							// CONFIG_AMEBAGREEN2_SPI0
 
 #ifdef CONFIG_AMEBAGREEN2_SPI1
-#define		SPI1_MOSI	PB_28
-#define		SPI1_MISO	PB_27
-#define		SPI1_SCLK	PB_25
-#define		SPI1_CS0	PB_26
-#if defined(CONFIG_SPI_CS) && defined(CONFIG_AMEBAGREEN2_SPI0_CS)
+#define		SPI1_MOSI  _PB_24
+#define		SPI1_MISO  _PB_25
+#define		SPI1_SCLK  _PB_23
+#define		SPI1_CS    _PB_26
+#if defined(CONFIG_SPI_CS) && defined(CONFIG_AMEBAGREEN2_SPI1_CS)
 #define		SPI1_CS1	PB_29
 #endif
 #endif							// CONFIG_AMEBAGREEN2_SPI1
