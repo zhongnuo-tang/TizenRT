@@ -177,7 +177,7 @@ ifeq ($(CONFIG_BOARDCTL_RESET),y)
 CHIP_CSRCS += amebagreen2_systemreset.c
 endif
 ifeq ($(CONFIG_SYSTEM_REBOOT_REASON),y)
-#CMN_CSRCS += amebagreen2_reboot_reason.c #FIXME
+CMN_CSRCS += amebagreen2_reboot_reason.c
 endif
 ifeq ($(CONFIG_BINARY_SIGNING),y)
 #CMN_CSRCS += amebagreen2_signature.c
