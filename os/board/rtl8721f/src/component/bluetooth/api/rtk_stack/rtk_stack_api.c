@@ -73,7 +73,9 @@ static void bt_stack_api_taskentry(void *ctx)
 
 	osif_sem_give(api_task_sem);
 
+#if defined(configENABLE_TRUSTZONE) && (configENABLE_TRUSTZONE == 1)
 	osif_create_secure_context(BT_SECURE_STACK_SIZE);
+#endif
 
 	while (true) {
 		if (true == osif_msg_recv(api_task_evt_msg_q, &event, BT_TIMEOUT_FOREVER)) {
