@@ -87,7 +87,7 @@ include component/lwip/api/Make.defs
 # include component/wifi/driver/src/core/option/Make.defs
 # include component/ssl/mbedtls_ram_map/rom/Make.defs
 # include component/mbed/targets/hal/rtl8721f/Make.defs
-# include component/os/tizenrt/Make.defs
+include component/os/tizenrt/Make.defs
 include component/wifi/common/Make.defs
 include component/os/os_wrapper/Make.defs
 

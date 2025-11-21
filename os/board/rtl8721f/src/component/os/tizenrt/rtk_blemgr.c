@@ -1,6 +1,6 @@
 /******************************************************************
  *
- * Copyright 2022 Samsung Electronics All Rights Reserved.
+ * Copyright 2025 Samsung Electronics All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -227,19 +227,19 @@ struct trble_ops g_trble_drv_ops = {
 trble_result_e trble_netmgr_init(struct bledev *dev, trble_client_init_config *client, trble_server_init_config *server)
 {
 	trble_result_e ret = TRBLE_INVALID_ARGS;
-	 if (!wifi_is_running(0)) {
-	 	TRBLE_TEST_ERR("[TRBLE] WiFi is off. Please turn on WiFi first.\n");
-	 	return TRBLE_FAIL;
-	 }
-#ifdef CONFIG_AMEBASMART_BLE_SCATTERNET
+	if (!wifi_is_running(0)) {
+		TRBLE_TEST_ERR("[TRBLE] WiFi is off. Please turn on WiFi first.\n");
+		return TRBLE_FAIL;
+	}
+#ifdef CONFIG_AMEBAGREEN2_BLE_SCATTERNET
 	if (client != NULL && server != NULL) {
 		ret = rtw_ble_combo_init(client, server);
 	}
-#elif defined(CONFIG_AMEBASMART_BLE_CENTRAL)
+#elif defined(CONFIG_AMEBAGREEN2_BLE_CENTRAL)
 	if (client != NULL) {
 		ret = rtw_ble_client_init(client);
 	}
-#elif defined(CONFIG_AMEBASMART_BLE_PERIPHERAL)
+#elif defined(CONFIG_AMEBAGREEN2_BLE_PERIPHERAL)
 	if (server != NULL) {
 		ret = rtw_ble_server_init(server);
 	}
@@ -259,11 +259,11 @@ trble_result_e trble_netmgr_init(struct bledev *dev, trble_client_init_config *c
 trble_result_e trble_netmgr_deinit(struct bledev *dev)
 {
 	trble_result_e ret = TRBLE_FAIL;
-#ifdef CONFIG_AMEBASMART_BLE_SCATTERNET
+#ifdef CONFIG_AMEBAGREEN2_BLE_SCATTERNET
 	ret = rtw_ble_combo_deinit();
-#elif defined(CONFIG_AMEBASMART_BLE_CENTRAL)
+#elif defined(CONFIG_AMEBAGREEN2_BLE_CENTRAL)
 	ret = rtw_ble_client_deinit();
-#elif defined(CONFIG_AMEBASMART_BLE_PERIPHERAL)
+#elif defined(CONFIG_AMEBAGREEN2_BLE_PERIPHERAL)
 	ret = rtw_ble_server_deinit();
 #endif
 	if (ret == TRBLE_SUCCESS) {
@@ -482,7 +482,7 @@ trble_result_e trble_netmgr_write_read_queue_count(struct bledev *dev, trble_con
 trble_result_e trble_netmgr_set_server_config(struct bledev *dev, trble_server_init_config *server)
 {
 	trble_result_e ret = TRBLE_FAIL;
-#ifdef CONFIG_AMEBASMART_BLE_SCATTERNET
+#ifdef CONFIG_AMEBAGREEN2_BLE_SCATTERNET
 	if (server != NULL) {
 		ret = rtw_ble_combo_set_server_config(server);
 	}

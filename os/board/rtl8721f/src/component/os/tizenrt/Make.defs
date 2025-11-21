@@ -52,8 +52,11 @@
 CSRCS += lwip_intf_tizenrt.c \
        ethernetif_tizenrt.c
 
-CSRCS += rtk_netmgr.c \
-       # rtk_blemgr.c \ temporary skip first
+CSRCS += rtk_netmgr.c
+
+ifdef CONFIG_AMEBAGREEN2_BLE
+CSRCS += rtk_blemgr.c
+endif
 
 DEPPATH += --dep-path component/os/tizenrt
 VPATH += :component/os/tizenrt
