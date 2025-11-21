@@ -441,7 +441,9 @@ extern "C"
 #define RTK_BLE_5_0_USE_EXTENDED_ADV        1
 #endif
 
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #define RTK_BT_API_MEM_PRE_ALLOC            1
+#endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 
 #if defined(RTK_BT_API_MEM_PRE_ALLOC) && RTK_BT_API_MEM_PRE_ALLOC
 #define BT_API_SEM_POOL_SIZE                8
