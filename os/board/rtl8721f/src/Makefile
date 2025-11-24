@@ -205,6 +205,7 @@ CFLAGS += -I$(DIR_BT)/api/rtk_stack/
 CFLAGS += -I$(DIR_BT)/rtk_stack/inc/app/
 CFLAGS += -I$(DIR_BT)/rtk_stack/inc/bluetooth/gap/
 CFLAGS += -I$(DIR_BT)/rtk_stack/inc/bluetooth/profile/
+CFLAGS += -I$(DIR_BT)/rtk_stack/inc/os/
 CFLAGS += -I$(DIR_BT)/rtk_stack/inc/platform/
 CFLAGS += -I$(DIR_BT)/rtk_stack/inc/stack/
 CFLAGS += -I$(DIR_BT)/rtk_stack/platform/common/
