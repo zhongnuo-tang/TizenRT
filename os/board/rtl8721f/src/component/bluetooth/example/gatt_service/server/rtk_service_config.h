@@ -11,6 +11,9 @@
 extern "C"  {
 #endif
 
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+#define TIZENRT_SRV_ID                   0
+#else
 #define SIMPLE_BLE_SRV_ID                   0
 #define DEVICE_INFO_SRV_ID                  1
 #define HEART_RATE_SRV_ID                   2
@@ -25,6 +28,7 @@ extern "C"  {
 #define BLE_WIFIMATE_SRV_ID                 11
 #define TRANSFER_MODULE_SRV_ID              12
 #define BLE_OTA_SRV_ID                      13
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 
 #define TRANSFER_MODULE_SRV_ID_BASE         0x80
 

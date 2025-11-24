@@ -49,15 +49,8 @@
 #
 ############################################################################
 
-CSRCS += rtk_bas.c \
-	rtk_cte_service.c \
-	rtk_dis.c \
-	rtk_gls.c \
-	rtk_hids_kb.c \
-	rtk_hrs.c \
-	rtk_ias.c \
-	rtk_long_uuid_service.c \
-	rtk_simple_ble_service.c
+CSRCS += rtk_cte_service.c \
+	ble_tizenrt_service.c
 
 DEPPATH += --dep-path component/bluetooth/example/gatt_service/server
 VPATH += :component/bluetooth/example/gatt_service/server
