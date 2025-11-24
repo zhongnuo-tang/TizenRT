@@ -18,6 +18,9 @@
 #include <rtk_bt_gatts.h>
 
 #include <rtk_service_config.h>
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+#include <ble_tizenrt_service.h>
+#else
 #include <rtk_bas.h>
 #include <rtk_hrs.h>
 #include <rtk_simple_ble_service.h>
@@ -26,6 +29,7 @@
 #include <rtk_hids_kb.h>
 #include <rtk_gls.h>
 #include <rtk_long_uuid_service.h>
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 #include <bt_utils.h>
 
 #if defined(RTK_BLE_5_1_CTE_SUPPORT) && RTK_BLE_5_1_CTE_SUPPORT
