@@ -643,6 +643,10 @@ typedef struct {
 /* AUTO_GEN_END */
 
 /* MANUAL_GEN_START */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 //Please add your defination here
 
@@ -750,6 +754,21 @@ typedef struct {
   * @{
   */
 
+/** @defgroup I2C_Controller IDs
+  * @{
+  */
+
+enum {
+	I2C_ID_0,
+	I2C_ID_1,
+	I2C_MAX_NUM
+};
+#define IS_I2C_ID(ID) (((ID) == I2C_ID_0) || \
+									   ((ID) == I2C_ID_1))
+/**
+  * @}
+  */
+
 /** @defgroup I2C_Addr_Mode
   * @{
   */
@@ -830,14 +849,15 @@ _LONG_CALL_ u32 I2C_ClearINT(I2C_TypeDef *I2Cx, u32 INTrAddr);
 _LONG_CALL_ void I2C_SetSpeed(I2C_TypeDef *I2Cx, u32 SpdMd, u32 I2Clk, u32 I2CIPClk);
 _LONG_CALL_ void I2C_StructInit(I2C_InitTypeDef *I2C_InitStruct);
 _LONG_CALL_ u8 I2C_ReceiveData(I2C_TypeDef *I2Cx);
+_LONG_CALL_ s32 I2C_PollFlagRawINT(I2C_TypeDef *I2Cx, u32 I2C_FLAG, u32 I2C_RawINT, u32 timeout_ms, u32 *txflr_out);
 
 /*I2C_Exported_Master_Functions I2C Exported Master Functions*/
 _LONG_CALL_ void I2C_MasterSendNullData(I2C_TypeDef *I2Cx, u8 *pBuf, u8  I2CCmd, u8  I2CStop, u8  I2CReSTR);
 _LONG_CALL_ void I2C_MasterSend(I2C_TypeDef *I2Cx, u8 *pBuf, u8  I2CCmd, u8  I2CStop, u8  I2CReSTR);
 _LONG_CALL_ u32 I2C_MasterWrite(I2C_TypeDef *I2Cx, u8 *pBuf, u32 len);
-_LONG_CALL_ void I2C_MasterReadDW(I2C_TypeDef *I2Cx, u8 *pBuf, u32 len);
+_LONG_CALL_ u32 I2C_MasterReadDW(I2C_TypeDef *I2Cx, u8 *pBuf, u32 len);
 _LONG_CALL_ u32 I2C_MasterRead(I2C_TypeDef *I2Cx, u8 *pBuf, u32 len);
-_LONG_CALL_ void I2C_MasterRepeatRead(I2C_TypeDef *I2Cx, u8 *pWriteBuf, u32 Writelen, u8 *pReadBuf, u32 Readlen);
+_LONG_CALL_ u32 I2C_MasterRepeatRead(I2C_TypeDef *I2Cx, u8 *pWriteBuf, u32 Writelen, u8 *pReadBuf, u32 Readlen);
 _LONG_CALL_ void I2C_SetSlaveAddress(I2C_TypeDef *I2Cx, u16 Address);
 _LONG_CALL_ u32 I2C_MasterWriteInt(I2C_TypeDef *I2Cx, I2C_IntModeCtrl *I2C_SemStruct, u8 *pBuf, u32 len);
 _LONG_CALL_ u32 I2C_MasterReadInt(I2C_TypeDef *I2Cx, I2C_IntModeCtrl *I2C_SemStruct, u8 *pBuf, u32 len);
@@ -864,6 +884,37 @@ _LONG_CALL_ void I2C_DmaMode2Config(I2C_TypeDef *I2Cx, u32 I2C_DmaCmd, u32 I2C_D
 _LONG_CALL_ bool I2C_TXGDMA_Init(u8 Index, GDMA_InitTypeDef *GDMA_InitStruct, void *CallbackData, IRQ_FUN CallbackFunc, u8 *pTxBuf, int TxCount);
 _LONG_CALL_ bool I2C_RXGDMA_Init(u8 Index, GDMA_InitTypeDef *GDMA_InitStruct, void *CallbackData, IRQ_FUN CallbackFunc, u8 *pRxBuf, int RxCount);
 
+/*I2C_Backup_Functions I2C Backup Functions*/
+typedef struct {
+	uint32_t IC_CON;
+	uint32_t IC_TAR;
+	uint32_t IC_SAR;
+	uint32_t IC_HS_MAR;
+	uint32_t IC_SS_SCL_HCNT;
+	uint32_t IC_SS_SCL_LCNT;
+	uint32_t IC_FS_SCL_HCNT;
+	uint32_t IC_FS_SCL_LCNT;
+	uint32_t IC_HS_SCL_HCNT;
+	uint32_t IC_HS_SCL_LCNT;
+	uint32_t IC_INTR_MASK;
+	uint32_t IC_RX_TL;
+	uint32_t IC_TX_TL;
+	uint32_t IC_SDA_HOLD;
+	uint32_t IC_SLV_DATA_NACK_ONLY;
+	uint32_t IC_DMA_TDLR;
+	uint32_t IC_DMA_RDLR;
+	uint32_t IC_SDA_SETUP;
+	uint32_t IC_ACK_GENERAL_CALL;
+	uint32_t IC_OUT_SMP_DLY;
+	uint32_t IC_FILTER;
+	uint32_t IC_SAR2;
+} I2C_Backup;
+
+_LONG_CALL_ bool I2C_Config_BackupBuf(u32 i2c_id, I2C_Backup *I2C_BackupStruct);
+_LONG_CALL_ bool I2C_Suspend(u32 i2c_id);
+_LONG_CALL_ bool I2C_Resume(u32 i2c_id);
+_LONG_CALL_ void I2C_SuspendAll(void);
+_LONG_CALL_ void I2C_ResumeAll(void);
 
 /* Other Definitions --------------------------------------------------------*/
 #if 1
@@ -886,7 +937,13 @@ extern u32 IC_FS_SCL_HCNT_TRIM;
 extern u32 IC_FS_SCL_LCNT_TRIM;
 #define I2C_EARLY_RX_DONE 			-1
 #define I2C_TRX_BUFFER_DEPTH 16
+#define I2C_POLL_TIMEOUT_MS  1000
+#define I2C_POLL_DELAY_US    2
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 /* MANUAL_GEN_END */

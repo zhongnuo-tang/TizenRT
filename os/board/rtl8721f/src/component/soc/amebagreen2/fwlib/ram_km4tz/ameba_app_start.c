@@ -195,7 +195,6 @@ void app_start(void)
 	RTK_LOGI(TAG, "AP CPU CLK: %lu Hz \n", SystemCoreClock);
 
 	/* Init heap region and configure FreeRTOS */
-	os_init();
 	XTAL_INIT();
 
 	if ((EFUSE_GetChipVersion()) >= SYSCFG_CUT_VERSION_B) {
