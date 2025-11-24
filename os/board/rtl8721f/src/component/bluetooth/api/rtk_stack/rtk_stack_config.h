@@ -14,6 +14,10 @@
 extern "C" {
 #endif
 
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+#define GAP_MAX_LINKS  2
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
+
 #define GAP_MAX_EXT_ADV_SETS                6
 #define GAP_MAX_PA_ADV_SETS                 3
 #define GAP_MAX_PA_SYNC_HANDLES             3
