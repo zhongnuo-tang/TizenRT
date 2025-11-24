@@ -49,8 +49,7 @@
 #
 ############################################################################
 
-CSRCS += rtk_bas_client.c \
-	rtk_cte_client.c \
+CSRCS += rtk_cte_client.c \
 	rtk_gaps_client.c \
 	rtk_gcs_client.c \
 	rtk_simple_ble_client.c
