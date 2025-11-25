@@ -442,22 +442,22 @@ int amebagreen2_timer_initialize(const char *devpath, int timer)
 	switch (timer) {
 	case TIMER0:
 		priv = &g_gpt0_lowerhalf;
-		priv->obj.timer_id = TIMER4;
+		priv->obj.timer_id = TIMER0;
 		break;
 
 	case TIMER1:
 		priv = &g_gpt1_lowerhalf;
-		priv->obj.timer_id = TIMER5;
+		priv->obj.timer_id = TIMER1;
 		break;
 
 	case TIMER2:
 		priv = &g_gpt2_lowerhalf;
-		priv->obj.timer_id = TIMER6;
+		priv->obj.timer_id = TIMER2;
 		break;
 
 	case TIMER3:
 		priv = &g_gpt3_lowerhalf;
-		priv->obj.timer_id = TIMER7;
+		priv->obj.timer_id = TIMER3;
 		break;
 
 	default:

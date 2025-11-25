@@ -85,7 +85,14 @@ void gtimer_init(gtimer_t *obj, uint32_t tid)
 	TIM_InitStruct.TIM_UpdateSource = TIM_UpdateSource_Overflow;
 	TIM_InitStruct.TIM_ARRProtection = ENABLE;
 
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 	RTIM_TimeBaseInit(TIMx[tid], &TIM_InitStruct, TIMx_irq[tid], (IRQ_FUN) gtimer_timeout_handler, (u32)obj);
+#else
+	RTIM_TimeBaseInit(TIMx[tid], &TIM_InitStruct, TIMx_irq[tid], NULL, 0);
+	InterruptDis(TIMx_irq[tid]);
+	InterruptRegister((IRQ_FUN) gtimer_timeout_handler, TIMx_irq[tid], (u32)obj, INT_PRI_MIDDLE);
+	InterruptEn(TIMx_irq[tid], INT_PRI_MIDDLE);
+#endif
 }
 
 /**

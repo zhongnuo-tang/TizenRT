@@ -241,7 +241,6 @@ void board_initialize(void)
 #endif
 
 
-	//InterruptDis(UART_LOG_IRQ);
 
 	amebagreen2_mount_partitions();
 	// board_gpio_initialize();
@@ -252,12 +251,12 @@ void board_initialize(void)
 	amebagreen2_wdg_initialize(CONFIG_WATCHDOG_DEVPATH, 5000);
 #endif
 #ifdef CONFIG_TIMER
-	// int i;
-	// char path[CONFIG_PATH_MAX];
-	// for (i = 0; i < GTIMER_MAX; i++) {
-	// 	snprintf(path, sizeof(path), "/dev/timer%d", i);
-	// 	amebagreen2_timer_initialize(path, i);
-	// }
+	int i;
+	char path[CONFIG_PATH_MAX];
+	for (i = 0; i < GTIMER_MAX; i++) {
+		snprintf(path, sizeof(path), "/dev/timer%d", i);
+		amebagreen2_timer_initialize(path, i);
+	}
 #endif
 
 #ifdef CONFIG_RTC_DRIVER
