@@ -202,6 +202,9 @@ static rtk_bt_evt_cb_ret_t ble_central_gap_app_callback(uint8_t evt_code, void *
 #if !defined(RTK_BLE_MGR_LIB) || !RTK_BLE_MGR_LIB
 			/* when connection established, attach the profile(who has been registered)
 			    to this connection */
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+			if (RTK_BT_OK == general_client_attach_conn(conn_ind->conn_handle)
+#else
 			if (RTK_BT_OK == general_client_attach_conn(conn_ind->conn_handle) &&
 				RTK_BT_OK == bas_client_attach_conn(conn_ind->conn_handle) &&
 				RTK_BT_OK == gaps_client_attach_conn(conn_ind->conn_handle) &&
@@ -209,6 +212,7 @@ static rtk_bt_evt_cb_ret_t ble_central_gap_app_callback(uint8_t evt_code, void *
 #if defined(RTK_BLE_5_1_CTE_SUPPORT) && RTK_BLE_5_1_CTE_SUPPORT
 				&& RTK_BT_OK == cte_client_attach_conn(conn_ind->conn_handle)
 #endif
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 			   ) {
 				BT_LOGA("[APP] GATTC Profiles attach connection success, conn_handle: %d\r\n",
 						conn_ind->conn_handle);
@@ -713,6 +717,7 @@ static rtk_bt_evt_cb_ret_t ble_central_gattc_app_callback(uint8_t event, void *d
 	case GCS_CLIENT_PROFILE_ID:
 		general_client_app_callback(event, data);
 		break;
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 	case GAPS_CLIENT_PROFILE_ID:
 		gaps_client_app_callback(event, data);
 		break;
@@ -727,6 +732,7 @@ static rtk_bt_evt_cb_ret_t ble_central_gattc_app_callback(uint8_t event, void *d
 		cte_client_app_callback(event, data);
 		break;
 #endif
+#endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 	default:
 		break;
 	}
