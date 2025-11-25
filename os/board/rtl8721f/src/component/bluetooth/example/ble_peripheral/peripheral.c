@@ -430,7 +430,9 @@ static rtk_bt_evt_cb_ret_t ble_peripheral_gap_app_callback(uint8_t evt_code, voi
 		}
 #endif /* RTK_BLE_5_0_USE_EXTENDED_ADV */
 		/* gatts action */
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 		app_server_disconnect(disconn_ind->conn_handle);
+#endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 		break;
 	}
 
@@ -840,8 +842,13 @@ static rtk_bt_evt_cb_ret_t ble_peripheral_gatts_app_callback(uint8_t event, void
 		BT_LOGA("[APP] Service Changed cccd is updated, conn_handle: %d, cccd_enable: %d\r\n",
 				srv_change->conn_handle, srv_change->cccd_enable);
 		return RTK_BT_EVT_CB_OK;
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+	} else {
+		ble_tizenrt_srv_callback(event, data);
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 	}
 
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 	app_id = app_get_gatts_app_id(event, data);
 	switch (app_id) {
 	case SIMPLE_BLE_SRV_ID:
@@ -877,6 +884,7 @@ static rtk_bt_evt_cb_ret_t ble_peripheral_gatts_app_callback(uint8_t event, void
 	default:
 		break;
 	}
+#endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 
 	return RTK_BT_EVT_CB_OK;
 }
@@ -957,6 +965,9 @@ int ble_peripheral_main(uint8_t enable)
 #endif /* RTK_BLE_PRIVACY_SUPPORT */
 
 		BT_APP_PROCESS(rtk_bt_evt_register_callback(RTK_BT_LE_GP_GATTS, ble_peripheral_gatts_app_callback));
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		BT_APP_PROCESS(ble_tizenrt_srv_add());
+#else
 		BT_APP_PROCESS(simple_ble_srv_add());
 		BT_APP_PROCESS(device_info_srv_add());
 		BT_APP_PROCESS(heart_rate_srv_add());
@@ -967,6 +978,7 @@ int ble_peripheral_main(uint8_t enable)
 #if defined(RTK_BLE_5_1_CTE_SUPPORT) && RTK_BLE_5_1_CTE_SUPPORT
 		BT_APP_PROCESS(cte_srv_add());
 #endif
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 
 #if defined(RTK_BLE_5_0_USE_EXTENDED_ADV) && RTK_BLE_5_0_USE_EXTENDED_ADV
 		if (adv_filter_whitelist) {
@@ -995,7 +1007,9 @@ int ble_peripheral_main(uint8_t enable)
 		/* Disable BT */
 		BT_APP_PROCESS(rtk_bt_disable());
 
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 		app_server_deinit();
+#endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 	}
 
 	return 0;
