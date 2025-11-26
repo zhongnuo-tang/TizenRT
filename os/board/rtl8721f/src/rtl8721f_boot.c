@@ -244,7 +244,7 @@ void board_initialize(void)
 
 	amebagreen2_mount_partitions();
 	// board_gpio_initialize();
-	// board_i2c_initialize();
+	board_i2c_initialize();
 	// board_spi_initialize();
 	// board_i2s_initialize();
 #ifdef CONFIG_WATCHDOG

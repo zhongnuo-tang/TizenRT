@@ -17,11 +17,19 @@ config ARCH_CHIP_RTL8721F
 	#select AMEBAGREEN2_WIFI #TODO: Port amebagreen2 wifi
 	select ARMV8M_HAVE_ICACHE
 	select ARMV8M_HAVE_DCACHE
-
+	select AMEBAGREEN2_PERIPHERAL
 endchoice
 
 menu "Realtek RTL8721F Peripheral Support"
 
+config AMEBAGREEN2_PERIPHERAL
+	bool
+	default n
+	select BOARD_HAVE_SPI0
+	select BOARD_HAVE_SPI1
+	select BOARD_HAVE_I2C0
+	select BOARD_HAVE_I2C1
+	
 config BOARD_HAVE_SPI0
 	bool
 	default n
@@ -43,10 +51,6 @@ config BOARD_HAVE_I2C0
 	default n
 
 config BOARD_HAVE_I2C1
-	bool
-	default n
-
-config BOARD_HAVE_I2C2
 	bool
 	default n
 
@@ -165,10 +169,6 @@ config AMEBAGREEN2_I2C0
 config AMEBAGREEN2_I2C1
 	bool "I2C_1"
 	depends on BOARD_HAVE_I2C1
-	default n
-config AMEBAGREEN2_I2C2
-	bool "I2C_2"
-	depends on BOARD_HAVE_I2C2
 	default n
 
 config AMEBAGREEN2_I2C_DYNTIMEO

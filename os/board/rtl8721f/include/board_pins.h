@@ -74,27 +74,15 @@
 /* I2C pins configuration */
 #ifdef CONFIG_AMEBAGREEN2_I2C
 #ifdef CONFIG_AMEBAGREEN2_I2C0
-#if defined(CONFIG_RTL8721F_BOARD_AIL) || defined(CONFIG_RTL8721F_BOARD_AILP) || defined(CONFIG_RTL8721F_BOARD_AILPW)
-#define		I2C0_SCL	PB_30
-#define		I2C0_SDA	PB_29
-#else
-#error Not Supported, Please check the board type configure
-#endif
+#define		I2C0_SCL	PA_25
+#define		I2C0_SDA	PA_26
 #endif							// CONFIG_AMEBAGREEN2_I2C0
 
 #ifdef CONFIG_AMEBAGREEN2_I2C1
-#if defined(CONFIG_RTL8721F_BOARD_AIL) || defined(CONFIG_RTL8721F_BOARD_AILP) || defined(CONFIG_RTL8721F_BOARD_AILPW)
 #define		I2C1_SCL	PA_4
 #define		I2C1_SDA	PA_3
-#else
-#error Not Supported, Please check the board type configure
-#endif
 #endif							// CONFIG_AMEBAGREEN2_I2C1
 
-#ifdef CONFIG_AMEBAGREEN2_I2C2
-#define		I2C2_SCL	PA_29
-#define		I2C2_SDA	PA_28
-#endif							// CONFIG_AMEBAGREEN2_I2C2
 #endif							// CONFIG_AMEBAGREEN2_I2C
 
 /* IST415 pins configuration */

@@ -169,7 +169,7 @@ CHIP_CSRCS += amebagreen2_serial.c
 CHIP_CSRCS += amebagreen2_rtc_lowerhalf.c
 CHIP_CSRCS += amebagreen2_rtc.c
 CHIP_CSRCS += amebagreen2_watchdog_lowerhalf.c
-#CHIP_CSRCS += amebagreen2_i2c.c
+CHIP_CSRCS += amebagreen2_i2c.c
 ##CHIP_CSRCS += amebagreen2_i2s.c
 #CHIP_CSRCS += amebagreen2_spi.c
 
