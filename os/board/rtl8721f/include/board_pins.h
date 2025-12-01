@@ -96,13 +96,12 @@
 #endif
 
 /* GPIO pins configuration */
-#define 	GPIO_PIN_LIST   { 						\
-					{PA_23, PIN_INPUT, PullDown }, 		\
-										\
-					/* PB_20 is gpio pin number for LED */ 	\
-					{PB_20, PIN_OUTPUT, PullDown },		\
-					{PB_22, PIN_INPUT, PullUp } 		\
-				}
+#define 	GPIO_PIN_LIST   { 									\
+							/* Sample GPIO Pins */ 			
+							{PA_26, PIN_INPUT, PullDown }, 		\
+							{PB_21, PIN_INPUT, PullDown }, 		\
+							{PB_22, PIN_INPUT, PullDown }, 		\
+							}
 
 /* Power control pins configuration */
 #define         PWR_PIN_00	{_PA_0,			GPIO_PuPd_DOWN,			GPIO_PuPd_DOWN}

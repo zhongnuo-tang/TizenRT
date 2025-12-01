@@ -75,6 +75,7 @@
 #include "timer_api.h"
 #include "ameba_i2c.h"
 #include "ameba_spi.h"
+#include "board_pins.h"
 #ifdef CONFIG_FLASH_PARTITION
 #include "common.h"
 #endif
@@ -174,9 +175,8 @@ void board_gpio_initialize(void)
 		u32 pinname;
 		u32 pinmode;
 		u32 pinpull;
-	} pins[] = {
 
-	};
+	} pins[] = GPIO_PIN_LIST;
 
 	for (i = 0; i < sizeof(pins) / sizeof(*pins); i++) {
 		lower = amebagreen2_gpio_lowerhalf(pins[i].pinname, pins[i].pinmode, pins[i].pinpull);
@@ -243,7 +243,7 @@ void board_initialize(void)
 
 
 	amebagreen2_mount_partitions();
-	// board_gpio_initialize();
+	board_gpio_initialize();
 	board_i2c_initialize();
 	board_spi_initialize();
 	// board_i2s_initialize();

@@ -172,6 +172,7 @@ CHIP_CSRCS += amebagreen2_watchdog_lowerhalf.c
 CHIP_CSRCS += amebagreen2_i2c.c
 ##CHIP_CSRCS += amebagreen2_i2s.c
 CHIP_CSRCS += amebagreen2_spi.c
+CHIP_CSRCS += amebagreen2_gpio_lowerhalf.c
 
 ifeq ($(CONFIG_BOARDCTL_RESET),y)
 CHIP_CSRCS += amebagreen2_systemreset.c
