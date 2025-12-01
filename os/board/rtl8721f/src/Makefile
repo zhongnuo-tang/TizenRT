@@ -129,6 +129,7 @@ endif
 
 TARGETDIR = 	$(COMPONENT_DIR)/soc/amebagreen2
 
+CFLAGS += -I$(BOARD_SRCDIR)/$(CONFIG_ARCH_BOARD)/include
 CFLAGS += -I$(DIR)/../include
 CFLAGS += -I$(TOPDIR)/arch/$(CONFIG_ARCH)/src/armv8-m
 # CFLAGS += -I$(PROJ_DIR)/inc/inc_km4
