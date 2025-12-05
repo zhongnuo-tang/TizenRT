@@ -828,3 +828,20 @@ void hci_platform_gpio_enable(uint8_t bt_gpio, char *pad)
 	hci_platform_bt_gpio_pad(bt_gpio, pad);                      /* pinmux, to PINMUX_FUNCTION_BT_IO */
 	osif_delay(5);
 }
+
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+uint8_t hci_platform_get_ble_mac_address(uint8_t *ble_addr) {
+	uint8_t *pbuf;
+
+	/* Read Logic Efuse */
+	pbuf = osif_mem_alloc(RAM_TYPE_DATA_ON, 6);
+	if (!pbuf || _FAIL == OTP_LogicalMap_Read(pbuf, 0x1B4, 6)) {
+		BT_LOGE("BT MAC address read failed\r\n");
+		return HCI_FAIL;
+	}
+
+	memcpy(ble_addr, pbuf, 6);
+	osif_mem_free(pbuf);
+	return HCI_SUCCESS;
+}
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
