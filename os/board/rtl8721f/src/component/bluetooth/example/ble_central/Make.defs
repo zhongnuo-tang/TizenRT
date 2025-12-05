@@ -49,7 +49,8 @@
 #
 ############################################################################
 
-CSRCS += central.c
+CSRCS += central.c \
+	ble_tizenrt_client.c
 
 DEPPATH += --dep-path component/bluetooth/example/ble_central
 VPATH += :component/bluetooth/example/ble_central
