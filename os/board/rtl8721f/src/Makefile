@@ -112,6 +112,7 @@ include component/bluetooth/rtk_coex/Make.defs
 include component/bluetooth/example/bt_atcmd/Make.defs
 include component/bluetooth/example/gatt_service/client/Make.defs
 include component/bluetooth/example/gatt_service/server/Make.defs
+include component/rtk_coex/Make.defs
 ifeq ($(CONFIG_AMEBAGREEN2_BLE_PERIPHERAL),y)
 include component/bluetooth/example/ble_peripheral/Make.defs
 endif
@@ -210,6 +211,7 @@ CFLAGS += -I$(DIR_BT)/rtk_stack/inc/platform/
 CFLAGS += -I$(DIR_BT)/rtk_stack/inc/stack/
 CFLAGS += -I$(DIR_BT)/rtk_stack/platform/common/
 CFLAGS += -I$(DIR_BT)/rtk_coex/
+CFLAGS += -I$(COMPONENT_DIR)/rtk_coex/
 CFLAGS += -I$(DIR_BT)/example/bt_atcmd/
 CFLAGS += -I$(DIR_BT)/example/gatt_service/client/
 CFLAGS += -I$(DIR_BT)/example/gatt_service/server/
