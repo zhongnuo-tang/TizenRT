@@ -47,6 +47,7 @@
 #define RTK_BT_DEV_NAME "RTK_BT_SCATTERNET"
 
 #if defined(RTK_BLE_5_0_USE_EXTENDED_ADV) && RTK_BLE_5_0_USE_EXTENDED_ADV
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 static uint8_t ext_adv_data[] = {
 	// Flags
 	0x02,
@@ -88,6 +89,7 @@ static rtk_bt_le_ext_adv_param_t ext_adv_param = {
 	.secondary_adv_phy = RTK_BT_LE_PHYS_2M,
 	.adv_sid = 0,
 };
+#endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #else
 static uint8_t adv_data[] = {
 	0x02, //AD len
@@ -429,6 +431,10 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 					(scan_res_ind->primary_phy << 4) | scan_res_ind->secondary_phy,
 					scan_res_ind->tx_power, scan_res_ind->len);
 #ifdef CONFIG_PLATFORM_TIZENRT_OS
+		trble_scanned_device scanned_device = {0};
+		if (scan_res_ind->len > 31) {
+			scan_res_ind->len = 31;
+		}
 		scanned_device.adv_type = scan_res_ind->evt_type;
 		if (scanned_device.adv_type == 0x1b) {
 			memcpy(scanned_device.resp_data, scan_res_ind->data, scan_res_ind->len);
@@ -556,6 +562,12 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 				disconn_ind->reason, disconn_ind->conn_handle, role, le_addr);
 		BT_AT_PRINT("+BLEGAP:disconn,0x%x,%d,%s,%s\r\n",
 					disconn_ind->reason, disconn_ind->conn_handle, role, le_addr);
+
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		if (ble_client_connect_is_running) {
+			ble_client_connect_is_running = 0;
+		}
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 
 		if (RTK_BT_LE_ROLE_SLAVE == disconn_ind->role) {
 			/* gap action */
@@ -1159,7 +1171,9 @@ static uint16_t app_get_gatts_app_id(uint8_t event, void *data)
 static rtk_bt_evt_cb_ret_t ble_scatternet_gatts_app_callback(uint8_t event, void *data, uint32_t len)
 {
 	(void)len;
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 	uint16_t app_id = 0xFFFF;
+#endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 
 	if (RTK_BT_GATTS_EVT_MTU_EXCHANGE == event) {
 		rtk_bt_gatt_mtu_exchange_ind_t *p_gatt_mtu_ind = (rtk_bt_gatt_mtu_exchange_ind_t *)data;
@@ -1343,11 +1357,13 @@ int ble_scatternet_main(uint8_t enable)
 	bool adv_filter_whitelist = false;
 	char addr_str[30] = {0};
 	char name[30] = {0};
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #if defined(RTK_BLE_5_0_USE_EXTENDED_ADV) && RTK_BLE_5_0_USE_EXTENDED_ADV
 	uint8_t adv_handle;
 #else
 	rtk_bt_le_adv_param_t adv_param = {0};
 #endif
+#endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #if defined(RTK_BLE_PRIVACY_SUPPORT) && RTK_BLE_PRIVACY_SUPPORT
 	uint8_t bond_size = 0;
 #endif
@@ -1445,19 +1461,23 @@ int ble_scatternet_main(uint8_t enable)
 #endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 
 #if defined(RTK_BLE_5_0_USE_EXTENDED_ADV) && RTK_BLE_5_0_USE_EXTENDED_ADV
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 		if (adv_filter_whitelist) {
 			ext_adv_param.filter_policy = RTK_BT_LE_ADV_FILTER_ALLOW_SCAN_WLST_CON_WLST;
 		}
 		BT_APP_PROCESS(rtk_bt_le_gap_create_ext_adv(&ext_adv_param, &adv_handle));
 		BT_APP_PROCESS(rtk_bt_le_gap_set_ext_adv_data(adv_handle, ext_adv_data, sizeof(ext_adv_data)));
 		BT_APP_PROCESS(rtk_bt_le_gap_start_ext_adv(adv_handle, 0, 0));
+#endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #else
 		BT_APP_PROCESS(rtk_bt_le_gap_set_adv_data(adv_data, sizeof(adv_data)));
 		BT_APP_PROCESS(rtk_bt_le_gap_set_scan_rsp_data(scan_rsp_data, sizeof(scan_rsp_data)));
 		if (adv_filter_whitelist) {
 			adv_param.filter_policy = RTK_BT_LE_ADV_FILTER_ALLOW_SCAN_WLST_CON_WLST;
 		}
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 		BT_APP_PROCESS(rtk_bt_le_gap_start_adv(&adv_param));
+#endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #endif
 
 #if (defined(BT_WAKE_UP_HOST) && BT_WAKE_UP_HOST) && (defined(RTK_BT_POWER_CONTROL_SUPPORT) && RTK_BT_POWER_CONTROL_SUPPORT)
