@@ -182,8 +182,13 @@ extern "C"
 
 #if defined(RTK_BLE_5_0_SUPPORT) && RTK_BLE_5_0_SUPPORT
 #define RTK_BLE_5_0_SET_PHYS_SUPPORT        1
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+#define RTK_BLE_5_0_AE_ADV_SUPPORT          1
+#define RTK_BLE_5_0_AE_SCAN_SUPPORT         1
+#else
 #define RTK_BLE_5_0_AE_ADV_SUPPORT          0
 #define RTK_BLE_5_0_AE_SCAN_SUPPORT         0
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 #endif /* RTK_BLE_5_0_SUPPORT */
 
 /*
