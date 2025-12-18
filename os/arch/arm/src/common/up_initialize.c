@@ -313,7 +313,7 @@ void up_initialize(void)
 #endif
 	/* Initialize the network */
 
-	// up_netinitialize(); #FIX ME wifi related
+	up_netinitialize();
 
 	/* Initialize USB -- device and/or host */
 

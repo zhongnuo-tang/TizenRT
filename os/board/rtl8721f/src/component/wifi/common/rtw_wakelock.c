@@ -17,11 +17,7 @@
 
 #include <basic_types.h>
 #include <os_wrapper.h>
-#if CONFIG_PLATFORM_TIZENRT_OS
-#include "ameba_tizenrt_pmu.h"
-#else
 #include <ameba_pmu.h>
-#endif //CONFIG_PLATFORM_TIZENRT_OS
 
 void rtw_acquire_wakelock(void)
 {

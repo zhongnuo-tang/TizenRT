@@ -80,6 +80,8 @@ CSRCS += ameba_i2c.c \
 	ameba_loguart.c \
 	ameba_captouch.c \
 	ameba_mpu_ram.c \
+	ameba_pmu.c \
+	ameba_pmctimer.c \
 	#ameba_ftl.c \
 	#ameba_pmc_com.c \
 	#ameba_prs.c \

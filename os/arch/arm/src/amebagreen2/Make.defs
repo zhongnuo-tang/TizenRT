@@ -145,8 +145,8 @@ CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os/freertos
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/app/monitor/include
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/soc/amebagreen2/swlib
 
-#CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/driver/include
-#CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/api
+CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/driver/include
+CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/api
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/common
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/driver/src/intf
 #CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/wifi/wifi_config
@@ -165,7 +165,7 @@ CHIP_CSRCS += amebagreen2_timerisr.c
 #CHIP_CSRCS += amebagreen2_lowerhalf.c
 CHIP_CSRCS += amebagreen2_timer_lowerhalf.c
 CHIP_CSRCS += amebagreen2_serial.c
-#CHIP_CSRCS += amebagreen2_enet.c
+CHIP_CSRCS += amebagreen2_enet.c
 CHIP_CSRCS += amebagreen2_rtc_lowerhalf.c
 CHIP_CSRCS += amebagreen2_rtc.c
 CHIP_CSRCS += amebagreen2_watchdog_lowerhalf.c
@@ -197,9 +197,11 @@ endif
 
 # Wifi
 ifeq ($(CONFIG_AMEBAGREEN2_WIFI),y)
-ifeq ($(CONFIG_ARCH_FPU),y)
 
-else
+EXTRA_LIBS += $(TOPDIR)/board/rtl8721f/src/libs/lib_wifi_common.a
+EXTRA_LIBS += $(TOPDIR)/board/rtl8721f/src/libs/lib_wifi_rtk_app.a
+EXTRA_LIBS += $(TOPDIR)/board/rtl8721f/src/libs/lib_wifi_whc_ap.a
+EXTRA_LIBS += $(TOPDIR)/board/rtl8721f/src/libs/lib_wpa_lite.a
+EXTRA_LIBS += $(TOPDIR)/board/rtl8721f/src/libs/lib_wps.a
 
-endif
 endif

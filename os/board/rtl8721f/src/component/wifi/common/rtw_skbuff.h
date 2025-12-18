@@ -18,15 +18,25 @@
 #ifndef __SKBUFF_H__
 #define __SKBUFF_H__
 
-#include "rtw_wifi_constants.h"
+#include "rtw_autoconf.h"
+#include "ameba.h"
 #include "os_wrapper.h"
 #include "rtw_atomic.h"
 #include "rtw_misc.h"
 #include "dlist.h"
 
 /*skb size = HW info + wlan over head + ethernet len + safety*/
-#define MAX_SKB_BUF_SIZE	(((WLAN_HW_INFO_LEN+WLAN_MAX_PROTOCOL_OVERHEAD+WLAN_MAX_ETHFRM_LEN+8)\
+#define MAX_SKB_BUF_SIZE_NORMAL  (((WLAN_HW_INFO_LEN+WLAN_MAX_PROTOCOL_OVERHEAD+WLAN_MAX_ETHFRM_LEN+8)\
 							+ SKB_CACHE_SZ) & ~(SKB_CACHE_SZ-1))
+
+#if !(!defined(CONFIG_WHC_INTF_IPC) && defined(CONFIG_WHC_HOST))
+#if defined(CONFIG_WHC_INTF_SDIO)
+#include "whc_dev_struct.h"
+#define MAX_SKB_BUF_SIZE	MAX(MAX_SKB_BUF_SIZE_NORMAL, (SPDIO_DEVICE_RX_BUFSZ + SPDIO_SKB_RSVD_LEN + SKB_CACHE_SZ) & ~(SKB_CACHE_SZ-1))
+#else
+#define MAX_SKB_BUF_SIZE	MAX_SKB_BUF_SIZE_NORMAL
+#endif
+#endif
 
 /*TX reserve size before 802.3 pkt*/
 #define WLAN_ETHHDR_LEN	14
@@ -47,11 +57,14 @@ struct skb_raw_para {
 	unsigned char enable : 1;       /* indicate whether this packet is a tx_raw packet. set to 1 when tx_raw */
 	unsigned char sgi : 1;          /* 1 for enable data short */
 	unsigned char agg_en : 1;       /* aggregation of tx_raw frames. 1:enable; 0-disable */
+	unsigned char bw_40_en : 1;    	/* Bandwidth: 1 to 40M, 0 to 20M. */
 	unsigned char rom_rsvd[8];
 };
 
 struct sk_buff {
 	struct list_head list;
+	unsigned char		*buf;/* Head of buffer */
+	/* list and buf cannot be changed after initialization */
 	unsigned char		*head;		/* Head of buffer */
 	unsigned char		*data;		/* Data head pointer */
 	unsigned char		*tail;		/* Tail pointer	*/
@@ -65,9 +78,8 @@ struct sk_buff {
 
 	struct skb_raw_para	tx_raw;
 
-	unsigned char buf[MAX_SKB_BUF_SIZE] SKB_ALIGNMENT;/* buf start address and size alignmengt for pre allocate skb*/
 	atomic_t ref;
-}; /*total size should be align to max(AP_cache_size, NP_cache_size), single core no need*/
+} SKB_ALIGNMENT; /*total size should be align to max(AP_cache_size, NP_cache_size), single core no need*/
 
 struct skb_priv_t {
 	/*skb_buff for managing and store skb data*/
@@ -130,7 +142,7 @@ void kfree_skb(struct sk_buff *skb);
 struct sk_buff *skb_clone(struct sk_buff *skb, int gfp_mask);
 struct sk_buff *skb_copy(const struct sk_buff *skb, int gfp_mask, unsigned int reserve_len);
 void dev_kfree_skb_any(struct sk_buff *skb);
-void init_skb_pool(uint32_t skb_num_np, uint32_t skb_buf_size, unsigned char skb_cache_zise);
+void init_skb_pool(uint32_t skb_num_np, uint32_t skb_buf_size, unsigned char skb_cache_size);
 void deinit_skb_pool(void);
 struct sk_buff *get_buf_from_poll(void);
 void release_buf_to_poll(struct sk_buff *skb);
