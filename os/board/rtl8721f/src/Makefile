@@ -93,7 +93,6 @@ include component/os/os_wrapper/Make.defs
 
 ifeq ($(CONFIG_AMEBAGREEN2_WIFI),y)
 include component/wifi/Make.defs
-include component/wifi/api/Make.defs
 include component/wifi/rtk_app/wifi_feature_disable/Make.defs
 include component/wifi/rtk_app/wifi_init/Make.defs
 include component/wifi/wpa_supplicant/wpa_supplicant/Make.defs
