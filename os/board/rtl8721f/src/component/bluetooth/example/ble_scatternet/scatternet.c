@@ -1371,7 +1371,11 @@ int ble_scatternet_main(uint8_t enable)
 	if (1 == enable) {
 		//set GAP configuration
 		bt_app_conf.app_profile_support = RTK_BT_PROFILE_GATTS | RTK_BT_PROFILE_GATTC;
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		bt_app_conf.mtu_size = 512;
+#else
 		bt_app_conf.mtu_size = 180;
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 		bt_app_conf.master_init_mtu_req = true;
 		bt_app_conf.slave_init_mtu_req = false;
 		bt_app_conf.prefer_all_phy = RTK_BT_LE_PHYS_PREFER_ALL;
