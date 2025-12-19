@@ -15,6 +15,9 @@
 #else
 //#error "Please Enable Coexist!!!"
 #endif
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+#include "bt_debug.h"
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 
 #if defined(HCI_BT_COEX_ENABLE) && HCI_BT_COEX_ENABLE
 
@@ -337,7 +340,11 @@ static void bt_coex_le_connect_complete_evt(uint8_t enhance, uint8_t *pdata)
 		interval = (uint16_t)((pdata[12] << 8) | pdata[11]);
 	}
 
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+	BT_LOGA("[BT_COEX] bt_coex_le_connect_complete_evt: conn_handle = %d, interval = 0x%x \r\n", conn_handle, interval);
+#else
 	DBG_BT_COEX("bt_coex_le_connect_complete_evt: conn_handle = %d, interval = 0x%x \r\n", conn_handle, interval);
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 
 	p_conn = bt_coex_find_link_by_handle(conn_handle);
 
