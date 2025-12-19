@@ -281,9 +281,6 @@ void board_initialize(void)
 #ifdef CONFIG_AMEBAGREEN2_WIFI
 	wifi_init();
 #endif
-#ifdef CONFIG_AMEBAGREEN2_BLE
-	bt_ipc_api_init_host();
-#endif
 }
 #else
 #error "CONFIG_BOARD_INITIALIZE MUST ENABLE"
