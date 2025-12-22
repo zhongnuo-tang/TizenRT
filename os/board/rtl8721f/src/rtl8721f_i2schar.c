@@ -26,17 +26,17 @@
 #include <errno.h>
 #include <debug.h>
 
-#if defined(CONFIG_AUDIO_I2SCHAR) && defined(CONFIG_AMEBALITE_I2S)
+#if defined(CONFIG_AUDIO_I2SCHAR) && defined(CONFIG_AMEBAGREEN2_I2S)
 
 #include <tinyara/audio/i2s.h>
-#include "ameba_i2s.h"
+#include "amebagreen2_i2s.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifndef CONFIG_AMEBALITE_I2SCHAR_MINOR
-#define CONFIG_AMEBALITE_I2SCHAR_MINOR 0
+#ifndef CONFIG_AMEBAGREEN2_I2SCHAR_MINOR
+#define CONFIG_AMEBAGREEN2_I2SCHAR_MINOR 0
 #endif
 /*****************************************************************************
  * Private Functions
@@ -69,17 +69,17 @@ int i2schar_devinit(void)
 	/* Have we already initialized? */
 
 	if (!initialized) {
-		/* Call amebalite_i2s_initialize() to get an instance of the I2S interface */
+		/* Call amebagreen2_i2s_initialize() to get an instance of the I2S interface */
 
-		i2s = amebalite_i2s_initialize(0);
+		i2s = amebagreen2_i2s_initialize(0);
 		if (!i2s) {
-			lldbg("ERROR: Failed to get the AMEBALITE I2S driver\n");
+			lldbg("ERROR: Failed to get the AMEBAGREEN2 I2S driver\n");
 			return -ENODEV;
 		}
 
 		/* Register the I2S character driver at "/dev/i2schar0" */
 
-		ret = i2schar_register(i2s, CONFIG_AMEBALITE_I2SCHAR_MINOR);
+		ret = i2schar_register(i2s, CONFIG_AMEBAGREEN2_I2SCHAR_MINOR);
 		if (ret < 0) {
 			lldbg("ERROR: i2schar_register failed: %d\n", ret);
 			return ret;
@@ -96,4 +96,4 @@ int i2schar_devinit(void)
 	return OK;
 }
 
-#endif							/* CONFIG_AUDIO_I2SCHAR && CONFIG_AMEBALITE_I2S */
+#endif							/* CONFIG_AUDIO_I2SCHAR && CONFIG_AMEBAGREEN2_I2S */

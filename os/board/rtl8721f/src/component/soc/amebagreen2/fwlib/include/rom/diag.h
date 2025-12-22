@@ -27,6 +27,7 @@ int DiagVSNprintfNano(char *buf, size_t maxlen, const char *fmt,  va_list ap);
 typedef enum {
 	MODULE_USB_OTG, /**< usb otg */
 	MODULE_USB_CLASS, /**< usb class */
+	MODULE_I2S,  /**< i2s */
 	MODULE_NUMs		/**< Module Number */
 } MODULE_DEFINE;
 

@@ -82,10 +82,11 @@ CSRCS += ameba_i2c.c \
 	ameba_mpu_ram.c \
 	ameba_pmu.c \
 	ameba_pmctimer.c \
+	ameba_audio_clock.c \
+	ameba_sport.c \
 	#ameba_ftl.c \
 	#ameba_pmc_com.c \
 	#ameba_prs.c \
-	#ameba_sport.c \
 	#ameba_vad.c \
 	#ameba_psram.c \
 

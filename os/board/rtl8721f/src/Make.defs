@@ -50,3 +50,8 @@
 ############################################################################
 
 CSRCS += rtl8721f_boot.c
+ifeq ($(CONFIG_AUDIO_I2SCHAR),y)
+ifeq ($(CONFIG_AMEBAGREEN2_I2S),y)
+CSRCS += rtl8721f_i2schar.c
+endif
+endif

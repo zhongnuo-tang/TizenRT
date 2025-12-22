@@ -133,7 +133,7 @@ void board_i2s_initialize(void)
 
 void board_spi_initialize(void)
 {
-#ifdef CONFIG_SPI
+#if defined(CONFIG_SPI) && defined(CONFIG_AMEBAGREEN2_SPI)
 	struct spi_dev_s *spi;
 	spi = up_spiinitialize(1);
 
@@ -258,7 +258,7 @@ void board_initialize(void)
 	board_gpio_initialize();
 	board_i2c_initialize();
 	board_spi_initialize();
-	// board_i2s_initialize();
+	board_i2s_initialize();
 #ifdef CONFIG_WATCHDOG
 	amebagreen2_wdg_initialize(CONFIG_WATCHDOG_DEVPATH, 5000);
 #endif

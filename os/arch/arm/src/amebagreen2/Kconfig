@@ -29,7 +29,8 @@ config AMEBAGREEN2_PERIPHERAL
 	select BOARD_HAVE_SPI1
 	select BOARD_HAVE_I2C0
 	select BOARD_HAVE_I2C1
-	
+	select BOARD_HAVE_I2S0_TX
+
 config BOARD_HAVE_SPI0
 	bool
 	default n
@@ -54,11 +55,11 @@ config BOARD_HAVE_I2C1
 	bool
 	default n
 
-config BOARD_HAVE_I2S2
+config BOARD_HAVE_I2S0_TX
 	bool
 	default n
-
-config BOARD_HAVE_I2S3
+	
+config BOARD_HAVE_I2S0_RX
 	bool
 	default n
 
@@ -206,22 +207,16 @@ config AMEBAGREEN2_I2S
 	default n
 
 if AMEBAGREEN2_I2S
-config AMEBAGREEN2_I2S2
-	bool "I2S_2"
-	depends on BOARD_HAVE_I2S2
-	default n
-config AMEBAGREEN2_I2S3
-	bool "I2S_3"
-	depends on BOARD_HAVE_I2S3
-	default n
 
 config AMEBAGREEN2_I2S_RX
 	bool "Enable I2S RX"
 	default n
+	depends on BOARD_HAVE_I2S0_RX
 
 config AMEBAGREEN2_I2S_TX
 	bool "Enable I2S TX"
 	default n
+	depends on BOARD_HAVE_I2S0_TX
 
 if AMEBAGREEN2_I2S_TX
 config AMEBAGREEN2_I2S_TXCL
