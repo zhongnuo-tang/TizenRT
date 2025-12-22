@@ -37,6 +37,7 @@ CSRCS += flash_api.c \
 		rtc_api.c \
 		wait_api.c \
 		ameba_gpio_ram.c \
+		i2s_api.c \
 
 DEPPATH += --dep-path component/soc/amebagreen2/hal/src
 VPATH += :component/soc/amebagreen2/hal/src

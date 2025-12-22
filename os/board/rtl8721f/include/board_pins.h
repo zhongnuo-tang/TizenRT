@@ -212,22 +212,12 @@
 #define IS_UART2_TX(tx) (tx == PB_8)
 #define IS_UART4_TX(tx) (tx == PB_20)
 
-/* I2S2 pins configuration */
+/* I2S0 pins configuration */
 #ifdef CONFIG_AMEBAGREEN2_I2S
-#ifdef CONFIG_AMEBAGREEN2_I2S2
-#define		I2S2_MCLK	NULL
-#define		I2S2_SCLK	PB_21
-#define		I2S2_WS		PA_16
-#define		I2S2_SD_TX	PB_10
-#define		I2S2_SD_RX	PB_19
-#endif							// CONFIG_AMEBAGREEN2_I2S2
-
-#ifdef CONFIG_AMEBAGREEN2_I2S3
-#define		I2S3_MCLK	PA_15
-#define		I2S3_SCLK	PA_14
-#define		I2S3_WS		PA_13
-#define		I2S3_SD_TX	PB_11
-#define		I2S3_SD_RX	PB_20
-#endif							// CONFIG_AMEBAGREEN2_I2S3
+#define		I2S0_MCLK	PA_23
+#define		I2S0_BCLK	PA_20
+#define		I2S0_WS		PA_21
+#define		I2S0_SD_TX	PA_22
+#define		I2S0_SD_RX	NULL
 #endif							// CONFIG_AMEBAGREEN2_I2S
 #endif							// BOARD_PINS_H

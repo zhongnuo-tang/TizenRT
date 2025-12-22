@@ -264,6 +264,27 @@ struct gtimer_s {
 /** @} */
 /** @} */
 
+/** @addtogroup MBED_I2S
+ *  @brief      MBED_I2S driver modules.
+ *  @{
+ */
+
+/** @addtogroup MBED_I2S_Exported_Types MBED_I2S Exported Types
+  * @{
+  */
+struct i2s_s {
+	uint8_t i2s_idx;
+	u32 sampling_rate;
+	u32 clock;
+	uint8_t channel_num;
+	uint8_t channel_length;
+	uint8_t fifo_num;
+	uint8_t word_length;
+	uint8_t direction;
+	uint8_t mode;
+	uint8_t role;
+};
+
 
 /** @addtogroup MBED_GDMA
  *  @brief    MBED_GDMA driver modules.
