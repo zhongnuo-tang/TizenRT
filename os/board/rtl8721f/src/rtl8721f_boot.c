@@ -79,6 +79,9 @@
 #ifdef CONFIG_FLASH_PARTITION
 #include "common.h"
 #endif
+#ifdef CONFIG_AMEBAGREEN2_BLE
+#include "rtw_coex_ipc.h"
+#endif
 
 /************************************************************************************
  * Pre-processor Definitions
@@ -277,6 +280,9 @@ void board_initialize(void)
 #endif
 #ifdef CONFIG_FTL_ENABLED
 	app_ftl_init();
+#endif
+#ifdef CONFIG_AMEBAGREEN2_BLE
+	coex_ipc_entry();
 #endif
 #ifdef CONFIG_AMEBAGREEN2_WIFI
 	wifi_init();
