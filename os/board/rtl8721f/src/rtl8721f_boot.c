@@ -210,11 +210,16 @@ void amebagreen2_mount_partitions(void)
 #endif /* CONFIG_FLASH_PARTITION */
 }
 
-#ifdef CONFIG_FTL_ENABLED
-extern const u8 ftl_phy_page_num;
-extern const u32 ftl_phy_page_start_addr;
-static void app_ftl_init(void)
+#if defined(CONFIG_FTL_ENABLED) && CONFIG_FTL_ENABLED
+#include "ftl_int.h"
+
+void app_ftl_init(void)
 {
+	u32 ftl_start_addr, ftl_end_addr;
+
+	flash_get_layout_info(FTL, &ftl_start_addr, &ftl_end_addr);
+	ftl_phy_page_start_addr = ftl_start_addr - SPI_FLASH_BASE;
+	ftl_phy_page_num = (ftl_end_addr - ftl_start_addr + 1) / PAGE_SIZE_4K;
 	ftl_init(ftl_phy_page_start_addr, ftl_phy_page_num);
 }
 #endif
