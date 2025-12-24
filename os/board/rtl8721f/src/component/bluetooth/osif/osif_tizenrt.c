@@ -661,6 +661,16 @@ bool osif_msg_recv(void *p_handle, void *p_msg, uint32_t wait_ms)
 		return _FAIL;
 	}
 
+	if (osif_task_context_check() == false) {
+		DEBUGASSERT(wait_ms == BT_TIMEOUT_NONE);
+
+		irqstate_t flags = tizenrt_critical_enter();
+		FAR struct mqueue_msg_s *mqmsg = mq_waitreceive((mqd_t)p_handle);
+		tizenrt_critical_exit(flags);
+		mq_doreceive((mqd_t)p_handle, mqmsg, p_msg, &prio);
+		return _SUCCESS;
+	}
+
 	if (wait_ms != 0xFFFFFFFF) {
 		struct timespec ts;
 		clock_gettime(CLOCK_REALTIME, &ts);
