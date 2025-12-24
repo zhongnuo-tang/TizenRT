@@ -28,6 +28,10 @@
 #define COEX_STACK_SIZE_IPC_HST_SEND_API (1024*4)
 
 /* ---------------------------- Global Variables ---------------------------- */
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+rtos_task_t coex_ipc_api_host_task_handler = NULL;
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
+
 rtos_sema_t  g_host_coex_ipc_api_task_wake_sema = NULL;
 rtos_sema_t  g_host_coex_ipc_api_message_send_sema = NULL;
 
@@ -227,8 +231,13 @@ void coex_ipc_api_init_host(void)
 	rtos_sema_give(g_host_coex_ipc_api_message_send_sema);
 
 	/* Initialize the event task */
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+	if (RTK_SUCCESS != rtos_task_create(&coex_ipc_api_host_task_handler, (const char *const)"coex_ipc_api_host_task", (rtos_task_function_t)coex_ipc_api_host_task, NULL,
+										COEX_STACK_SIZE_IPC_HST_API, CONFIG_COEX_IPC_HOST_API_PRIO)) {
+#else
 	if (RTK_SUCCESS != rtos_task_create(NULL, (const char *const)"coex_ipc_api_host_task", (rtos_task_function_t)coex_ipc_api_host_task, NULL,
 										COEX_STACK_SIZE_IPC_HST_API, CONFIG_COEX_IPC_HOST_API_PRIO)) {
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 		RTK_LOGS(TAG_WLAN_COEX, RTK_LOG_ERROR, "Create coex_ipc_api_host_task Err\n");
 	}
 
