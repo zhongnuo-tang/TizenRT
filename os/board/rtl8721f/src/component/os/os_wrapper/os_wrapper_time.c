@@ -12,7 +12,12 @@ uint64_t GenericTimerFreq;
 
 void rtos_time_delay_ms(uint32_t ms)
 {
-	up_mdelay(ms);
+	if (up_interrupt_context()){
+		up_mdelay(ms);
+	}
+	else {
+		usleep((unsigned int)ms * 1000);
+	}
 }
 
 void rtos_time_delay_us(uint32_t us)
