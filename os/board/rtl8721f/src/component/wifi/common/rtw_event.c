@@ -22,6 +22,8 @@
 #ifndef CONFIG_PLATFORM_TIZENRT_OS
 #include "atcmd_service.h"
 #include <wifi_auto_reconnect.h>
+#else
+#include "rtk_wifi_utils.h"
 #endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #include "wpa_lite_intf.h"
 #include "../wpa_supplicant/wps_protocol_handler.h"
@@ -79,6 +81,9 @@ void wifi_event_handle_external(u32 event_cmd, u8 *evt_info)
  *                                          Internal events
  *********************************************************************************************/
 
+extern rtk_network_link_callback_t g_link_up;
+extern rtk_network_link_callback_t g_link_down;
+
 void wifi_event_join_status_internal_hdl(u8 *evt_info)
 {
 #if (!defined(CONFIG_MP_SHRINK) && !defined(CONFIG_WHC_DEV)) || defined(CONFIG_WHC_WPA_SUPPLICANT_OFFLOAD)
@@ -103,6 +108,13 @@ void wifi_event_join_status_internal_hdl(u8 *evt_info)
 		at_printf_indicate("wifi connected\r\n");
 #else
 		dbg_noarg("wifi connected\r\n");
+		if (g_link_up) {
+			RTK_LOGD(TAG_WLAN_INIC, "%s() send link_up\n", __func__);
+			rtk_reason_t reason = {0};
+			reason.if_id = RTK_WIFI_STATION_IF;
+			reason.reason_code = join_status;
+			g_link_up(&reason);
+		}
 #endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #if defined(CONFIG_LWIP_LAYER) && CONFIG_LWIP_LAYER
 		LwIP_netif_set_link_up(0);
@@ -177,6 +189,15 @@ void wifi_event_join_status_internal_hdl(u8 *evt_info)
 	if ((join_status == RTW_JOINSTATUS_DISCONNECT) || (join_status == RTW_JOINSTATUS_FAIL)) {
 		/*wpa lite disconnect hdl*/
 		rtw_psk_disconnect_hdl(join_status_info->bssid, IFACE_PORT0);
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		if (g_link_down) {
+			RTK_LOGD(TAG_WLAN_INIC, "%s() send link_down\n", __func__);
+			rtk_reason_t reason = {0};
+			reason.if_id = RTK_WIFI_STATION_IF;
+			reason.reason_code = join_status;
+			g_link_down(&reason);
+		}
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 	}
 
 #if !defined(CONFIG_WHC_DEV) && CONFIG_AUTO_RECONNECT

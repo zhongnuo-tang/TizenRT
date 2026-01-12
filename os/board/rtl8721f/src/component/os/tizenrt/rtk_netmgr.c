@@ -219,13 +219,13 @@ static s32 app_scan_result_handler(unsigned int scanned_AP_num, void *user_data)
 	}
 
 	for (i = 0; i < scanned_AP_num; i++) {
-		scanned_AP_info = (struct rtw_scan_result *)(scan_buf + i * sizeof(struct rtw_scan_result));
+		scanned_AP_info = &scan_buf[i];
 		scanned_AP_info->ssid.val[scanned_AP_info->ssid.len] = 0; /* Ensure the SSID is null terminated */
 
-			scan_result_report.scan_complete = FALSE;
-			scan_result_report.user_data = user_data;
-			memcpy(&scan_result_report.ap_details, scanned_AP_info, sizeof(scan_result_report.ap_details));
-			app_scan_result_handler_legacy(&scan_result_report);
+		scan_result_report.scan_complete = FALSE;
+		scan_result_report.user_data = user_data;
+		memcpy(&scan_result_report.ap_details, scanned_AP_info, sizeof(scan_result_report.ap_details));
+		app_scan_result_handler_legacy(&scan_result_report);
 	}
 	scan_result_report.scan_complete = TRUE;
 	app_scan_result_handler_legacy(&scan_result_report);
@@ -310,7 +310,20 @@ static int rtk_drv_callback_handler(int type)
 	(void)rtk_drv_callback_handler(type);
 }
 
+rtk_network_link_callback_t g_link_up = NULL;
+rtk_network_link_callback_t g_link_down = NULL;
 
+int8_t WiFiRegisterLinkCallback(rtk_network_link_callback_t link_up, rtk_network_link_callback_t link_down)
+{
+	if (!g_link_up) {
+		g_link_up = link_up;
+	}
+	if (!g_link_down) {
+		g_link_down = link_down;
+	}
+
+	return RTK_STATUS_SUCCESS;
+}
 //
 // Interface API
 //
@@ -319,7 +332,15 @@ trwifi_result_e wifi_netmgr_utils_init(struct netdev *dev)
 	trwifi_result_e wuret = TRWIFI_FAIL;
 	ndbg("\n[RTK] Init netmgr with dev %s\n",dev->ifname);
 
-	int ret = RTK_STATUS_SUCCESS;
+	int ret = RTK_STATUS_ERROR;
+	ret = WiFiRegisterLinkCallback(&linkup_handler, &linkdown_handler);
+	if (ret != RTK_STATUS_SUCCESS) {
+		printf("[RTK] Link callback handles: register failed !\n");
+		return RTK_STATUS_ERROR;
+	} else {
+		printf("[RTK] Link callback handles: registered\n");
+	}
+
 	/* At this stage, no action needs to be done by RTK driver for wlan1 */
 	if (!memcmp(dev->ifname, "wlan0", 5)) {
 		ret = cmd_wifi_on(RTK_WIFI_STATION_IF);
