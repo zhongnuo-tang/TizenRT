@@ -527,6 +527,8 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 					uint8_t addr[TRBLE_BD_ADDR_MAX_LEN];
 					_reverse_mac(conn_ind->peer_addr.addr_val, addr);
 #if defined (RTK_BLE_5_0_AE_ADV_SUPPORT) && RTK_BLE_5_0_AE_ADV_SUPPORT
+					/* TODO: Ziv green2 HACK/Workaround for adv_handle=255 issue. Sleep 1ns to stop ext_adv first. osif_delay(1) or osif_delay_us(1) also works */
+					nanosleep(&(FAR const struct timespec){0, 1}, NULL);
 					if (RTK_BT_OK != rtk_bt_le_gap_get_ext_adv_handle_by_conn_handle(conn_ind->conn_handle, &adv_handle)) {
 						BT_LOGE("[APP] Get adv handle failed \r\n");
 					}
