@@ -14,6 +14,14 @@
 #include <rtk_client_config.h>
 #include <bt_utils.h>
 
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+#include <tinyara/net/if/ble.h>
+
+extern trble_client_init_config *client_init_parm;
+extern rtk_bt_gattc_write_ind_t g_scatternet_write_result;
+extern rtk_bt_gattc_write_ind_t g_scatternet_write_no_rsp_result;
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
+
 #if !defined(RTK_BLE_MGR_LIB) || !RTK_BLE_MGR_LIB
 void _print_uuid(uint8_t type, uint8_t *uuid)
 {
@@ -239,6 +247,18 @@ void general_client_write_res_hdl(void *data)
 		BT_AT_PRINT("+BLEGATTC:write,%d,%d,%d,0x%x\r\n",
 					write_status, write_res->conn_handle,
 					write_res->type, write_res->handle);
+
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		if (RTK_BT_GATT_CHAR_WRITE_REQ == write_res->type) {
+			g_scatternet_write_result.status = write_status;
+			g_scatternet_write_result.conn_handle = write_res->conn_handle;
+			g_scatternet_write_result.type = write_res->type;
+		} else if (RTK_BT_GATT_CHAR_WRITE_NO_RSP == write_res->type) {
+			g_scatternet_write_no_rsp_result.status = write_status;
+			g_scatternet_write_no_rsp_result.conn_handle = write_res->conn_handle;
+			g_scatternet_write_no_rsp_result.type = write_res->type;
+		}
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 	} else {
 		return;
 	}
@@ -258,6 +278,19 @@ void general_client_notify_hdl(void *data)
 	BT_AT_PRINT("+BLEGATTC:notify,%d,0x%x",
 				ntf_ind->conn_handle, ntf_ind->value_handle);
 	BT_AT_DUMP("", ntf_ind->value, ntf_ind->len);
+
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+	trble_data read_result;
+	read_result.length = ntf_ind->len;
+	read_result.data = (uint8_t *)osif_mem_alloc(RAM_TYPE_DATA_ON, read_result.length);
+	if (!read_result.data) {
+		BT_LOGE("[APP] Fail to malloc data %s\r\n", __FUNCTION__);
+		return;
+	}
+	memcpy(read_result.data, ntf_ind->value, read_result.length);
+	client_init_parm->trble_operation_notification_cb((trble_operation_handle *)&ntf_ind->conn_handle, &read_result);
+	osif_mem_free(read_result.data);
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 }
 
 void general_client_indicate_hdl(void *data)
@@ -274,6 +307,19 @@ void general_client_indicate_hdl(void *data)
 	BT_AT_PRINT("+BLEGATTC:indicate,%d,0x%x",
 				indicate_ind->conn_handle, indicate_ind->value_handle);
 	BT_AT_DUMP("", indicate_ind->value, indicate_ind->len);
+
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+	trble_data read_result;
+	read_result.length = indicate_ind->len;
+	read_result.data = (uint8_t *)osif_mem_alloc(RAM_TYPE_DATA_ON, read_result.length);
+	if (!read_result.data) {
+		BT_LOGE("[APP] Fail to malloc data %s\r\n", __FUNCTION__);
+		return;
+	}
+	memcpy(read_result.data, indicate_ind->value, read_result.length);
+	client_init_parm->trble_operation_indication_cb((trble_operation_handle *)&indicate_ind->conn_handle, &read_result);
+	osif_mem_free(read_result.data);
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 }
 
 void general_client_cccd_enable_hdl(void *data)
