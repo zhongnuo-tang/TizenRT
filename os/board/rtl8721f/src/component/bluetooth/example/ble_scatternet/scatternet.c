@@ -470,6 +470,9 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 
 	case RTK_BT_LE_GAP_EVT_CONNECT_IND: {
 		rtk_bt_le_conn_ind_t *conn_ind = (rtk_bt_le_conn_ind_t *)param;
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		memcpy(ble_tizenrt_scatternet_conn_ind, conn_ind, sizeof(rtk_bt_le_conn_ind_t));
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 		rtk_bt_le_addr_to_str(&(conn_ind->peer_addr), le_addr, sizeof(le_addr));
 		if (!conn_ind->err) {
 			role = conn_ind->role ? "slave" : "master";
@@ -1183,6 +1186,15 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gatts_app_callback(uint8_t event, void
 		if (p_gatt_mtu_ind->result == RTK_BT_OK) {
 			BT_LOGA("[APP] GATTS mtu exchange successfully, mtu_size: %d, conn_handle: %d \r\n",
 					p_gatt_mtu_ind->mtu_size, p_gatt_mtu_ind->conn_handle);
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+			if (RTK_BT_LE_ROLE_SLAVE == ble_tizenrt_scatternet_conn_ind->role) {
+				if (server_init_parm.mtu_update_cb) {
+					server_init_parm.mtu_update_cb(p_gatt_mtu_ind->conn_handle, p_gatt_mtu_ind->mtu_size);
+				} else {
+					ble_tizenrt_dummy_callback();
+				}
+			}
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 		} else {
 			BT_LOGE("[APP] GATTS mtu exchange fail \r\n");
 		}
