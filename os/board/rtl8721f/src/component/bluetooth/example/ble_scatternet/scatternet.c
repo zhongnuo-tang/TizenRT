@@ -161,7 +161,7 @@ trble_device_connected ble_tizenrt_scatternet_bond_list[RTK_BLE_GAP_MAX_LINKS] =
 
 static void ble_tizenrt_dummy_callback(void)
 {
-	dbg("[APP] Application Dummy Callback API\r\n");
+	BT_LOGA("[APP] Application Dummy Callback API\r\n");
 }
 #endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 
@@ -813,9 +813,9 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 
 #ifdef CONFIG_PLATFORM_TIZENRT_OS
 			if (RTK_BT_LE_ROLE_SLAVE == ble_tizenrt_scatternet_conn_ind->role) {
-				dbg("[APP] Disconnect, conn_handle: %d\r\n", auth_cplt_ind->conn_handle);
+				BT_LOGE("[APP] Disconnect, conn_handle: %d\r\n", auth_cplt_ind->conn_handle);
 				if (RTK_BT_OK != rtk_bt_le_gap_disconnect(auth_cplt_ind->conn_handle)) {
-					dbg("[APP] Disconnect failed!\r\n");
+					BT_LOGE("[APP] Disconnect failed!\r\n");
 				}
 			}
 #endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
@@ -831,7 +831,7 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 				trble_device_connected connected_dev;
 				uint16_t mtu_size = 0;
 				if (RTK_BT_OK != rtk_bt_le_gap_get_mtu_size(auth_cplt_ind->conn_handle, &mtu_size)) {
-					dbg("[APP] Get mtu size failed \r\n");
+					BT_LOGE("[APP] Get mtu size failed \r\n");
 				}
 				connected_dev.conn_handle = ble_tizenrt_scatternet_conn_ind->conn_handle;
 				connected_dev.is_bonded = ble_tizenrt_scatternet_bond_list[conn_id].is_bonded;
@@ -847,7 +847,7 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 				if (server_init_parm.connected_cb) {
 #if defined (RTK_BLE_5_0_AE_ADV_SUPPORT) && RTK_BLE_5_0_AE_ADV_SUPPORT
 					if (RTK_BT_OK != rtk_bt_le_gap_get_ext_adv_handle_by_conn_handle(auth_cplt_ind->conn_handle, &adv_handle)) {
-						dbg("[APP] Get adv handle failed \r\n");
+						BT_LOGE("[APP] Get adv handle failed \r\n");
 					}
 #endif
 					uint8_t addr[TRBLE_BD_ADDR_MAX_LEN];
