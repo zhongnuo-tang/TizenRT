@@ -25,6 +25,9 @@
 #include <ble_tizenrt_service.h>
 #include <debug.h>
 #include <tinyara/config.h>
+#ifdef CONFIG_PM
+#include <tinyara/pm/pm.h>
+#endif //#ifdef CONFIG_PM
 #else
 #include <rtk_bas.h>
 #include <rtk_hrs.h>
@@ -300,6 +303,11 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 	(void)len;
 	char le_addr[30] = {0};
 	char *role;
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+#ifdef CONFIG_PM
+	struct pm_domain_s *domain;
+#endif //#ifdef CONFIG_PM
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 
 	switch (evt_code) {
 	case RTK_BT_LE_GAP_EVT_ADV_START_IND: {
@@ -481,6 +489,15 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 #if !defined(RTK_BLE_MGR_LIB) || !RTK_BLE_MGR_LIB
 			/* gattc action */
 #ifdef CONFIG_PLATFORM_TIZENRT_OS
+#ifdef CONFIG_PM
+			/* Register PM_BLE_DOMAIN and Perform 10 minutes timedsuspend */
+			domain = pm_domain_register("BLE");
+			if (domain < 0) {
+				pmdbg("Unable to register BLE DOMAIN\n");
+			} else if (pm_timedsuspend(domain, 600000) != 0) {
+				pmdbg("Unable to perform PM suspend for 10 minutes for ble domain\n");
+			}
+#endif //#ifdef CONFIG_PM
 			if (RTK_BT_LE_ROLE_MASTER == conn_ind->role &&
 				RTK_BT_OK == general_client_attach_conn(conn_ind->conn_handle)
 #else
