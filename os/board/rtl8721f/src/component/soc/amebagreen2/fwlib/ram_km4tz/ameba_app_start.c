@@ -28,6 +28,7 @@ extern void arm_gic_set_CUTVersion(uint32_t CUTVersion);
 
 static const char *TAG = "APP";
 static u32 g_mpu_nregion_allocated;
+extern void newlib_locks_init(void);
 extern int main(void);
 extern void NS_ENTRY BOOT_IMG3(void);
 extern void SOCPS_WakeFromPG_AP(void);
@@ -252,13 +253,15 @@ void app_start(void)
 	}
 	os_heap_init();
 
+	newlib_locks_init();
+
 	mpu_init();
 	app_mpu_nocache_init();
 	if ((Get_OSC131_STATE() & RTC_BIT_FIRST_PON) == 1) {
 		SDM32K_Enable();
 		SYSTIMER_Init(); /* 0.2ms */
 	}
-	
+
 	/*Register RTC_DET_IRQ callback function */
 	InterruptRegister((IRQ_FUN) rtc_irq_init, RTC_DET_IRQ, (u32)NULL, INT_PRI_LOWEST);
 	InterruptEn(RTC_DET_IRQ, INT_PRI_LOWEST);
