@@ -1937,6 +1937,17 @@ typedef enum {
 	RTK_BT_LE_COC_CHAN_PARAM_MTU           = 0x2,
 } rtk_bt_le_coc_chan_param_type_t;
 
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+typedef struct {
+	uint16_t le_psm;                          /*!< LE PSM value */
+	uint16_t err;                             /*!< Error code of registraion of LE PSM value */
+} rtk_bt_le_coc_reg_psm_ind_t;
+
+typedef struct {
+	uint16_t err;                             /*!< Error code of setting LE COC security */
+} rtk_bt_le_coc_set_sec_ind_t;
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
+
 typedef struct {
 	uint16_t conn_handle;                     /*!< Connection handle */
 	uint16_t cid;                             /*!< Local l2cap channel ID assgined by bt stack */

@@ -389,6 +389,10 @@ typedef enum {
 	RTK_BT_LE_GAP_EVT_CONN_CTE_REQ_FAIL_IND,        /*!< Indicate LE CTE request fail, with msg @ref rtk_bt_le_gap_cte_req_fail_ind_t */
 	RTK_BT_LE_GAP_EVT_PAWR_DATA_REQ_IND,            /*!< Indicate LE periodic adv subevent data request, with msg @ref rtk_bt_le_gap_pawr_data_req_ind_t */
 	RTK_BT_LE_GAP_EVT_PAWR_RSP_IND,                 /*!< Indicate LE periodic adv response from synced device, with msg @ref rtk_bt_le_gap_pawr_rsp_ind_t */
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+	RTK_BT_LE_GAP_EVT_COC_REG_PSM_IND,              /*!< Indicate LE l2cap credit based connection-oriented channel(coc) register PSM complete @ref rtk_bt_le_coc_reg_psm_ind_t */
+	RTK_BT_LE_GAP_EVT_COC_SET_SEC_IND,              /*!< Indicate LE l2cap credit based connection-oriented channel(coc) set security complete @ref rtk_bt_le_coc_set_sec_ind_t */
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 	RTK_BT_LE_GAP_EVT_COC_CONNECT_IND,              /*!< Indicate LE l2cap credit based connection-oriented channel(coc) connect complete, with msg @ref rtk_bt_le_coc_conn_state_ind_t */
 	RTK_BT_LE_GAP_EVT_COC_DISCONNECT_IND,           /*!< Indicate LE coc chan disconnect complete, with msg @ref rtk_bt_le_coc_conn_state_ind_t */
 	RTK_BT_LE_GAP_EVT_COC_SEND_DATA_RESULT_IND,     /*!< Indicate LE coc send data result, with msg @ref rtk_bt_le_coc_send_data_res_ind_t */

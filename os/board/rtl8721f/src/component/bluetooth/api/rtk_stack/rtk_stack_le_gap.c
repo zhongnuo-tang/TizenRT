@@ -2060,6 +2060,14 @@ static T_APP_RESULT bt_stack_le_coc_callback(uint8_t coc_msg_type, void *coc_dat
 				BT_LOGE("[GAP_COC_MSG_LE_REG_PSM] Error: le_psm mismatched\r\n");
 			}
 		}
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		p_evt = rtk_bt_event_create(RTK_BT_LE_GP_GAP, RTK_BT_LE_GAP_EVT_COC_REG_PSM_IND,
+									sizeof(rtk_bt_le_coc_send_data_res_ind_t));
+		rtk_bt_le_coc_reg_psm_ind_t *reg_psm_ind = (rtk_bt_le_coc_reg_psm_ind_t *)p_evt->data;
+		reg_psm_ind->le_psm = reg_psm->le_psm;
+		reg_psm_ind->err = reg_psm->cause;
+		rtk_bt_evt_indicate(p_evt, NULL);
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 		break;
 	}
 	case GAP_COC_MSG_LE_SET_PSM_SECURITY: {
@@ -2071,6 +2079,13 @@ static T_APP_RESULT bt_stack_le_coc_callback(uint8_t coc_msg_type, void *coc_dat
 			p_cmd->ret = sec_reg->cause;
 			osif_sem_give(p_cmd->psem);
 		}
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		p_evt = rtk_bt_event_create(RTK_BT_LE_GP_GAP, RTK_BT_LE_GAP_EVT_COC_SET_SEC_IND,
+									sizeof(rtk_bt_le_coc_send_data_res_ind_t));
+		rtk_bt_le_coc_set_sec_ind_t *set_sec_ind = (rtk_bt_le_coc_set_sec_ind_t *)p_evt->data;
+		set_sec_ind->err = sec_reg->cause;
+		rtk_bt_evt_indicate(p_evt, NULL);
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 		break;
 	}
 	case GAP_COC_MSG_LE_SEND_DATA: {
