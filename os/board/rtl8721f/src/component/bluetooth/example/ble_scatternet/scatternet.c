@@ -157,6 +157,7 @@ extern rtk_bt_le_conn_ind_t *ble_tizenrt_scatternet_conn_ind;
 extern uint8_t *del_bond_addr;
 extern uint8_t ble_client_connect_is_running;
 extern uint16_t scan_timeout;
+extern trble_le_coc_init_config le_coc_init_parm;
 rtk_bt_gattc_read_ind_t ble_tizenrt_scatternet_read_results[RTK_BLE_GAP_MAX_LINKS] = {0};
 rtk_bt_gattc_write_ind_t g_scatternet_write_result = {0};
 rtk_bt_gattc_write_ind_t g_scatternet_write_no_rsp_result = {0};
@@ -1098,6 +1099,42 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 #endif /* RTK_BLE_5_1_CTE_SUPPORT */
 
 #if defined(RTK_BLE_COC_SUPPORT) && RTK_BLE_COC_SUPPORT
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+	case RTK_BT_LE_GAP_EVT_COC_REG_PSM_IND: {
+		rtk_bt_le_coc_reg_psm_ind_t *reg_psm_ind = (rtk_bt_le_coc_reg_psm_ind_t *)param;
+		if (!reg_psm_ind->err) {
+			BT_LOGA("[APP] LE COC register PSM success, le_psm: 0x%x, err: 0x%x\r\n",
+					reg_psm_ind->le_psm, reg_psm_ind->err);
+		} else {
+			BT_LOGE("[APP] LE COC register PSM fail, le_psm: 0x%x, err: 0x%x\r\n",
+					reg_psm_ind->le_psm, reg_psm_ind->err);
+		}
+		if (le_coc_init_parm.reg_psm_cb) {
+			le_coc_init_parm.reg_psm_cb(reg_psm_ind->le_psm, reg_psm_ind->err);
+		} else {
+			ble_tizenrt_dummy_callback();
+		}
+		break;
+	}
+
+	case RTK_BT_LE_GAP_EVT_COC_SET_SEC_IND: {
+		rtk_bt_le_coc_set_sec_ind_t *set_sec_ind = (rtk_bt_le_coc_set_sec_ind_t *)param;
+		if (!set_sec_ind->err) {
+			BT_LOGA("[APP] LE COC set security success, err: 0x%x\r\n",
+					set_sec_ind->err);
+		} else {
+			BT_LOGE("[APP] LE COC set security fail, err: 0x%x\r\n",
+					set_sec_ind->err);
+		}
+		if (le_coc_init_parm.set_sec_cb) {
+			le_coc_init_parm.set_sec_cb(set_sec_ind->err);
+		} else {
+			ble_tizenrt_dummy_callback();
+		}
+		break;
+	}
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
+
 	case RTK_BT_LE_GAP_EVT_COC_CONNECT_IND: {
 		rtk_bt_le_coc_conn_state_ind_t *coc_conn_ind = (rtk_bt_le_coc_conn_state_ind_t *)param;
 		if (!coc_conn_ind->err) {
@@ -1109,6 +1146,13 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 		}
 		BT_AT_PRINT("+BLEGAP:coc_conn,%d,0x%x,%d\r\n", coc_conn_ind->conn_handle, coc_conn_ind->cid,
 					(coc_conn_ind->err == 0) ? 0 : -1);
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		if (le_coc_init_parm.con_cb) {
+			le_coc_init_parm.con_cb(coc_conn_ind->conn_handle, coc_conn_ind->cid, coc_conn_ind->err);
+		} else {
+			ble_tizenrt_dummy_callback();
+		}
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 		break;
 	}
 
@@ -1123,6 +1167,13 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 		}
 		BT_AT_PRINT("+BLEGAP:coc_disconn,%d,0x%x,%d\r\n", coc_disconn_ind->conn_handle,
 					coc_disconn_ind->cid, (coc_disconn_ind->err == 0) ? 0 : -1);
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		if (le_coc_init_parm.discon_cb) {
+			le_coc_init_parm.discon_cb(coc_disconn_ind->conn_handle, coc_disconn_ind->cid, coc_disconn_ind->err);
+		} else {
+			ble_tizenrt_dummy_callback();
+		}
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 		break;
 	}
 
@@ -1132,6 +1183,13 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 				res_ind->conn_handle, res_ind->cid, res_ind->credit, res_ind->err);
 		BT_AT_PRINT("+BLEGAP:coc_send,%d,0x%x,%d,%d\r\n", res_ind->conn_handle, res_ind->cid,
 					res_ind->credit, (res_ind->err == 0) ? 0 : -1);
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		if (le_coc_init_parm.send_cb) {
+			le_coc_init_parm.send_cb(res_ind->conn_handle, res_ind->cid, res_ind->err, res_ind->credit);
+		} else {
+			ble_tizenrt_dummy_callback();
+		}
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 		break;
 	}
 
@@ -1141,6 +1199,21 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 				data_ind->conn_handle, data_ind->cid, data_ind->len);
 		BT_DUMPA("[HEX]: ", data_ind->data, data_ind->len);
 		BT_AT_PRINT("+BLEGAP:coc_recv,%d,0x%x\r\n", data_ind->conn_handle, data_ind->cid);
+#ifdef CONFIG_PLATFORM_TIZENRT_OS
+		trble_data read_result;
+		read_result.length = data_ind->len;
+		read_result.data = (uint8_t *)osif_mem_alloc(RAM_TYPE_DATA_ON, read_result.length);
+		if (!read_result.data) {
+			BT_LOGE("[APP] fail to malloc data %s\n", __FUNCTION__);
+			break;
+		}
+		memcpy(read_result.data, data_ind->data, read_result.length);
+		if (le_coc_init_parm.recv_cb) {
+			le_coc_init_parm.recv_cb(data_ind->conn_handle, data_ind->cid, &read_result);
+		} else {
+			ble_tizenrt_dummy_callback();
+		}
+#endif //#ifdef CONFIG_PLATFORM_TIZENRT_OS
 		break;
 	}
 #endif /* RTK_BLE_COC_SUPPORT */
