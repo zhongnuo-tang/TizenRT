@@ -1116,11 +1116,13 @@ void osif_create_secure_context(uint32_t size)
 	dbg("%s not implemented\n", __FUNCTION__);
 }
 
+extern int TRNG_get_random_bytes(void *dst, uint32_t size);
 /****************************************************************************/
 /* Generate random bytes                                                    */
 /****************************************************************************/
 void osif_rand(void *val, uint32_t size)
 {
-	/* TIZEN_RT_NOT_REQUIRED */
-	dbg("%s not implemented\n", __FUNCTION__);
+	if (TRNG_get_random_bytes(val, size)) {
+		dbg("%s: TRNG get random failed\r\n", __func__);
+	}
 }
