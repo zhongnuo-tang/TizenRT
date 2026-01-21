@@ -406,23 +406,38 @@ bool osif_sem_delete(void *p_handle)
 bool osif_sem_take(void *p_handle, uint32_t wait_ms)
 {
 	if (!p_handle) {
-		dbg("pp_handle is NULL\n");
+		dbg("p_handle is NULL\n");
 		return _FAIL;
 	}
 
-	if (wait_ms != 0xFFFFFFFF) {
+	sem_t *sem = (sem_t *)p_handle;
+
+	if (wait_ms != BT_TIMEOUT_FOREVER) {
 		struct timespec ts;
-		clock_gettime(CLOCK_REALTIME, &ts);
-		ts.tv_sec += wait_ms / 1000;
-		ts.tv_nsec += (wait_ms % 1000) * 1000 * 1000;
-		if (sem_timedwait((sem_t *) p_handle, &ts) != OK) {
-			dbg("sema wait 0x%x ms fail\n", wait_ms);
+		if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
+			dbg("clock_gettime failed errno=%d\n", get_errno());
 			return _FAIL;
 		}
+
+		ts.tv_sec += wait_ms / MSEC_PER_SEC;
+		ts.tv_nsec += (wait_ms % MSEC_PER_SEC) * NSEC_PER_MSEC;
+		if (ts.tv_nsec >= NSEC_PER_SEC) {
+			ts.tv_sec += ts.tv_nsec / NSEC_PER_SEC;
+			ts.tv_nsec %= NSEC_PER_SEC;
+		}
+
+		while (sem_timedwait(sem, &ts) != OK) {
+			if (get_errno() != EINTR) {
+				dbg("sema timedwait 0x%x ms failed errno=%d\n", wait_ms, get_errno());
+				return _FAIL;
+			}
+		}
 	} else {
-		if (sem_wait((sem_t *) p_handle) != OK) {
-			dbg("sema wait fail\n");
-			return _FAIL;
+		while (sem_wait(sem) != OK) {
+			if (get_errno() != EINTR) {
+				dbg("sema wait failed errno=%d\n", get_errno());
+				return _FAIL;
+			}
 		}
 	}
 
