@@ -365,9 +365,8 @@ trble_result_e trble_netmgr_ioctl(struct bledev *dev, trble_msg_s *msg)
 	trble_result_e ret = TRBLE_UNSUPPORTED;
 	
 	if (msg->cmd == TRBLE_MSG_GET_VERSION) {
-		// uint8_t *version = (uint8_t *)msg->data;
-		// temporary remove
-		// ret = rtw_ble_get_version(version);
+		uint8_t *version = (uint8_t *)msg->data;
+		ret = rtw_ble_server_get_version(version);
 	}
 	return ret;
 }

@@ -999,4 +999,24 @@ trble_result_e rtw_ble_server_set_adv_type(trble_adv_type_e type, trble_addr *ad
     return TRBLE_SUCCESS;
 }
 
+trble_result_e rtw_ble_server_get_version(uint8_t *version)
+{
+	if (version == NULL) {
+		debug_print("version is NULL\n");
+		return TRBLE_FAIL;
+	}
+
+	rtk_bt_le_version_info_t ble_version;
+	if (RTK_BT_OK != rtk_bt_le_gap_get_version(&ble_version)) {
+		debug_print("Fail to get BLE version\n");
+		return TRBLE_FAIL;
+	}
+
+	version[0] = (uint8_t)(ble_version.lmp_subversion >> 8);
+	version[1] = (uint8_t)ble_version.lmp_subversion;
+	version[2] = (uint8_t)ble_version.btgap_buildnum;
+
+	return TRBLE_SUCCESS;
+}
+
 #endif /* TRBLE_SERVER_C_ */

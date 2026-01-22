@@ -54,6 +54,7 @@ extern trble_result_e rtw_ble_server_get_bonded_device(trble_bonded_device_list_
 extern trble_result_e rtw_ble_server_delete_bonded_device(uint8_t bd_addr[TRBLE_BD_ADDR_MAX_LEN]);
 extern trble_result_e rtw_ble_server_delete_bonded_device_all(void);
 extern trble_result_e rtw_ble_server_set_adv_interval(uint16_t interval); // interval range (0x0020 ~ 0x4000)
+extern trble_result_e rtw_ble_server_get_version(uint8_t *version);
 
 extern trble_result_e rtw_ble_client_scan_whiltelist_add(trble_addr *addr);
 extern trble_result_e rtw_ble_client_scan_whiltelist_delete(trble_addr *addr);
