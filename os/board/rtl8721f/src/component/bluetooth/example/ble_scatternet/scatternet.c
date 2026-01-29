@@ -524,15 +524,15 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 			}
 
 #ifdef CONFIG_PLATFORM_TIZENRT_OS
-			if (RTK_BT_LE_ROLE_MASTER == conn_ind->role)
-			{
-				trble_device_connected connected_dev;
+			if (RTK_BT_LE_ROLE_MASTER == conn_ind->role) {
+				trble_device_connected connected_dev = {0};
 				uint16_t mtu_size = 0;
 				uint8_t conn_id;
 				rtk_bt_le_gap_get_conn_id(conn_ind->conn_handle, &conn_id);
 				connected_dev.conn_handle = conn_ind->conn_handle;
 				connected_dev.is_bonded = ble_tizenrt_scatternet_bond_list[conn_id].is_bonded;
 				memcpy(connected_dev.conn_info.addr.mac, conn_ind->peer_addr.addr_val, RTK_BD_ADDR_LEN);
+				connected_dev.conn_info.addr.type = (trble_addr_type_e)conn_ind->peer_addr.type;
 				connected_dev.conn_info.conn_interval = conn_ind->conn_interval;
 				connected_dev.conn_info.slave_latency = conn_ind->conn_latency;
 				connected_dev.conn_info.scan_timeout = scan_timeout;
@@ -846,7 +846,7 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 				rtk_bt_le_gap_get_conn_id(auth_cplt_ind->conn_handle, &conn_id);
 				ble_tizenrt_scatternet_bond_list[conn_id].is_bonded = true;
 				memcpy(ble_tizenrt_scatternet_bond_list[conn_id].conn_info.addr.mac, ble_tizenrt_scatternet_conn_ind->peer_addr.addr_val, RTK_BD_ADDR_LEN);
-				trble_device_connected connected_dev;
+				trble_device_connected connected_dev = {0};
 				uint16_t mtu_size = 0;
 				if (RTK_BT_OK != rtk_bt_le_gap_get_mtu_size(auth_cplt_ind->conn_handle, &mtu_size)) {
 					BT_LOGE("[APP] Get mtu size failed \r\n");
@@ -854,6 +854,7 @@ static rtk_bt_evt_cb_ret_t ble_scatternet_gap_app_callback(uint8_t evt_code, voi
 				connected_dev.conn_handle = ble_tizenrt_scatternet_conn_ind->conn_handle;
 				connected_dev.is_bonded = ble_tizenrt_scatternet_bond_list[conn_id].is_bonded;
 				memcpy(connected_dev.conn_info.addr.mac, ble_tizenrt_scatternet_conn_ind->peer_addr.addr_val, RTK_BD_ADDR_LEN);
+				connected_dev.conn_info.addr.type = (trble_addr_type_e)ble_tizenrt_scatternet_conn_ind->peer_addr.type;
 				connected_dev.conn_info.conn_interval = ble_tizenrt_scatternet_conn_ind->conn_interval;
 				connected_dev.conn_info.slave_latency = ble_tizenrt_scatternet_conn_ind->conn_latency;
 				connected_dev.conn_info.scan_timeout = scan_timeout;
