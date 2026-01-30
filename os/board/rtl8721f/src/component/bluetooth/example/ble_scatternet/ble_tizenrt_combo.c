@@ -102,6 +102,13 @@ trble_result_e rtw_ble_combo_deinit(void)
 {
     ble_tizenrt_scatternet_main(0);
 
+	extern void *scan_filter_tmr_handle;
+	if (scan_filter_tmr_handle) {
+		if (!osif_timer_delete(&scan_filter_tmr_handle)) {
+			dbg("timer delete fail!! \n");
+		}
+	}
+
     osif_mem_free(client_init_parm);
     client_init_parm = NULL;
 

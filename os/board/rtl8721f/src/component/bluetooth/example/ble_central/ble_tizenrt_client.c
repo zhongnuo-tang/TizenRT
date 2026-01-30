@@ -309,6 +309,12 @@ trble_result_e rtw_ble_client_stop_scan(void)
 		return TRBLE_INVALID_STATE;
 	}
 
+	if (scan_filter_tmr_handle) {
+		if (!osif_timer_stop(&scan_filter_tmr_handle)) {
+			dbg("timer stop fail!! \n");
+		}
+	}
+
     if (RTK_BT_OK != rtk_bt_le_gap_stop_scan())
     {
         dbg("stop scan failed! \n");
@@ -848,6 +854,12 @@ trble_result_e rtw_ble_client_operation_enable_notification_and_indication(trble
 trble_result_e rtw_ble_client_deinit(void)
 {
     ble_tizenrt_central_main(0);
+
+	if (scan_filter_tmr_handle) {
+		if (!osif_timer_delete(&scan_filter_tmr_handle)) {
+			dbg("timer delete fail!! \n");
+		}
+	}
 
     osif_mem_free(client_init_parm);
     client_init_parm = NULL;
