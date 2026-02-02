@@ -23,6 +23,10 @@
 /* AUTO_GEN_END */
 
 /* MANUAL_GEN_START */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /* Exported types ------------------------------------------------------------*/
 /** @defgroup PSRAM_Exported_Types PSRAM Exported Types
@@ -638,5 +642,9 @@ extern u8 APM_WR_INIT_LATENCY_SPEC[6];
 #define PSRAM_WB958_DQ16 	PSRAM_DEVICE_DQ16|PSRAM_DEVICE_CLK_250 | MEM_PSRAM_WB | PSRAM_SIZE_256Mb | PSRAM_PAGE1024
 
 #define ChipInfo_MemoryInfo() ChipInfo_MCM_Info()
+#ifdef __cplusplus
+}
+#endif
+
 /* MANUAL_GEN_END */
 #endif

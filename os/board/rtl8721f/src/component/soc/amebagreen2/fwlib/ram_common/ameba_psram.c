@@ -48,6 +48,94 @@ static u32 PSRAM_CALIB_PATTERN[6] = {
 
 PSRAMINFO_TypeDef PsramInfo;
 
+/**
+ * @brief  Initialize PSRAMINFO_TypeDef according to the memory configuration from MCM_MemTypeDef.
+ * @param  meminfo [in]  Pointer to MCM_MemTypeDef structure (typically from ChipInfo_MCMInfo()).
+ * @param  info    [out] Pointer to PSRAMINFO_TypeDef structure to fill in.
+ * @return None
+ * @note
+ */
+void ChipInfo_InitPsramInfoFromMemInfo(const MCM_MemTypeDef *meminfo, PSRAMINFO_TypeDef *info)
+{
+	_memset(info, 0, sizeof(PSRAMINFO_TypeDef));
+	info->Psram_Page_size = 0;
+	info->Psram_Clk_Limit = 0;
+	info->Psram_Type      = 0;
+	RRAM_TypeDef *rram = RRAM_DEV;
+
+	if (meminfo == NULL || info == NULL) {
+		return;
+	}
+
+	if (meminfo->mem_type == MCM_TYPE_PSRAM) {
+		info->Psram_DQ16 = meminfo->dram_info.dqx;
+
+		switch (meminfo->dram_info.model) {
+		case MCM_PSRAM_VENDOR_WB:
+			info->Psram_Vendor = MCM_PSRAM_VENDOR_WB;
+			switch (meminfo->dram_info.density) {
+			case MCM_PSRAM_SIZE_32Mb:
+				info->Psram_Size	   = 4 * 1024 * 1024;
+				info->Psram_Page_size  = PSRAM_PAGE128;
+				info->Psram_Clk_Limit  = PSRAM_DEVICE_CLK_200;
+				info->Psram_Type       = PSRAM_TYPE_WB955;
+				info->Psram_PDEX_CMD0 = PSRAM_WB955_PDEX_CMD0;
+				info->Psram_PDX_TIME = Psram_WB955_TEXTHS;
+				info->Psram_PDE_TIME =  Psram_WB955_THSIN;
+				break;
+			case MCM_PSRAM_SIZE_128Mb:
+				info->Psram_Size	   = 16 * 1024 * 1024;
+				info->Psram_Page_size  = PSRAM_PAGE2048;
+				info->Psram_Clk_Limit  = PSRAM_DEVICE_CLK_250;
+				info->Psram_Type       = PSRAM_TYPE_WB957;
+				info->Psram_PDEX_CMD0 = PSRAM_WB_PDEX_CMD0;
+				info->Psram_PDX_TIME = Psram_WB957_TEXTHS;
+				info->Psram_PDE_TIME = Psram_WB957_THSIN;
+				break;
+			case MCM_PSRAM_SIZE_256Mb:
+				info->Psram_Size	   = 32 * 1024 * 1024;
+				info->Psram_Page_size  = PSRAM_PAGE1024;
+				info->Psram_Clk_Limit  = PSRAM_DEVICE_CLK_250;
+				info->Psram_Type       = PSRAM_TYPE_WB958;
+				info->Psram_PDEX_CMD0 = PSRAM_WB_PDEX_CMD0;
+				info->Psram_PDX_TIME = Psram_WB958_TEXTHS;
+				info->Psram_PDE_TIME = Psram_WB958_THSIN;
+				break;
+			default:
+				break;
+			}
+			break;
+		case MCM_PSRAM_VENDOR_APM:
+			info->Psram_Vendor = MCM_PSRAM_VENDOR_APM;
+			switch (meminfo->dram_info.density) {
+			case MCM_PSRAM_SIZE_64Mb:
+				info->Psram_Size	   = 8 * 1024 * 1024;
+				info->Psram_Page_size  = PSRAM_PAGE1024;
+				info->Psram_Clk_Limit  = PSRAM_DEVICE_CLK_200;
+				info->Psram_Type       = PSRAM_TYPE_APM64;
+				break;
+			case MCM_PSRAM_SIZE_128Mb:
+				info->Psram_Size	   = 16 * 1024 * 1024;
+				info->Psram_Page_size  = PSRAM_PAGE2048;
+				info->Psram_Clk_Limit  = PSRAM_DEVICE_CLK_200;
+				info->Psram_Type       = PSRAM_TYPE_APM128;
+				break;
+			default:
+				break;
+			}
+			break;
+
+		default:
+			info->Psram_Vendor = MCM_PSRAM_VENDOR_NOTCARE;
+			break;
+		}
+	} else {
+		info->Psram_Vendor = MCM_PSRAM_VENDOR_NOTCARE;
+	}
+	rram->PSRAM_TYPE = info->Psram_Vendor;
+	rram->PSRAM_DQ = info->Psram_DQ16;
+	RTK_LOGD(TAG, "rram->PSRAM_TYPE  = 0x%x\n", rram->PSRAM_TYPE);
+}
 
 /**
   * @brief get psram clk info
@@ -183,10 +271,10 @@ void PSRAM_CLK_Update(void)
 		}
 	}
 
-	RTK_LOGI(TAG, "PSRAM Control: CLK=%-8lu Hz | DQ Width=%-2d bits | Density=0x%08X Bytes \n", \
-			 PsramClk, \
-			 PsramInfo.Psram_DQ16 == PSRAM_DEVICE_DQ16 ? 16 : 8, \
-			 PsramInfo.Psram_Size);
+	RTK_LOGI(TAG, "PSRAM CLK: %ldMHz, DQ%ld, Size: %ldMB\n", \
+			 PsramClk / 1000000, \
+			 PsramInfo.Psram_DQ16 == MCM_PSRAM_DQ16 ? 16 : 8, \
+			 PsramInfo.Psram_Size / 1024 / 1024);
 }
 
 
@@ -800,7 +888,7 @@ u32 PSRAM_SW_Calibration(u32 DQnum)
 		}
 	}
 
-	RTK_LOGI(TAG, "CalNmin = %x CalNmax = %x WindowSize = %x phase: %x \n", window_start, window_end, window_size, phase_cnt);
+	RTK_LOGI(TAG, "Cal win size %ld\n", window_size);
 
 	if ((window_size) < 9) {
 		return FALSE;

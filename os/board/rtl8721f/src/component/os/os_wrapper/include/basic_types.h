@@ -80,6 +80,11 @@
 #define UNUSED(X)      (void)X
 #endif
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef unsigned int	        uint;
 typedef	signed int		        sint;
 
@@ -521,4 +526,8 @@ typedef unsigned char	BOOLEAN, *PBOOLEAN;
 #define	__restrict			/* Ignore */
 #endif
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif// __BASIC_TYPES_H__

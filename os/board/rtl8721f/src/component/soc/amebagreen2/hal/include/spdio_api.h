@@ -30,6 +30,10 @@
 
 #include "basic_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup Ameba_Mbed_API
  * @{
  */
@@ -105,10 +109,8 @@ s8 spdio_tx(struct spdio_t *obj, struct spdio_buf_t *pbuf);
 void spdio_trigger_rx_handle(void);
 void SPDIO_Board_Init(void);
 
-/**
- * @brief An obj which will be used to initialize SDIO interface,
- * 		so it must be initialized before by calling HalSdioInit();
- */
-extern struct spdio_t *g_spdio_priv;
+#ifdef __cplusplus
+}
+#endif
 
 #endif // #ifndef __SPDIO_API_H__

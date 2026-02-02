@@ -28,6 +28,10 @@
  * @{
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*Don't modify this enum table*/
 enum spdio_rx_data_t {
 	SPDIO_RX_DATA_NULL = 0x00,
@@ -111,10 +115,14 @@ typedef s8(*spdio_device_rx_done_cb_ptr)(PSPDIO_ADAPTER pSPDIODev, struct spdio_
 
 void SDIO_TxBdHdl_Init(SPDIO_TX_BD_HANDLE *g_TXBDHdl, SPDIO_TX_BD *SPDIO_TXBDAddr, struct spdio_buf_t *spdio_dev_rx_buf, u16 host_tx_bd_num);
 void SDIO_RxBdHdl_Init(SPDIO_RX_BD_HANDLE *g_RXBDHdl, SPDIO_RX_BD *SPDIO_RXBDAddr, INIC_RX_DESC *g_RXDESCAddr, u16 host_rx_bd_num);
-void SPDIO_Notify_INT(u16 IntStatus);
-void SPDIO_Recycle_Rx_BD(IN PSPDIO_ADAPTER pSPDIODev, spdio_device_tx_done_cb_ptr spdio_device_tx_done_cb);
-s8 SPDIO_DeviceTx(PSPDIO_ADAPTER pSPDIODev, struct spdio_buf_t *pbuf);
-void SPDIO_TxBd_DataReady_DeviceRx(IN PSPDIO_ADAPTER pSPDIODev, spdio_device_rx_done_cb_ptr spdio_device_rx_done_cb);
-void SPDIO_Device_Init(PSPDIO_ADAPTER pSPDIODev);
-void SPDIO_Device_DeInit(void);
+void SPDIO_Notify_INT(SDIO_TypeDef *SDIO, u16 IntStatus);
+void SPDIO_Recycle_Rx_BD(SDIO_TypeDef *SDIO, PSPDIO_ADAPTER pSPDIODev, spdio_device_tx_done_cb_ptr spdio_device_tx_done_cb);
+u8 SPDIO_DeviceTx(SDIO_TypeDef *SDIO, PSPDIO_ADAPTER pSPDIODev, struct spdio_buf_t *pbuf);
+void SPDIO_TxBd_DataReady_DeviceRx(SDIO_TypeDef *SDIO, PSPDIO_ADAPTER pSPDIODev, spdio_device_rx_done_cb_ptr spdio_device_rx_done_cb);
+void SPDIO_Device_Init(SDIO_TypeDef *SDIO, PSPDIO_ADAPTER pSPDIODev);
+void SPDIO_Device_DeInit(SDIO_TypeDef *SDIO);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

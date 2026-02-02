@@ -1675,6 +1675,10 @@
 /* AUTO_GEN_END */
 
 /* MANUAL_GEN_START */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //Please add your defination here
 
 /**
@@ -1763,6 +1767,10 @@ typedef struct {
 
 
 /** @} */
+
+#ifdef __cplusplus
+}
+#endif
 
 /* MANUAL_GEN_END */
 
