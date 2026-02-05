@@ -5,10 +5,7 @@
  */
 
 #include "ameba_soc.h"
-#include "os_wrapper.h"
-#include "os_wrapper_specific.h"
 
-static const char *const TAG = "FLASH";
 uint32_t PrevIrqStatus;
 
 #define WRITE_SYNC_CLEAR   0
@@ -120,7 +117,7 @@ void FLASH_Write_Lock(void)
 	rtos_sched_suspend();
 	/* Get core-to-core hardware semphone */
 	while (IPC_SEMTake(IPC_SEM_FLASH, 1000) != TRUE) {
-		RTK_LOGS(TAG, RTK_LOG_ERROR, "FLASH_Write_Lock get hw sema fail\n");
+		RTK_LOGW(NOTAG, "FLASH_Write_Lock get hw sema fail\n");
 	}
 #ifdef CONFIG_ARM_CORE_CM4_KM4TZ
 	/* Sent IPC to KM4NS */
