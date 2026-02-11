@@ -68,6 +68,7 @@ class logParser:
 		self.g_stext_app = [0] * 10
 		self.g_etext_app = [0] * 10
 		self.app_name = []
+		self.read_all_elf = False
 		self.crash_type_assert = False
 		self.task_state = dict()
 
@@ -172,6 +173,33 @@ class logParser:
 					self.g_stext_app[app_idx] = int(t[0], 16)
 					self.g_etext_app[app_idx] = self.g_stext_app[app_idx] + int(word[3], 10) # word[3] is text_size
 					app_idx = app_idx + 1
+
+		if app_idx == 0:
+			app_count = 0
+			app_names = []
+
+			debug_files = [
+				f for f in os.listdir(self.bin_path)
+				if f.endswith("_dbg") and os.path.isfile(os.path.join(self.bin_path, f))
+			]
+
+			for f in debug_files:
+				app_names.append(f.split("_")[0])
+				self.app_name.append(app_names[app_count])
+				app_count = app_count + 1
+
+			if app_count > 0:
+				self.read_all_elf = True
+				self.g_app_idx = app_count
+				self.g_stext_app = array('i', range(0, self.g_app_idx))
+				self.g_etext_app = array('i', range(0, self.g_app_idx))
+
+				for app_idx in range(app_count):
+					#setting start and end address with minimum and maximum possible values for now when address is not available
+					self.g_stext_app[app_idx] = int("0x00000000", 16)
+					self.g_etext_app[app_idx] = int("0x77777777", 16)
+			else:
+				print("\nNo debug files found for common and app binaries\n")
 
 	# API to find crash binary, crash point and crash type from assert log
 	def find_crash_point(self):
@@ -549,13 +577,20 @@ class logParser:
 						if (self.is_kernel_text_address(hex(stack_val))):
 							#If yes, print it's corresponding symbol
 							utils.print_symbol(stack_addr, stack_val, 0, self.bin_path, self.app_name)
-						# Check if the stack address lies in application text address range
-						is_app_symbol = self.is_app_text_address(hex(stack_val))	# app index in case of application symbol
-						if (is_app_symbol):
-							#If yes, print it's corresponding symbol
-							if not self.xip_enabled:
-								stack_val = stack_val - int(self.g_stext_app[is_app_symbol - 1])
-							utils.print_symbol(stack_addr, stack_val, is_app_symbol, self.bin_path, self.app_name)
+						else:
+							if self.read_all_elf:
+								if not self.xip_enabled:
+									stack_val = stack_val - int(self.g_stext_app[is_app_symbol - 1])
+								for i in range(self.g_app_idx):
+									utils.print_symbol(stack_addr, stack_val, i + 1, self.bin_path, self.app_name)
+							else:
+								# Check if the stack address lies in application text address range
+								is_app_symbol = self.is_app_text_address(hex(stack_val))	# app index in case of application symbol
+								if (is_app_symbol):
+									#If yes, print it's corresponding symbol
+									if not self.xip_enabled:
+										stack_val = stack_val - int(self.g_stext_app[is_app_symbol - 1])
+									utils.print_symbol(stack_addr, stack_val, is_app_symbol, self.bin_path, self.app_name)
 
 	# Function to Parse the input log file (which contains wrong stackdump during assert)
 	def print_wrong_sp(self):
@@ -723,9 +758,8 @@ class logParser:
 		state_no+=1
 		self.task_state[str(state_no)] = " Wait to scheduling (Ready)"
 		state_no+=1
-		if config_smp:
-			self.task_state[str(state_no)] = " Assigned to CPU (Ready)"
-			state_no+=1
+		self.task_state[str(state_no)] = " Assigned to CPU (Ready)"
+		state_no+=1
 		self.task_state[str(state_no)] = " Running"
 		state_no+=1
 		self.task_state[str(state_no)] = " Inactive"
@@ -734,17 +768,14 @@ class logParser:
 		state_no+=1
 		self.task_state[str(state_no)] = " Wait FIN"
 		state_no+=1
-		if not config_disable_signals:
-			self.task_state[str(state_no)] = " Wait Signal"
-			state_no+=1
-		if not config_disable_mqueue:
-			self.task_state[str(state_no)] = " Wait MQ Receive (MQ Empty)"
-			state_no+=1
-			self.task_state[str(state_no)] = " Wait MQ Send (MQ Full)"
-			state_no+=1
-		if config_paging:
-			self.task_state[str(state_no)] = " Wait Page Fill"
-			state_no+=1
+		self.task_state[str(state_no)] = " Wait Signal"
+		state_no+=1
+		self.task_state[str(state_no)] = " Wait MQ Receive (MQ Empty)"
+		state_no+=1
+		self.task_state[str(state_no)] = " Wait MQ Send (MQ Full)"
+		state_no+=1
+		self.task_state[str(state_no)] = " Wait Page Fill"
+		state_no+=1
 
 	# API to print all the runnning TCB in the system
 	def print_task_list(self):
@@ -806,6 +837,8 @@ class logParser:
 	# Function to format logs and delete the timestamp (supported formats-|xxxxxxxxx| and [xxxxxxxxx]) if it consists of timestamp at the start of each log line
 	def format_log_file(self):
 
+		current_line = ""  # Initialize current_line
+
 		# Delete unwanted logs (if any) and timestamp at the start of each line
 		with open(self.log_file, "r") as f:
 			data = f.readlines()
@@ -846,4 +879,3 @@ class logParser:
 						print ('\t\t-{0}\t- Instead, supported log format in TRAP is as follows:'.format(line))
 						print ("\t\t-{0} {1}\n\tKindly modify the log file as per accepted format.\n".format(word[word.index('Assertion')-1], correctFormatString))
 						sys.exit(1)
-

@@ -31,6 +31,7 @@
 #include "amebasmart_config.h"
 #include "arch_timer.h"
 #include "ameba_soc.h"
+#include "osdep_service.h"
 #endif
 
 #ifdef CONFIG_SMP
@@ -85,18 +86,9 @@ static clock_t up_get_missingtick(void)
 
 static int up_pm_board_sleep(void)
 {
-	/* mask sys tick interrupt*/
-	arm_arch_timer_int_mask(1);
-	up_timer_disable();
 	/* Interrupt source will wake cpu up, just leave expected idle time as 0
 	Enter sleep mode for AP */
 	config_SLEEP_PROCESSING();
-	/* When wake from pg, arm timer has been reset, so a new compare value is necessary to
-	trigger an timer interrupt */
-	up_timer_enable();
-	/* Arch timer is running at 50Mhz */
-	arm_arch_timer_set_compare(arm_arch_timer_count() + 50000);
-	arm_arch_timer_int_mask(0);
 
 	return 0;
 }

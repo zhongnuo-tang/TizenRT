@@ -611,6 +611,30 @@ int get_errno(void);
 #define sllvdbg(...)
 #endif
 
+#ifdef CONFIG_DEBUG_SMP_ERROR
+#define smpdbg(format, ...)    dbg(format, ##__VA_ARGS__)
+#define smplldbg(format, ...)  lldbg(format, ##__VA_ARGS__)
+#else
+#define smpdbg(...)
+#define smplldbg(...)
+#endif
+
+#ifdef CONFIG_DEBUG_SMP_WARN
+#define smpwdbg(format, ...)    wdbg(format, ##__VA_ARGS__)
+#define smpllwdbg(format, ...)  llwdbg(format, ##__VA_ARGS__)
+#else
+#define smpwdbg(...)
+#define smpllwdbg(...)
+#endif
+
+#ifdef CONFIG_DEBUG_SMP_INFO
+#define smpvdbg(format, ...)   vdbg(format, ##__VA_ARGS__)
+#define smpllvdbg(format, ...) llvdbg(format, ##__VA_ARGS__)
+#else
+#define smpvdbg(...)
+#define smpllvdbg(...)
+#endif
+
 #ifdef CONFIG_DEBUG_PM_ERROR
 #define pmdbg(format, ...)    dbg(format, ##__VA_ARGS__)
 #define pmlldbg(format, ...)  lldbg(format, ##__VA_ARGS__)
@@ -649,6 +673,24 @@ int get_errno(void);
 #else
 #define sevdbg(...)
 #define sellvdbg(...)
+#endif
+
+#ifdef CONFIG_DEBUG_WIFICSI_ERROR
+#define csidbg(format, ...)    dbg(format, ##__VA_ARGS__)
+#else
+#define csidbg(...)
+#endif
+
+#ifdef CONFIG_DEBUG_WIFICSI_WARN
+#define csiwdbg(format, ...)    wdbg(format, ##__VA_ARGS__)
+#else
+#define csiwdbg(...)
+#endif
+
+#ifdef CONFIG_DEBUG_WIFICSI_INFO
+#define csivdbg(format, ...)   vdbg(format, ##__VA_ARGS__)
+#else
+#define csivdbg(...)
 #endif
 
 /****************************************/
@@ -1499,6 +1541,30 @@ int get_errno(void);
 #define sllvdbg     (void)
 #endif
 
+#ifdef CONFIG_DEBUG_SMP_ERROR
+#define smpdbg      dbg
+#define smplldbg    lldbg
+#else
+#define smpdbg      (void)
+#define smplldbg    (void)
+#endif
+
+#ifdef CONFIG_DEBUG_SMP_WARN
+#define smpwdbg     wdbg
+#define smpllwdbg   llwdbg
+#else
+#define smpwdbg     (void)
+#define smpllwdbg   (void)
+#endif
+
+#ifdef CONFIG_DEBUG_SMP_INFO
+#define smpvdbg     vdbg
+#define smpllvdbg   llvdbg
+#else
+#define smpvdbg     (void)
+#define smpllvdbg   (void)
+#endif
+
 #ifdef CONFIG_DEBUG_SECURE_ELEMENT_ERROR
 #define sedbg      dbg
 #define selldbg    lldbg
@@ -1513,6 +1579,24 @@ int get_errno(void);
 #else
 #define sevdbg     (void)
 #define sellvdbg   (void)
+#endif
+
+#ifdef CONFIG_DEBUG_WIFICSI_ERROR
+#define csidbg      dbg
+#else
+#define csidbg      (void)
+#endif
+
+#ifdef CONFIG_DEBUG_WIFICSI_WARN
+#define csiwdbg     wdbg
+#else
+#define csiwdbg     (void)
+#endif
+
+#ifdef CONFIG_DEBUG_WIFICSI_INFO
+#define csivdbg     vdbg
+#else
+#define csivdbg     (void)
 #endif
 
 /****************************************/

@@ -55,13 +55,13 @@ HEAD_ASRC  =
 #include common/Make.defs
 CMN_CSRCS += arm_assert.c up_allocateheap.c arm_blocktask.c
 CMN_CSRCS += up_createstack.c arm_exit.c arm_fullcontextrestore.c
-CMN_CSRCS += arm_initialize.c up_lowputs.c
+CMN_CSRCS += arm_initialize.c up_lowputs.c up_flush_console.c
 CMN_CSRCS += arm_modifyreg16.c arm_modifyreg32.c
 CMN_CSRCS += arm_modifyreg8.c arm_nputs.c arm_releasepending.c
 CMN_CSRCS += up_releasestack.c arm_reprioritizertr.c arm_saveusercontext.c
 CMN_CSRCS += arm_stackframe.c arm_switchcontext.c
 CMN_CSRCS += arm_vfork.c arm_unblocktask.c up_usestack.c
-
+CMN_CSRCS += up_checkstackoverflow.c
 ifeq ($(CONFIG_SYSTEM_REBOOT_REASON),y)
 CMN_CSRCS += up_reboot_reason.c
 endif
@@ -191,12 +191,12 @@ ifeq ($(CONFIG_ARCH_FPU),y)
 endif
 
 ifeq ($(CONFIG_SMP),y)
-  CMN_CSRCS += arm_cpuindex.c arm_cpustart.c arm_cpupause.c arm_cpuidlestack.c
+  CMN_CSRCS += arm_cpuindex.c arm_cpuon.c arm_cpupause.c arm_cpuidlestack.c
   CMN_CSRCS += arm_scu.c
 endif
 
 ifeq ($(CONFIG_CPU_HOTPLUG),y)
-  CMN_CSRCS += arm_cpuhotplug.c
+  CMN_CSRCS += arm_cpuoff.c
 endif
 
 ARCH_SRCDIR = $(TOPDIR)/arch/$(CONFIG_ARCH)/src/
@@ -219,7 +219,7 @@ CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/mbed/hal_ext/
 
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/project/realtek_amebaD2_va0_example/inc/inc_ap
 
-CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os/os_wrapper/include
+CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os_dep
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/os/tizenrt
 
 CFLAGS += -I$(TOPDIR)/board/$(CONFIG_ARCH_BOARD)/src/component/usrcfg/rtl8730e/include
@@ -302,9 +302,7 @@ endif
 ifeq ($(CONFIG_AMEBASMART_WIFI),y)
 ifeq ($(CONFIG_ARCH_FPU),y)
 EXTRA_LIBS += $(TOPDIR)/board/rtl8730e/src/libs/lib_wpa_lite.a
-EXTRA_LIBS += $(TOPDIR)/board/rtl8730e/src/libs/lib_wifi_com_sec.a
-EXTRA_LIBS += $(TOPDIR)/board/rtl8730e/src/libs/lib_wps.a
-EXTRA_LIBS += $(TOPDIR)/board/rtl8730e/src/libs/lib_wifi_inic_ap.a
+EXTRA_LIBS += $(TOPDIR)/board/rtl8730e/src/libs/lib_wifi_common.a
 else
 #EXTRA_LIBS += $(TOPDIR)/board/
 endif

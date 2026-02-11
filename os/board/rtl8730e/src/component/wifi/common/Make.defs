@@ -49,9 +49,7 @@
 #
 ############################################################################
 
-CSRCS += rtw_timer.c \
-	rtw_atomic.c \
-	rtw_wakelock.c
+CSRCS += rtw_timer.c
 
 DEPPATH += --dep-path component/wifi/common
 VPATH += :component/wifi/common

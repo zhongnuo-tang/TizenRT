@@ -88,6 +88,7 @@
 #include "objects.h"
 #include "ameba_uart.h"
 #include "tinyara/kmalloc.h"
+#include "osdep_service.h"
 #include "ameba_vector.h"
 
 /****************************************************************************
@@ -887,7 +888,7 @@ static void rtl8730e_up_shutdown(struct uart_dev_s *dev)
 	DEBUGASSERT(priv);
 	DEBUGASSERT(sdrv[uart_index_get(priv->tx)]);
 	serial_free(sdrv[uart_index_get(priv->tx)]);
-	rtos_mem_free(sdrv[uart_index_get(priv->tx)]);
+	rtw_free(sdrv[uart_index_get(priv->tx)]);
 	sdrv[uart_index_get(priv->tx)] = NULL;
 }
 
@@ -1267,6 +1268,28 @@ void up_serialinit(void)
 	bsp_pm_domain_register("UART", BSP_UART_DRV);
 	pmu_register_sleep_callback(PMU_LOGUART_DEVICE, (PSM_HOOK_FUN)rtk_loguart_suspend, NULL, (PSM_HOOK_FUN)rtk_loguart_resume, NULL);
 	pmu_register_sleep_callback(PMU_UART1_DEVICE, (PSM_HOOK_FUN)rtk_uart_suspend, NULL, (PSM_HOOK_FUN)rtk_uart_resume, NULL);
+#endif
+}
+
+/****************************************************************************
+ * Name: up_get_console_dev
+ *
+ * Description:
+ *   Read CONSOLE_DEV device serial structure
+ *
+ * Input Parameters:
+ *   none
+ *
+ * Returned Value:
+ *   CONSOLE_DEV structure address
+ *
+ ****************************************************************************/
+void *up_get_console_dev(void)
+{
+#ifdef CONSOLE_DEV
+	return &CONSOLE_DEV;
+#else
+	return NULL;
 #endif
 }
 

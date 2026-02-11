@@ -652,6 +652,10 @@ void up_assert(const uint8_t *filename, int lineno)
 	} else
 #endif
 	{
+		if (!IS_SECURE_STATE()) {
+			up_flush_console();
+		}
+
 		/* treat kernel fault */
 		arm_assert();
 	}

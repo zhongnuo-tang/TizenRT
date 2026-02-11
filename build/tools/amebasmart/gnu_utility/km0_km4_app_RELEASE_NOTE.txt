@@ -1,10 +1,21 @@
 /* == "version" + "Realtek git version" + "compile date" + "compile time" == */
 
-== version 3a654af2 2025/10/17-12:45:16 ==
-1. Remove sre PG print log
+== version d002f30788 2026/01/21-10:34:24 ==
+1. The original IPC flow could clear or handle interrupts while IMR was disabled, allowing a TX-done interrupt to be consumed before the waiter enabled IMR.
+2. Fix this by handling only `IPC_ISR & IPC_IMR` in the ISR and clearing any pending IPC interrupt status before enabling IMR and waiting.
+== version c220540be0 2025/12/24-13:53:09 ==
+1. Fix issue of crash due to wakeup by invalid packets
 
-== version 5b5b5dea 2025/09/19-15:16:29 ==
-1. Update wifi driver to support multi-sta CSI
+== version 81d4d19fce 2025/12/12-17:23:10 ==
+1. Change wififw sleep mode to CG
+
+== version ac677b6ae1 2025/12/10-17:27:15 ==
+1. Reduce PMC logs
+
+== version 261770ae95 2025/12/08-14:52:55 ==
+1. revert km4 driver to before multi-sta CSI
+2. disable autogating for psram
+3. fix KM4 deadbeef crash in wowlan PG kfree_skb
 
 == version d3d07d0844 2025/09/17-17:37:16 ==
 1. Fix issue of KM4 sometimes not returning scan results with 21 APs

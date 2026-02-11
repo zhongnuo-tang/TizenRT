@@ -83,6 +83,7 @@
 #include "up_internal.h"
 #include "amebasmart_boot.h"
 #include "ameba_soc.h"
+#include "osdep_service.h"
 #include "platform_opts_bt.h"
 
 #ifdef CONFIG_AMEBASMART_BOR
@@ -150,10 +151,8 @@ int up_check_iwdg(void)
 
 	if ((Temp & APBPeriph_IWDG) == 0) {
 		dbg("IWDG is disabled\n");
-		return 0;
 	} else {
 		dbg("IWDG is enabled\n");
-		return 1;
 	}
 }
 
@@ -223,7 +222,7 @@ void board_i2c_initialize(void)
 #ifdef CONFIG_AMEBASMART_I2C1
 	bus = 1;
 	snprintf(path, sizeof(path), "/dev/i2c-%d", bus);
-	i2c = (struct i2c_dev_s *)up_i2cinitialize(bus);
+	i2c = up_i2cinitialize(bus);
 #ifdef CONFIG_I2C_USERIO
 	if (i2c != NULL) {
 		ret = i2c_uioregister(path, i2c);
@@ -239,7 +238,7 @@ void board_i2c_initialize(void)
 #ifdef CONFIG_AMEBASMART_I2C2
 	bus = 2;
 	snprintf(path, sizeof(path), "/dev/i2c-%d", bus);
-	i2c = (struct i2c_dev_s *)up_i2cinitialize(bus);
+	i2c = up_i2cinitialize(bus);
 #ifdef CONFIG_I2C_USERIO
 	if (i2c != NULL) {
 		ret = i2c_uioregister(path, i2c);
@@ -469,6 +468,13 @@ void board_initialize(void)
 #ifdef CONFIG_AMEBASMART_WIFI
 	wlan_initialize();
 #endif
+
+#ifdef CONFIG_WIFI_CSI
+	if (rtl8730e_rtk_csi_initialize(0) != 0) {
+		lldbg("rtl8730e_rtk_csi initialization failed\n");
+	}
+#endif	
+
 	/* Enable IPC buffered print */
 	inic_ipc_buffered_printf_set_np_enable(1);
 

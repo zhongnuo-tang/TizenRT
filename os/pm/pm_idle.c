@@ -38,7 +38,7 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-
+#define PM_DEBUG_STR "."
 /****************************************************************************
  * Private Variables
  ****************************************************************************/
@@ -113,8 +113,8 @@ static int disable_secondary_cpus(void)
 	/* Send signal to shutdown other cores here */
 	for (int cpu = 1; cpu < CONFIG_SMP_NCPUS; cpu++) {
 		if (up_get_cpu_state(cpu) == CPU_RUNNING) {
-			if (up_cpu_hotplug(cpu) != OK) {
-				pmllvdbg("CPU%d hotplug failed! Unable to shutdown secondary core for sleep mode\n", cpu);
+			if (up_cpu_off(cpu) != OK) {
+				pmllvdbg("CPU%d shutdown failed! Unable to shutdown secondary core for sleep mode\n", cpu);
 				return ERROR;
 			}
 		}
@@ -204,8 +204,7 @@ static int check_secondary_cpus_idle(void)
  ****************************************************************************/
 static int disable_systick(void)
 {
-	/* TODO: move disable systick code BSP to here */
-	return OK;
+	return up_timer_disable();
 }
 
 /****************************************************************************
@@ -255,7 +254,7 @@ static void enable_and_compensate_systick(void)
 	}
 #endif
 
-	/* TODO: move enable systick code BSP to here */
+	(void)up_timer_enable();
 }
 
 #ifdef CONFIG_PM_TIMEDWAKEUP
@@ -338,8 +337,11 @@ static void update_wakeup_reason(void)
 
 	if (sleep_ops->get_wakeupreason) {
 		wakeup_src = sleep_ops->get_wakeupreason();
+		if (wakeup_src < PM_WAKEUP_UNKNOWN || wakeup_src >= PM_WAKEUP_SRC_COUNT) {
+			wakeup_src = PM_WAKEUP_UNKNOWN;
+		}
 
-		pmllvdbg("wakeup source code = %d\n", wakeup_src);
+		lldbg_noarg(": %s", wakeup_src_name[wakeup_src]);
 		pm_metrics_update_wakeup_reason(wakeup_src);
 	}
 }
@@ -399,10 +401,12 @@ static void enter_sleep(void)
 		return;
 	}
 
+	lldbg_noarg(PM_DEBUG_STR);
 	if (suspend_devices() != OK) {
 		goto DEVICES_RESUME;
 	}
 
+	lldbg_noarg(PM_DEBUG_STR);
 	if (disable_secondary_cpus() != OK) {
 		goto CPUS_ENABLE;
 	}
@@ -415,6 +419,7 @@ static void enter_sleep(void)
 		goto SYSTICK_ENABLE;
 	}
 
+	lldbg_noarg(PM_DEBUG_STR);
 	if (sleep_ops->sleep && sleep_ops->sleep() != 0) {
 		goto SYSTICK_ENABLE;
 	}
@@ -423,12 +428,15 @@ static void enter_sleep(void)
 
 SYSTICK_ENABLE:
 	enable_and_compensate_systick();
+	lldbg_noarg(PM_DEBUG_STR);
 
 CPUS_ENABLE:
 	enable_secondary_cpus();
+	lldbg_noarg(PM_DEBUG_STR);
 
 DEVICES_RESUME:
 	resume_devices();
+	lldbg_noarg(PM_DEBUG_STR"\n");
 }
 
 /****************************************************************************

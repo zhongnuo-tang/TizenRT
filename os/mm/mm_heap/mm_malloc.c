@@ -109,10 +109,9 @@ static void mm_free_delaylist(FAR struct mm_heap_s *heap)
 
 	while (tmp)
 	{
-		FAR void *address;
+		FAR struct mm_delaynode_s *address;
 
 		/* Get the first delayed deallocation */
-
 		address = tmp;
 		tmp = tmp->flink;
 
@@ -120,7 +119,11 @@ static void mm_free_delaylist(FAR struct mm_heap_s *heap)
 		 * 'while' condition above.
 		 */
 
-		mm_free(heap, address);
+#ifdef CONFIG_DEBUG_MM_FREEINFO
+		mm_free_withinfo(heap, (void *)address, address->free_call_addr, address->free_call_pid);
+#else
+		mm_free(heap, (void *)address);
+#endif
 	}
 #endif
 }
@@ -146,6 +149,9 @@ FAR void *mm_malloc(FAR struct mm_heap_s *heap, size_t size, mmaddress_t caller_
 	void *ret = NULL;
 	int ndx;
 	bool gc_done = false;
+#ifdef CONFIG_DEBUG_MM_HEAPINFO
+	size_t gc_before_size;
+#endif
 
 	/* Free the delay list first */
 	mm_free_delaylist(heap);
@@ -227,6 +233,10 @@ retry_after_gc:
 			remainder = (FAR struct mm_freenode_s *)(((char *)node) + size);
 			remainder->size = remaining;
 			remainder->preceding = size;
+#ifdef CONFIG_DEBUG_MM_FREEINFO
+			remainder->free_call_addr = MM_REMAINDER_FREE_CALL_ADDR;
+			remainder->free_call_pid = MM_REMAINDER_FREE_CALL_PID;
+#endif
 
 			/* Adjust the size of the node under consideration */
 
@@ -259,7 +269,15 @@ retry_after_gc:
 
 	if (!ret && gc_done == false) {
 		mdbg("Allocation failed!!! We dont have enough memory. Try to free dead task stack areas\n");
+#ifdef CONFIG_DEBUG_MM_HEAPINFO
+		gc_before_size = heap->total_alloc_size;
+#endif
 		sched_garbagecollection();
+#ifdef CONFIG_DEBUG_MM_HEAPINFO
+		if (gc_before_size > heap->total_alloc_size) {
+			mdbg("GC freed %u bytes\n", gc_before_size - heap->total_alloc_size);
+		}
+#endif
 		gc_done = true;
 		goto retry_after_gc;
 	}
