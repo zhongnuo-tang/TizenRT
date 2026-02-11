@@ -67,6 +67,9 @@ typedef struct {
   */
 
 /* *************** delete end *********************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** @defgroup CHIPINFO_MEMINFO_Structure_Type Structure Type
   * @{
@@ -345,6 +348,10 @@ enum MCM_MemType {
 /** @defgroup HWINFO_Exported_Functions HWINFO Exported Functions
   * @{
   */
+_LONG_CALL_ u8 EFUSE_GetESFlag(void);
+_LONG_CALL_ void EFUSE_GetUUID(u32 *UUID);
+_LONG_CALL_ u8 EFUSE_Get_Info(u32 FuncID);
+_LONG_CALL_ u8 EFUSE_GetChipInfo(void);
 _LONG_CALL_ u8 EFUSE_GetChipVersion(void);
 _LONG_CALL_ u16 ChipInfo_BDNum(void);
 _LONG_CALL_ u8 ChipInfo_PSRAMType(void);
@@ -353,7 +360,11 @@ _LONG_CALL_ bool ChipInfo_PsramExists(void);
 _LONG_CALL_ u32 ChipInfo_PsramBoundary(void);
 _LONG_CALL_ u32 ChipInfo_MCM_Info(void);//planned to delete
 _LONG_CALL_ MCM_MemTypeDef ChipInfo_MCMInfo(void);
-_LONG_CALL_ void ChipInfo_GetSocName_ToBuf(char *buf, size_t buflen);
+_LONG_CALL_ u32 ChipInfo_GetSocName_ToBuf(void);
+
+#ifdef __cplusplus
+}
+#endif
 /**
   * @}
   */

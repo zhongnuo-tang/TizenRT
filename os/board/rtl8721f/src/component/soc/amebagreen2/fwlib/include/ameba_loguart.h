@@ -524,6 +524,10 @@ typedef struct {
 /* AUTO_GEN_END */
 
 /* MANUAL_GEN_START */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 //Please add your defination here
 
@@ -862,6 +866,10 @@ _LONG_CALL_ void LOGUART_PutChar_RAM(u8 c);
 _LONG_CALL_ u8 LOGUART_Ready(void);
 #define DiagPutChar		LOGUART_PutChar
 #define DiagGetChar		LOGUART_GetChar
+
+#ifdef __cplusplus
+}
+#endif
 
 /* MANUAL_GEN_END */
 

@@ -7,18 +7,22 @@
 #ifndef _AMEBA_SHELL_H_
 #define _AMEBA_SHELL_H_
 
-#if (defined (CONFIG_WHC_HOST) || defined(CONFIG_WHC_NONE))
-#define SHELL_TASK_FUNC_STACK_SIZE (4000 + 128)
-#else
-#define SHELL_TASK_FUNC_STACK_SIZE (560 + 128 + CONTEXT_SAVE_SIZE)	/* KM0 cost stack: max_size < 300 bytes, test by monitor cmd */
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+#define SHELL_TASK_FUNC_STACK_SIZE (CONFIG_SHELL_TASK_STACK_BASIC_SIZE + 128 + CONTEXT_SAVE_SIZE)
 
 //Log UART
 //UART_LOG_CMD_BUFLEN: only 126 bytes could be used for keeping input
 //                                     cmd, the last byte is for string end ('\0').
 #define UART_LOG_CMD_BUFLEN     127
 #define UART_LOG_CMD_BUFLEN_L	4096
-
+#ifdef CONFIG_LONGER_CMD
+#define CMD_BUFLEN UART_LOG_CMD_BUFLEN_L
+#else
+#define CMD_BUFLEN UART_LOG_CMD_BUFLEN
+#endif
 #define MAX_ARGV                32
 
 typedef u32(*ECHOFUNC)(IN u8 *, ...);   //UART LOG echo-function type.
@@ -31,10 +35,8 @@ typedef struct {
 } UART_LOG_BUF, *PUART_LOG_BUF;
 
 typedef struct _COMMAND_TABLE_ {
-	const   u8 *cmd;
-	u16     ArgvCnt;
+	const char *cmd;
 	u32(*func)(u16 argc, u8 *argv[]);
-	const   u8 *msg;
 } COMMAND_TABLE, *PCOMMAND_TABLE;
 
 
@@ -90,4 +92,9 @@ void shell_loguratRx_ipc_int(void *Data, u32 IrqStatus, u32 ChanNum);
 //#define RtlConsolTaskRom		shell_task_rom
 
 //extern u32 shell_interrupt_on;
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif //_RTK_CONSOL_H_

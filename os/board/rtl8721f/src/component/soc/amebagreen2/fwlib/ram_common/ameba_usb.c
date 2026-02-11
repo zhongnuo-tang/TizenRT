@@ -8,10 +8,11 @@
 
 #include "ameba_soc.h"
 #include "usb_hal.h"
+#include "usb_regs.h"
 
 /* Private defines -----------------------------------------------------------*/
 
-#define USB_CAL_DATA_LEN									28U
+#define USB_CAL_DATA_LEN									30U
 
 /* USB OTG addon control register */
 #define USB_ADDON_REG_CTRL									(USB_ADDON_REG_BASE + 0x04UL)
@@ -33,7 +34,7 @@ static void usb_chip_enable_interrupt(u8 priority);
 static void usb_chip_disable_interrupt(void);
 static void usb_chip_register_irq_handler(void *handler, u8 priority);
 static void usb_chip_unregister_irq_handler(void);
-#ifndef CONFIG_NON_OS
+#if !defined(CONFIG_NON_OS) && !defined(CONFIG_PLATFORM_ZEPHYR)
 static void usb_chip_cg(u32 ms);
 #endif
 /* Private variables ---------------------------------------------------------*/
@@ -50,7 +51,7 @@ usb_hal_driver_t usb_hal_driver = {
 	.disable_interrupt = usb_chip_disable_interrupt,
 	.register_irq_handler = usb_chip_register_irq_handler,
 	.unregister_irq_handler = usb_chip_unregister_irq_handler,
-#ifndef CONFIG_NON_OS
+#if !defined(CONFIG_NON_OS) && !defined(CONFIG_PLATFORM_ZEPHYR)
 	.cg = usb_chip_cg,
 #endif
 };
@@ -65,10 +66,13 @@ usb_hal_driver_t usb_hal_driver = {
 static usb_cal_data_t *usb_chip_get_cal_data(u8 mode)
 {
 	usb_cal_data_t *data = NULL;
-
-	UNUSED(mode);
-
+	PLL_TypeDef *pll = (PLL_TypeDef *)PLL_REG_BASE;
 	u32 reg;
+
+	pll->PLL_UPLL_CTRL1 &= ~(PLL_BIT_UPLL_CMU_BIG_KVCO | PLL_MASK_UPLL_CMU_LF_R | PLL_MASK_UPLL_CMU_ICP);
+	pll->PLL_UPLL_CTRL1 |= PLL_UPLL_CMU_LF_R(0x2);
+	pll->PLL_UPLL_CTRL1 |= PLL_UPLL_CMU_ICP(0x2);
+	pll->PLL_UPLL_CTRL1 |= PLL_BIT_UPLL_CMU_CCO_SEL;
 
 	reg = HAL_READ32(USB_ADDON_REG_AUTOLOAD_CTRL, 0U);
 	if (reg & USB_ADDON_REG_AUTOLOAD_CTRL_BIT_AUTOLOAD_UPHY_EN) {
@@ -222,10 +226,28 @@ static usb_cal_data_t *usb_chip_get_cal_data(u8 mode)
 		data->addr = 0xE7;
 		data->val = (u8)((reg >> 24) & 0xFF);
 
-		data = &usb_cal_data[27];
-		data->page = 0xFF;
-		data->addr = 0x00;
-		data->val = 0x00;
+		if (USB_OTG_MODE_HOST == mode) {
+			/* Host mode trigger disconnect level setting */
+			data = &usb_cal_data[27];
+			data->page = 0x01;
+			data->addr = 0xE0;
+			data->val = 0x22;
+
+			data = &usb_cal_data[28];
+			data->page = 0x01;
+			data->addr = 0xE0;
+			data->val = 0x26;
+
+			data = &usb_cal_data[29];
+			data->page = 0xFF;
+			data->addr = 0x00;
+			data->val = 0x00;
+		} else {
+			data = &usb_cal_data[27];
+			data->page = 0xFF;
+			data->addr = 0x00;
+			data->val = 0x00;
+		}
 
 		data = &usb_cal_data[0];
 	}
@@ -337,7 +359,7 @@ static void usb_chip_unregister_irq_handler(void)
 	InterruptUnRegister(USB_IRQ);
 }
 
-#ifndef CONFIG_NON_OS
+#if !defined(CONFIG_NON_OS) && !defined(CONFIG_PLATFORM_ZEPHYR)
 static void usb_chip_wake_event(u8 enable)
 {
 	if (enable) {
@@ -352,6 +374,9 @@ static u32 usb_chip_cg_suspend_cb(u32 expected_idle_time, void *param)
 	(void) expected_idle_time;
 	(void) param;
 	PLL_TypeDef *sys_pll = (PLL_TypeDef *)PLL_REG_BASE;
+
+	USB_PCGCCTL = USB_PCGCCTL | USB_OTG_PCGCCTL_STOPCLK;
+
 	sys_pll->PLL_UPLL_CTRL0 |= PLL_BIT_SUSPEND_WAK_MSK;
 	return TRUE;
 }
@@ -361,6 +386,8 @@ static u32 usb_chip_cg_resume_cb(u32 expected_idle_time, void *param)
 	(void) expected_idle_time;
 	(void) param;
 	u32 reg;
+
+	USB_PCGCCTL = USB_PCGCCTL & (~(USB_OTG_PCGCCTL_STOPCLK | USB_OTG_PCGCCTL_GATECLK));
 
 	reg = HAL_READ32(USB_ADDON_REG_CTRL, 0);
 	reg &= ~USB_ADDON_REG_CTRL_BIT_DIS_SUSPEND;

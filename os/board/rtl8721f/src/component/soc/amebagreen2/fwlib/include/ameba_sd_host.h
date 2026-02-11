@@ -1271,6 +1271,10 @@ typedef struct {
 /* AUTO_GEN_END */
 
 /* MANUAL_GEN_START */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /**
   \brief  Defines SDIO Host ADMA table end.
@@ -1423,6 +1427,10 @@ typedef struct adma_descriptor_line_s {
 #define SDIO_ERR_SIG_EN_CONFIG 0x380 // disable CMD_ERR & DAT_ERR INT
 #define SDIO_OCR_VOLTAGE 0x100000
 #define SDIO_HOST_CTL2_CONFIG 0xA // 1.8V signaling + SDR50
+#ifdef __cplusplus
+}
+#endif
+
 /* MANUAL_GEN_END */
 
 /** @} */
@@ -1602,12 +1610,11 @@ typedef struct {
 #define SDMMC_R6_ILLEGAL_CMD 0x00004000U
 #define SDMMC_R6_COM_CRC_FAILED 0x00008000U
 
-#define SDMMC_VOLTAGE_WINDOW_SD 0x80100000U
 #define SDMMC_HIGH_CAPACITY 0x40000000U
-#define SDMMC_STD_CAPACITY 0x00000000U
-#define SDMMC_CHECK_PATTERN 0x000001AAU
-#define SDMMC_SWITCH_1_8V_CAPACITY 0x01000000U
+#define SDMMC_SWITCH_1_8V_CAPACITY 0x10000000U
+#define SDMMC_VOLTAGE_WINDOW_SD 0x00100000U // 3.2-3.3V
 
+#define SDMMC_CHECK_PATTERN 0x000001AAU
 /**
  * @brief  Masks for SCR
  */
@@ -1753,6 +1760,14 @@ typedef struct {
  * @{
  */
 #define IS_SD_BLOCK_SIZE(SIZE)	((SIZE) <= 0x800) // 2048 for SDIO card, 512 for SD mem card
+/**
+ * @}
+ */
+
+/** @defgroup SDHOST_DMA_ALIGN_ADDR
+ * @{
+ */
+#define SDIOH_DMA_ALIGN_SZ		(8) // hw: 8byte aligned
 /**
  * @}
  */
@@ -1967,7 +1982,7 @@ u32 SDMMC_CmdSetWrBlkEraseCnt(SDIOHOST_TypeDef *SDIOx, u32 BlockCnt);
 u32 SDMMC_CmdSendSCR(SDIOHOST_TypeDef *SDIOx);
 u32 SDMMC_CmdSendCID(SDIOHOST_TypeDef *SDIOx);
 u32 SDMMC_CmdSendCSD(SDIOHOST_TypeDef *SDIOx, u32 Argument);
-u32 SDMMC_CmdSetRelAdd(SDIOHOST_TypeDef *SDIOx, u16 *pRCA);
+u32 SDMMC_CmdSetRelAdd(SDIOHOST_TypeDef *SDIOx);
 u32 SDMMC_CmdSendStatus(SDIOHOST_TypeDef *SDIOx, u32 Argument);
 u32 SDMMC_CmdStatusRegister(SDIOHOST_TypeDef *SDIOx);
 u32 SDMMC_CmdSwitch(SDIOHOST_TypeDef *SDIOx, u32 Argument);
@@ -1978,15 +1993,10 @@ u32 SDIO_CmdRWDirect(SDIOHOST_TypeDef *SDIOx, u32 Argument);
 u32 SDIO_CmdRWExtended(SDIOHOST_TypeDef *SDIOx, u32 Argument);
 
 /* SDMMC Responses management functions */
-u32 SDMMC_GetCmdError(SDIOHOST_TypeDef *SDIOx);
-u32 SDMMC_GetCmdResp1(SDIOHOST_TypeDef *SDIOx);
-u32 SDMMC_GetCmdResp1B(SDIOHOST_TypeDef *SDIOx, u32 Timeout);
-u32 SDMMC_GetCmdResp2(SDIOHOST_TypeDef *SDIOx);
-u32 SDMMC_GetCmdResp3(SDIOHOST_TypeDef *SDIOx);
-u32 SDMMC_GetCmdResp4(SDIOHOST_TypeDef *SDIOx);
-u32 SDMMC_GetCmdResp5(SDIOHOST_TypeDef *SDIOx);
-u32 SDMMC_GetCmdResp6(SDIOHOST_TypeDef *SDIOx, u16 *pRCA);
-u32 SDMMC_GetCmdResp7(SDIOHOST_TypeDef *SDIOx);
+u32 SDIO_WaitResp(SDIOHOST_TypeDef *SDIOx, u8 RespType, u32 TimeOutUs);
+u32 SDMMC_CheckErrResp1(u32 resp);
+u32 SDMMC_CheckErrResp5(u32 resp);
+u32 SDMMC_CheckErrResp6(u32 resp);
 
 /**
  * @}

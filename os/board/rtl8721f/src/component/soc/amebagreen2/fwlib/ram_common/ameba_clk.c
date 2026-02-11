@@ -15,9 +15,14 @@ void SDM32K_Enable(void)
 {
 
 	SDM_TypeDef *SDM = SDM_DEV;
+	u32 temp = SDM->SDM_CTRL0;
 
 	SDM->SDM_TIMEOUT = SDM_TIEMRCAL_INTERVAL_1MIN;
-	SDM->SDM_CTRL0 |= SDM_BIT_EN | SDM_BIT_RST | SDM_BIT_ALWAYS_CAL_EN | SDM_BIT_TIMER_CAL_EN;
+	temp |= SDM_BIT_EN | SDM_BIT_RST | SDM_BIT_ALWAYS_CAL_EN | SDM_BIT_TIMER_CAL_EN;
+
+	/*Switch sdm32k mode from user_defined parameter mode to default mode.*/
+	temp &= ~SDM_BIT_MOD_SEL;
+	SDM->SDM_CTRL0 = temp;
 }
 
 /**
@@ -36,6 +41,32 @@ void SDM32K_TimerCalEnable(u32 newstatus)
 	} else {
 		SDM->SDM_CTRL0 &= ~SDM_BIT_TIMER_CAL_EN;
 	}
+}
+
+/**
+  * @brief  32K clock calibration factor modify
+  * @param  newstatus: can be one of the following values:
+  *		 @arg ENABLE
+  *		 @arg FALSE
+  * @note
+  *		From HW Experiment, add 3 to SDM_OBS_REF_CYC(default 312500)
+  */
+void SDM32K_CalFactorModify(u32 newstatus)
+{
+	SDM_TypeDef *SDM = SDM_DEV;
+	u32 temp = 0;
+
+	if (newstatus == ENABLE) {
+		SDM->SDM_CTRL1 = SDM_OBS_CYC_DEFAULT;
+		SDM->SDM_CTRL2 = SDM_OBS_REF_CYC_MODIFY;
+		SDM->SDM_CTRL3 = SDM_XTAL_PERIOD_DEFAULT;
+		temp = SDM->SDM_CTRL0 | SDM_BIT_MOD_SEL;
+		SDM->SDM_CTRL0 = temp;
+	} else {
+		temp = SDM->SDM_CTRL0 & ~SDM_BIT_MOD_SEL;
+		SDM->SDM_CTRL0 = temp;
+	}
+
 }
 
 /**
@@ -207,13 +238,7 @@ void OSC4M_R_Set(u32 setbit, u32 clearbit)
 	if (clearbit) {
 		r_sel &= ~LDO_FREQ_R_SEL(clearbit);
 	}
-	/*	root cause: When the frequency is greater than 6M, The timeout mechanism can cause register write exceptions
-	 	solve problem:  the L/H/R value can be written normally
-		work around: Repeat writing to the register to make the previous write immediately effective
-	*/
-	if ((SYSCFG_RLVersion()) == SYSCFG_CUT_VERSION_A) {
-		ldo->LDO_4M_OSC_CTRL1 = r_sel;
-	}
+
 	ldo->LDO_4M_OSC_CTRL1 = r_sel;
 
 	/* It takes 2us to stable */
@@ -232,14 +257,6 @@ void OSC4M_VCM_Set(u32 value)
 	temp &= ~(LDO_MASK_VCM_SEL_L | LDO_MASK_VCM_SEL_H);
 	temp |= (LDO_VCM_SEL_L(value) | LDO_VCM_SEL_H(value));
 
-	/*	root cause: When the frequency is greater than 6M, The timeout mechanism can cause register write exceptions
-	 	solve problem:  the L/H/R value can be written normally
-		work around: Repeat writing to the register to make the previous write immediately effective
-	*/
-	if ((SYSCFG_RLVersion()) == SYSCFG_CUT_VERSION_A) {
-		ldo->LDO_4M_OSC_CTRL1 = temp;
-		DelayUs(20);
-	}
 	ldo->LDO_4M_OSC_CTRL1 = temp;
 	DelayUs(20);
 
@@ -270,10 +287,6 @@ u32 OSC4M_Calibration(u32 ppm_limit)
 	//RTK_LOGI(TAG, "regu->REGU_4MOSC0=0x%x\n",(regu->REGU_4MOSC0));
 
 	/* Step2: Clear 4m calibration parameter first */
-	if ((SYSCFG_RLVersion()) == SYSCFG_CUT_VERSION_A) {
-		ldo->LDO_4M_OSC_CTRL1 &= (u16)(~(LDO_MASK_VCM_SEL_L | LDO_MASK_VCM_SEL_H));
-		DelayUs(20);
-	}
 	ldo->LDO_4M_OSC_CTRL1 &= (u16)(~(LDO_MASK_VCM_SEL_L | LDO_MASK_VCM_SEL_H));
 	DelayUs(20);
 	//RTK_LOGI(TAG, "regu->REGU_4MOSC0=0x%x\n",(regu->REGU_4MOSC0));
@@ -322,10 +335,6 @@ u32 OSC4M_Calibration(u32 ppm_limit)
 		DelayUs(20);
 		temp &= ~(LDO_MASK_VCM_SEL_L | LDO_MASK_VCM_SEL_H);
 		temp |= min_delta_r;
-		if ((SYSCFG_RLVersion()) == SYSCFG_CUT_VERSION_A) {
-			ldo->LDO_4M_OSC_CTRL1 = temp;
-			DelayUs(20);
-		}
 		ldo->LDO_4M_OSC_CTRL1 = temp;
 		DelayUs(20);
 
@@ -344,10 +353,6 @@ u32 OSC4M_Calibration(u32 ppm_limit)
 	/* Else  */
 	/* 	REGU_FREQ_R_SEL[8-N] keep 1. */
 	clearbit = 0;
-	if ((SYSCFG_RLVersion()) == SYSCFG_CUT_VERSION_A) {
-		ldo->LDO_4M_OSC_CTRL1 &= (u16)(~LDO_MASK_FREQ_R_SEL);
-		DelayUs(20);
-	}
 	ldo->LDO_4M_OSC_CTRL1 &= (u16)(~LDO_MASK_FREQ_R_SEL);
 	DelayUs(20);
 	for (cal_n = 1; cal_n <= 8; cal_n++) {
@@ -384,10 +389,6 @@ u32 OSC4M_Calibration(u32 ppm_limit)
 		DelayUs(20);
 		temp &= ~LDO_MASK_FREQ_R_SEL;
 		temp |= min_delta_r;
-		if ((SYSCFG_RLVersion()) == SYSCFG_CUT_VERSION_A) {
-			ldo->LDO_4M_OSC_CTRL1 = temp;
-			DelayUs(20);
-		}
 		ldo->LDO_4M_OSC_CTRL1 = temp;
 
 		/* It takes 2us to stable */
@@ -618,4 +619,38 @@ u8 PLL_ClkSrcGet(const u32 sys_pll, const u32 usb_pll, u32 fre_limit)
 		ret |= (usb_pll / usb_pll_div) >= (sys_pll / sys_pll_div) ? IS_USB_PLL : IS_SYS_PLL;
 	}
 	return ret;
+}
+
+/**
+  * @brief  Check whether the APB peripheral's clock has been enabled or not
+  * @param  APBPeriph_Clock_in: specifies the APB peripheral to check.
+  *         This parameter can be one of @ref APBPeriph_UART0_CLOCK, APBPeriph_ATIM_CLOCK and etc.
+  * @retval TRUE: The APB peripheral's clock has been enabled
+  * 		FALSE: The APB peripheral's clock has not been enabled
+  */
+u32 RCC_PeriphClockEnableChk(u32 APBPeriph_Clock_in)
+{
+	u32 ClkRegIndx = (APBPeriph_Clock_in >> 30) & 0x03;
+	u32 APBPeriph_Clock = APBPeriph_Clock_in & (~(BIT(31) | BIT(30)));
+	u32 Reg = 0;
+	u32 TempVal;
+
+	switch (ClkRegIndx) {
+	case 0x0:
+		Reg = REG_LSYS_CKE_GRP0;
+		break;
+	case 0x1:
+		Reg = REG_LSYS_CKE_GRP1;
+		break;
+	case 0x3:
+		Reg = REG_AON_CLK;
+		break;
+	}
+
+	TempVal = HAL_READ32(SYSTEM_CTRL_BASE, Reg);
+	if (TempVal & APBPeriph_Clock) {
+		return TRUE;
+	} else {
+		return FALSE;
+	}
 }

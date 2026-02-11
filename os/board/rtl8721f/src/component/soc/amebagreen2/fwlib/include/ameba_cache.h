@@ -8,6 +8,10 @@
 #define _AMEBA_CACHE_H_
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup AmebaD_Platform
   * @{
   */
@@ -40,7 +44,7 @@
   */
 #define CACHE_LINE_SIZE					32U
 #define CACHE_LINE_ADDR_MSK				(~(CACHE_LINE_SIZE - 1U))
-#define CACHE_LINE_ALIGMENT(x)			(((u32)(x) + (CACHE_LINE_SIZE - 1U)) & CACHE_LINE_ADDR_MSK)
+#define CACHE_LINE_ALIGNMENT(x)			(((u32)(x) + (CACHE_LINE_SIZE - 1U)) & CACHE_LINE_ADDR_MSK)
 
 #define IS_CACHE_LINE_ALIGNED(x)		(((x) & (CACHE_LINE_SIZE - 1U)) == 0)
 /**
@@ -242,4 +246,9 @@ void Cache_Flush(void)
 /**
   * @}
   */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif //_RTL8710B_CACHE_H_

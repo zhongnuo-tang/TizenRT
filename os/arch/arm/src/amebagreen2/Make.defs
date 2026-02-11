@@ -187,6 +187,9 @@ endif
 ifeq ($(CONFIG_AMEBAGREEN2_TRUSTZONE),y)
 CHIP_CSRCS += amebagreen2_nsc.c
 
+EXTRA_LIBS += ${TOPDIR}/board/rtl8721f/src/libs/lib_pmc.a
+EXTRA_LIBS += ${TOPDIR}/board/rtl8721f/src/libs/lib_chipinfo.a
+
 # trustzone library
 ifeq ($(CONFIG_ARCH_FPU),y)
 EXTRA_LIBS += ${TOPDIR}/board/rtl8721f/src/libs/cmse_implib_fpu.lib

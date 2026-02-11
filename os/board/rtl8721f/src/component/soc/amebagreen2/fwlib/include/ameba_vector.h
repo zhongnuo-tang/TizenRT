@@ -47,6 +47,11 @@
   * @{
   */
 #include "ameba_vector_table.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void (*HAL_VECTOR_FUN)(void);
 typedef u32(*IRQ_FUN)(void *Data);
 typedef u32(*Fault_Patch)(uint32_t *MSP, uint32_t lr, uint32_t fault_id);
@@ -93,4 +98,8 @@ extern IRQ_FUN UserIrqFunTable[];
 extern u32 UserIrqDataTable[];
 extern HAL_VECTOR_FUN  RomVectorTable[];
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif //_AMEBA_VECTOR_H_

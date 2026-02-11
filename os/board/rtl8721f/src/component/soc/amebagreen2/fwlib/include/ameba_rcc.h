@@ -7,6 +7,10 @@
 #ifndef _AMEBA_HP_RCC_H_
 #define _AMEBA_HP_RCC_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup AmebaD_Platform
   * @{
   */
@@ -204,5 +208,9 @@ _LONG_CALL_ u32 RCC_PeriphClockEnableChk(u32 APBPeriph_Clock_in);
 
 /* Registers Definitions --------------------------------------------------------*/
 /* Other definations --------------------------------------------------------*/
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _AMEBA_HP_RCC_H_ */

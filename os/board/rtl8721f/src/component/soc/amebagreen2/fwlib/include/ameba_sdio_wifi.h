@@ -333,6 +333,10 @@ typedef struct {
 /* AUTO_GEN_END */
 
 /* MANUAL_GEN_START */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 //Please add your definition here
 
@@ -411,6 +415,11 @@ void SDIO_DMA_Reset(SDIO_TypeDef *SDIO);
 u32 SDIO_DMA_CTRL_Get(SDIO_TypeDef *SDIO);
 void SDIO_SetReady(SDIO_TypeDef *SDIO, int ready);
 void SDIO_RxReq(SDIO_TypeDef *SDIO);
+void SDIO_AbortRxReq(SDIO_TypeDef *SDIO);
+
+#ifdef __cplusplus
+}
+#endif
 
 /* MANUAL_GEN_END */
 

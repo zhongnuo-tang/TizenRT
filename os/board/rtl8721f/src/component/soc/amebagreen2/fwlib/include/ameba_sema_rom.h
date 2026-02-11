@@ -23,6 +23,11 @@
 /**
   * @brief IPC SEM IDX
   */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
 	IPC_SEM_IMQ = 0,
 	IPC_SEM_FLASH,
@@ -32,6 +37,8 @@ typedef enum {
 	IPC_SEM_RRAM,
 	IPC_SEM_6,          /* reserved for futural use*/
 	IPC_SEM_DIAGNOSE,
+	IPC_SEM_SYSON,
+	IPC_SEM_DATA_FLASH,
 
 	IPC_SEM_USER = 32,	/* number 32 ~ 63 is reserved for customer use*/
 
@@ -72,5 +79,9 @@ void IPC_patch_function(void (*pfunc1)(u32), void (*pfunc2)(u32));
   * @}
   */
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif
 

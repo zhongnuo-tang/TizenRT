@@ -369,6 +369,10 @@ typedef struct {
 /* AUTO_GEN_END */
 
 /* MANUAL_GEN_START */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 //Please add your defination here
 
@@ -492,9 +496,9 @@ typedef struct {
   * @{
   */
 #define UART_RX_FIFOTRIG_LEVEL_1BYTES		((u32)0x00000000)
-#define UART_RX_FIFOTRIG_LEVEL_QUARTER	((u32)0x00000001) // UART0-2: 16; UART3: 8
-#define UART_RX_FIFOTRIG_LEVEL_HALF			((u32)0x00000002) // UART0-2: 32; UART3: 16
-#define UART_RX_FIFOTRIG_LEVEL_MINUS2		((u32)0x00000003) // UART0-2: 62; UART3: 30
+#define UART_RX_FIFOTRIG_LEVEL_QUARTER	((u32)0x00000001) // UART0-1: 16; UART2-3: 8
+#define UART_RX_FIFOTRIG_LEVEL_HALF			((u32)0x00000002) // UART0-1: 32; UART2-3: 16
+#define UART_RX_FIFOTRIG_LEVEL_MINUS2		((u32)0x00000003) // UART0-1: 62; UART2-3: 30
 /**
   * @}
   */
@@ -701,7 +705,8 @@ _LONG_CALL_ void UART_RxDebounceCmd(UART_TypeDef *UARTx, u32 NewState);
 _LONG_CALL_ void UART_RxDMADummyDataConfig(UART_TypeDef *UARTx, u8 Byte);
 _LONG_CALL_ u32 UART_GetRxDMADummyFlag(UART_TypeDef *UARTx);
 _LONG_CALL_ void UART_RxClearDMADummyFlag(UART_TypeDef *UARTx);
-
+_LONG_CALL_ void UART_RxToThreConfig(UART_TypeDef *UARTx, u32 RxTimeout);
+_LONG_CALL_ void UART_REToThreConfig(UART_TypeDef *UARTx, u32 RxTimeout);
 
 /* Other Definitions --------------------------------------------------------*/
 #define MAX_UART_INDEX			(4)
@@ -735,6 +740,10 @@ UART_GetRxFlag(u32 UartIdx)
 {
 	return (UART_StateRx[UartIdx]);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 /* MANUAL_GEN_END */
 

@@ -7,6 +7,10 @@
 #ifndef _AMEBA_INIC_H_
 #define _AMEBA_INIC_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @addtogroup AMEBA_Periph_Driver
   * @{
   */
@@ -124,15 +128,6 @@ typedef struct {
   * @}
   */
 
-/** @defgroup INIC_DESC_Size_definitions
-  * @{
-  */
-#define SIZE_RX_DESC	(sizeof(INIC_RX_DESC))
-#define SIZE_TX_DESC	(sizeof(INIC_TX_DESC))
-/**
-  * @}
-  */
-
 /**
  * @}
  */
@@ -153,5 +148,9 @@ typedef struct {
 /**
   * @}
   */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

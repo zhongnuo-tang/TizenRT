@@ -14,6 +14,10 @@ static FlashInfo_TypeDef *current_IC;
 /* Flag to check configuration register or not. Necessary for wide-range VCC MXIC flash */
 static u8 check_config_reg = 0;
 
+static u32 SPIC_DATA_FLASH_CALIB_PATTERN[2] = {0};
+
+u32 DATA_FLASH_SIZE = 0;
+
 static void DATA_FLASH_PLLInit_ClockDiv(void)
 {
 	u8 psramc_ckd;
@@ -21,7 +25,7 @@ static void DATA_FLASH_PLLInit_ClockDiv(void)
 	u32 sys_pll_clk = RRAM_DEV->clk_info_bk.SYSPLL_CLK;
 
 	/* set spic clock src and div */
-	psramc_ckd = PLL_ClkSrcGet(sys_pll_clk, usb_pll_clk, CLK_LIMIT_PSRAM);
+	psramc_ckd = PLL_ClkSrcGet(sys_pll_clk, usb_pll_clk, CLK_LIMIT_SPIC);
 	if (psramc_ckd & IS_SYS_PLL) {
 		RCC_PeriphClockDividerSet(SYS_PLL_PSRAM, GET_CLK_DIV(psramc_ckd));
 		RCC_PeriphClockSourceSet(PSRAM, SYS_PLL);
@@ -81,17 +85,19 @@ u32 DATA_FLASH_Read_DataIsRight(void)
 	pgolden_data[1] = HAL_READ32(LoaderLogAddr, 0x04);
 
 	if (FLASH_InitStruct->debug) {
-		RTK_LOGI(TAG, "DATA FLASH_Read 0x%lx:0x%lx\n", pgolden_data[0], pgolden_data[1]);
+		RTK_LOGI(TAG, "read data from data flash address0 as SPIC_DATA_FLASH_CALIB_PATTERN when flash is in 1io 20M. \n"
+				 "DATA FLASH_Read Expected: 0x%08lx 0x%08lx, Got: 0x%08lx 0x%08lx\n",
+				 SPIC_DATA_FLASH_CALIB_PATTERN[0], SPIC_DATA_FLASH_CALIB_PATTERN[1], pgolden_data[0], pgolden_data[1]);
 	}
 
 	/* compare data */
-	if (_memcmp(pgolden_data, SPIC_CALIB_PATTERN, 8) == 0) {
+	if (_memcmp(pgolden_data, SPIC_DATA_FLASH_CALIB_PATTERN, 8) == 0) {
 		return TRUE;
 	} else {
 		RTK_LOGE(TAG, "Data flash calibration fail. \n"
-				 "Make sure to program the calibration pattern (0x%lx:0x%lx) at address 0 of data flash.\n"
+				 "DATA FLASH_Read Expected: 0x%08lx 0x%08lx, Got: 0x%08lx 0x%08lx\n"
 				 "If use nand flash, consider bad block\n",
-				 SPIC_CALIB_PATTERN[0], SPIC_CALIB_PATTERN[1]);
+				 SPIC_DATA_FLASH_CALIB_PATTERN[0], SPIC_DATA_FLASH_CALIB_PATTERN[1], pgolden_data[0], pgolden_data[1]);
 		return FALSE;
 	}
 }
@@ -133,6 +139,8 @@ void data_flash_get_vendor(void)
 	/* Read flash ID */
 	DATA_FLASH_RxCmd(FLASH_InitStruct->FLASH_cmd_rd_id, 3, flash_ID);
 	RTK_LOGI(TAG, "Flash ID: %x-%x-%x\n", flash_ID[0], flash_ID[1], flash_ID[2]);
+
+	DATA_FLASH_SIZE = (1 << (flash_ID[2] - 0x11));
 
 	/* Get flash chip information */
 	current_IC = data_flash_get_chip_info((flash_ID[2] << 16) | (flash_ID[1] << 8) | flash_ID[0]);
@@ -270,14 +278,15 @@ void data_flash_highspeed_setup(void)
 {
 	FLASH_InitTypeDef *FLASH_InitStruct = &data_flash_init_para;
 	u32 read_mode = flash_get_readmode(Data_Flash_ReadMode);
+	u8 mem_type = ChipInfo_MemoryType();
 
 #if !defined(CONFIG_SECOND_FLASH_NOR) && !defined(CONFIG_SECOND_FLASH_NAND)
 	UNUSED(FLASH_InitStruct);
 	return;
 #endif
 
-	if (ChipInfo_MemoryType() == MEMORY_MCM_PSRAM) {
-		RTK_LOGE(TAG, "Can't support second flash for chip with mem psram\r\n");
+	if ((mem_type == MCM_TYPE_PSRAM) || (mem_type == MCM_SINGLE_DIE)) {
+		RTK_LOGE(TAG, "Can't support second flash for chip with mem psram or single die\r\n");
 		return;
 	}
 
@@ -321,6 +330,12 @@ void data_flash_highspeed_setup(void)
 		RTK_LOGI(TAG, "data NAND flash protection unlocked: 0x%x\n", DATA_NAND_GetStatus(NAND_REG_BLOCK_LOCK));
 	}
 #endif
+
+	/* read data from data flash address0 as calib data when flash is in 1io 20M*/
+	DCache_Invalidate(DATA_FLASH_BASE, 8);
+	SPIC_DATA_FLASH_CALIB_PATTERN[0] = HAL_READ32(DATA_FLASH_BASE, 0x00);
+	SPIC_DATA_FLASH_CALIB_PATTERN[1] = HAL_READ32(DATA_FLASH_BASE, 0x04);
+
 	/* Set flash I/O mode and high-speed calibration */
 	data_flash_rx_mode_switch(read_mode);
 

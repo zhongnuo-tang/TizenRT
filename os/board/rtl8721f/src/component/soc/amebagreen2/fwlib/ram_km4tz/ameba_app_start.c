@@ -28,6 +28,7 @@ extern void arm_gic_set_CUTVersion(uint32_t CUTVersion);
 
 static const char *TAG = "APP";
 static u32 g_mpu_nregion_allocated;
+//extern void newlib_locks_init(void);
 extern int main(void);
 extern void NS_ENTRY BOOT_IMG3(void);
 extern void SOCPS_WakeFromPG_AP(void);
@@ -123,7 +124,7 @@ u32 app_mpu_nocache_init(void)
 	return 0;
 }
 
-#ifndef CONFIG_WIFI_HOST_CONTROL
+#if !(!defined (CONFIG_WHC_INTF_IPC) && defined (CONFIG_WHC_DEV))
 #if defined (__GNUC__)
 /* Add This for C++ support to avoid compile error */
 void _init(void) {}
@@ -163,10 +164,56 @@ void os_heap_init(void){
 #endif
 #endif
 }
+
+void app_rtc_init(void)
+{
+	RTC_InitTypeDef RTC_InitStruct;
+	RTC_TimeTypeDef RTC_TimeStruct;
+
+	RTC_TimeStructInit(&RTC_TimeStruct);
+	RTC_TimeStruct.RTC_Year = 2021;
+	RTC_TimeStruct.RTC_Hours = 10;
+	RTC_TimeStruct.RTC_Minutes = 20;
+	RTC_TimeStruct.RTC_Seconds = 30;
+
+	RTC_StructInit(&RTC_InitStruct);
+	/*enable RTC*/
+	RTC_Enable(ENABLE);
+	RTC_Init(&RTC_InitStruct);
+	RTC_SetTime(RTC_Format_BIN, &RTC_TimeStruct);
+}
+
+u32 rtc_irq_init(void *Data)
+{
+	/* To avoid gcc warnings */
+	(void) Data;
+	u32 temp;
+
+	RTC_ClearDetINT();
+	SDM32K_Enable();
+	SYSTIMER_Init(); /* 0.2ms */
+	RCC_PeriphClockCmd(NULL, APBPeriph_RTC_CLOCK, ENABLE);
+	RTC_ClkSource_Select(SDM32K);
+
+	if ((Get_OSC131_STATE() & RTC_BIT_FIRST_PON) == 0) {
+		app_rtc_init();
+		/*set first_pon to 1, this indicate RTC first pon state*/
+		temp = Get_OSC131_STATE() | RTC_BIT_FIRST_PON;
+		Set_OSC131_STATE(temp);
+
+		/*before 131k calibratopn, cke_rtc should be enabled*/
+		if (SYSCFG_CHIPType_Get() == CHIP_TYPE_ASIC_POSTSIM) {//Only Asic need OSC Calibration
+			OSC131K_Calibration(30000); /* PPM=30000=3% *//* 7.5ms */
+		}
+	}
+
+	return 0;
+}
+
 // The Main App entry point
 void app_start(void)
 {
-#if !defined(CONFIG_WIFI_HOST_CONTROL) || defined(CONFIG_FULLMAC_NEW_VERSION) // When fullmac support XIP, need enable Cache and cannot share cache to TCM
+#if !defined(CONFIG_WHC_IN_SINGLE_DIE) // When fullmac support XIP, need enable Cache and cannot share cache to TCM
 	/* enable non-secure cache */
 	Cache_Enable(ENABLE);
 #endif
@@ -194,7 +241,10 @@ void app_start(void)
 	SystemCoreClockUpdate();
 	RTK_LOGI(TAG, "AP CPU CLK: %lu Hz \n", SystemCoreClock);
 
-	if ((SYSCFG_RLVersion()) >= SYSCFG_CUT_VERSION_B) {
+	/* Init heap region and configure FreeRTOS */
+	XTAL_INIT();
+
+	if ((EFUSE_GetChipVersion()) >= SYSCFG_CUT_VERSION_B) {
 		if (SYSCFG_CHIPType_Get() == CHIP_TYPE_ASIC_POSTSIM) {//Only Asic need OSC Calibration
 			OSC4M_Init();
 			OSC4M_Calibration(30000);
@@ -203,13 +253,18 @@ void app_start(void)
 	}
 	os_heap_init();
 
-	XTAL_INIT();
+	//newlib_locks_init();
+
 	mpu_init();
 	app_mpu_nocache_init();
 	if ((Get_OSC131_STATE() & RTC_BIT_FIRST_PON) == 1) {
 		SDM32K_Enable();
 		SYSTIMER_Init(); /* 0.2ms */
 	}
+
+	/*Register RTC_DET_IRQ callback function */
+	// InterruptRegister((IRQ_FUN) rtc_irq_init, RTC_DET_IRQ, (u32)NULL, INT_PRI_LOWEST);
+	// InterruptEn(RTC_DET_IRQ, INT_PRI_LOWEST);
 	/* Let NP run */
 	HAL_WRITE32(SYSTEM_CTRL_BASE, REG_LSYS_BOOT_CFG, HAL_READ32(SYSTEM_CTRL_BASE, REG_LSYS_BOOT_CFG) | LSYS_BIT_BOOT_CPU1_RUN);
 #ifdef CONFIG_PLATFORM_TIZENRT_OS
@@ -228,8 +283,6 @@ void app_start(void)
 	/* Call os_start() */
 
 	os_start();
-
-	/* Shoulnd't get here */
 
 	for (;;) ;
 #endif

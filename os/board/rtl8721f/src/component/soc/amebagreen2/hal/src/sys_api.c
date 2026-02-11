@@ -51,7 +51,6 @@ void sys_jtag_off(void)
 	Pinmux_Swdoff();
 }
 
-
 /**
   * @brief  Open log uart.
   * @retval none

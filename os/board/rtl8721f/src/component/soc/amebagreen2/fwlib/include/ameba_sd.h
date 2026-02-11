@@ -27,6 +27,11 @@
 /** @defgroup SD_Result
   * @{
   */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
 	SD_OK = 0,
 	SD_NODISK,
@@ -225,6 +230,7 @@ typedef struct {
   */
 
 #define SD_BLOCK_SIZE 512U // Block size is 512 bytes by default
+#define SD_MALLOC_BLK_CNT (8) // malloc size: 8 block
 #define SD_FATFS_TIMEOUT (30 * 1000 * 1000) // 30s: 30 * 1000 * 1000us
 #define SD_SEMA_MAX_DELAY  10
 
@@ -450,6 +456,8 @@ typedef struct {
   */
 SD_RESULT SD_Init(void);
 SD_RESULT SD_DeInit(void);
+SD_RESULT SD_CardInit(void);
+u32 SD_IRQHandler(void *pData);
 /**
   * @}
   */
@@ -495,7 +503,9 @@ SD_RESULT SD_GetCardCSD(SD_HdlTypeDef *hsd, SD_CardCSDTypeDef *pCSD);
 SD_RESULT SD_GetSDStatus(SD_HdlTypeDef *hsd, SD_StatusTypeDef *pStatus);
 
 _LONG_CALL_ void SD_SetSema(int (*sema_take_fn)(u32), int (*sema_give_isr_fn)(u32));
-u32 SD_WaitTransDone(SD_HdlTypeDef *hsd, u32 timeout_us);
+_LONG_CALL_ void SD_SetCdCallback(void (*cd_callback)(SD_RESULT));
+_LONG_CALL_ void SD_PreDMATrans(SD_HdlTypeDef *hsd);
+_LONG_CALL_ u32 SD_WaitTransDone(SD_HdlTypeDef *hsd, u32 timeout_us);
 _LONG_CALL_ SD_RESULT SD_Status(void);
 _LONG_CALL_ int SD_CheckStatusTO(SD_HdlTypeDef *hsd, u32 timeout_us);
 _LONG_CALL_ SD_RESULT SD_ReadBlocks(u32 sector, u8 *data, u32 count);
@@ -526,4 +536,8 @@ _LONG_CALL_ SD_RESULT SD_IO_WriteBlocks(u8 FuncNum, u32 Addr, u8 *pData, u16 Blo
   * @}
   */
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

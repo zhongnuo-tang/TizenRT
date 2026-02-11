@@ -9,6 +9,11 @@
 
 #include "ameba_rxi300.h"
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
 	MPC_EntryTypeDef MPC_Entry[6]; /*!< RXI300 IP have 6 ports */
 	__IO uint32_t RSVD4[4];
@@ -57,9 +62,9 @@ typedef enum {
   */
 #define SAU_INIT_CTRL_ALLNS  0
 
-#define SAU_ENTRYS_NUM			8
+#define SAU_ENTRY_NUM			8
 
-#define MPC_ENTRYS_NUM			6
+#define MPC_ENTRY_NUM			6
 #define MPC_CNT					3
 
 /**
@@ -127,4 +132,8 @@ __STATIC_FORCEINLINE u32 TrustZone_IsSecure(void)
 	return 0;
 #endif
 }
+
+#ifdef __cplusplus
+}
+#endif
 #endif

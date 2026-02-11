@@ -30,9 +30,7 @@ void SOCPS_NVICBackup(struct CPU_BackUp_TypeDef *bk, SysTick_Type *systick, NVIC
 	bk->NVICbackup_HP[7] = nvic->ISPR[1];
 	bk->NVICbackup_HP[8] = nvic->ISPR[2];
 
-#if defined(__VTOR_PRESENT) && (__VTOR_PRESENT == 1)
 	bk->SCBbackup_HP[0] = scb->VTOR;
-#endif
 }
 
 void SOCPS_NVICReFill(struct CPU_BackUp_TypeDef *bk, SysTick_Type *systick, NVIC_Type *nvic, SCB_Type *scb)
@@ -60,9 +58,7 @@ void SOCPS_NVICReFill(struct CPU_BackUp_TypeDef *bk, SysTick_Type *systick, NVIC
 	nvic->ISER[1] = bk->NVICbackup_HP[1];
 	nvic->ISER[2] = bk->NVICbackup_HP[2];
 
-#if defined(__VTOR_PRESENT) && (__VTOR_PRESENT == 1)
 	scb->VTOR = bk->SCBbackup_HP[0];
-#endif
 }
 
 void SOCPS_MPUBackup(struct CPU_BackUp_TypeDef *bk, MPU_Type *mpu)
@@ -199,9 +195,10 @@ void SOCPS_FixSpicRetFailPatch(void)
 
 void SOCPS_ClockSourceConfig(u8 regu_state, u8 xtal_mode, u8 osc_option)
 {
+	UNUSED(regu_state);
 	u32 reg_temp = 0;
 	LDO_TypeDef *LDO = LDO_BASE;
-	/* 2. OSC4M config */
+	/* 1. OSC4M config */
 	reg_temp = HAL_READ32(PMC_BASE, SYSPMC_OPT);
 	if (osc_option == TRUE) {
 		reg_temp |= PMC_BIT_PST_SLEP_ERCK;
@@ -211,12 +208,12 @@ void SOCPS_ClockSourceConfig(u8 regu_state, u8 xtal_mode, u8 osc_option)
 	HAL_WRITE32(PMC_BASE, SYSPMC_OPT, reg_temp);
 	RTK_LOGD(TAG, "SYSPMC_OPT %08x\n", HAL_READ32(PMC_BASE, SYSPMC_OPT));
 
-	/* 3.1 XTAL mode config */
+	/* 2.1 XTAL mode config */
 	reg_temp = HAL_READ32(PMC_BASE, AIP_TRIGGER);
 	reg_temp &= ~PMC_MASK_SYS_XTAL_SLP;
 	reg_temp |= PMC_SYS_XTAL_SLP(xtal_mode);
 
-	/* 3.2 for FPGA, XTAL need be on, remodify config if set to XTAL OFF*/
+	/* 2.2 for FPGA, XTAL need be on, remodify config if set to XTAL OFF*/
 	if ((SYSCFG_CHIPType_Get() == CHIP_TYPE_FPGA) && (xtal_mode == XTAL_OFF)) {
 		reg_temp &= ~PMC_MASK_SYS_XTAL_SLP;
 		reg_temp |= PMC_SYS_XTAL_SLP(XTAL_Normal); //keep normal in fpga
@@ -224,21 +221,24 @@ void SOCPS_ClockSourceConfig(u8 regu_state, u8 xtal_mode, u8 osc_option)
 	HAL_WRITE32(PMC_BASE, AIP_TRIGGER, reg_temp);
 	RTK_LOGI(TAG, "AIP_TRIGGER %08x\n", HAL_READ32(PMC_BASE, AIP_TRIGGER));
 
-	/* 5. XTAL sleep status config */
-	if (xtal_mode != XTAL_OFF) {
-		if (regu_state == STATE2_LDOPC_SWRPFM_08) {
-			reg_temp = HAL_READ32(PMC_BASE, SYSPMC_OPT);
-			reg_temp |= PMC_BIT_CKE_XTAL40M_SLEP;
-			HAL_WRITE32(PMC_BASE, SYSPMC_OPT, reg_temp);
-			/*Adjust voltage code of SWR to 0.9v*/
-			reg_temp = LDO->LDO_PFM_VOLT_CTRL;
-			reg_temp &= ~ LDO_MASK_VOLT_CODE1_PFM;
-			reg_temp |= LDO_VOLT_CODE1_PFM(0x6);
-			LDO->LDO_PFM_VOLT_CTRL = reg_temp;
-		} else {
-			RTK_LOGE(TAG, "xtal can only work in the state2 where the core voltage(LDO and SWR) is greater than 0.9v!\n");
-		}
+	/* 3. Config XTAL and its work voltage in sleep status:*/
+	if ((xtal_mode == XTAL_LPS_Without_40M) || (xtal_mode == XTAL_LPS_With_40M)) {
+		SOCPS_PowerStateSetInSleep(STATE2_LDOPC_SWRPFM_08);
+		RTK_LOGI(TAG, "The voltage of XTAL LPS/LPS with 40M mode in sleep state is 0.8V\n");
+	} else if ((xtal_mode == XTAL_Normal) || (xtal_mode == XTAL_HP)) {
+		SOCPS_PowerStateSetInSleep(STATE2_LDOPC_SWRPFM_08);
+		/*Adjust voltage code of SWR to 0.9v*/
+		reg_temp = LDO->LDO_PFM_VOLT_CTRL;
+		reg_temp &= ~ LDO_MASK_VOLT_CODE1_PFM;
+		reg_temp |= LDO_VOLT_CODE1_PFM(0x6);
+		LDO->LDO_PFM_VOLT_CTRL = reg_temp;
+		/* xtal clock gating can be set to 1 only when the sleep voltage is greater than or equal to 0.9V!*/
+		reg_temp = HAL_READ32(PMC_BASE, SYSPMC_OPT);
+		reg_temp |= PMC_BIT_CKE_XTAL40M_SLEP;
+		HAL_WRITE32(PMC_BASE, SYSPMC_OPT, reg_temp);
+		RTK_LOGI(TAG, "The voltage of XTAL Normal/HP mode in sleep state is 0.9V\n");
 	}
+
 }
 
 void SOCPS_PowerManage(u8 regu_state)
@@ -247,14 +247,12 @@ void SOCPS_PowerManage(u8 regu_state)
 	u32 reg_temp = 0;
 	SWR_TypeDef	*SWR = SWR_BASE;
 	LDO_TypeDef *LDO = LDO_BASE;
+	PLL_TypeDef *PLL = (PLL_TypeDef *)PLL_REG_BASE;
 	/* 1. regu (SWR and core LDO)sleep status configuuration. */
-	if (regu_state) {
-		/* 4.1 Set REGU's state when sleep.*/
-		SOCPS_PowerStateSetInSleep(regu_state);
-		/* 4.2 for simulation*/
-		SOCPS_ReguDelayAdjust(REGU_DELAY_500US);
+	if (regu_state == TRUE) {
+		SOCPS_PowerStateSetInSleep(STATE2_LDOPC_SWRPFM_08);
 	} else {
-		RTK_LOGE(TAG, "Invalid Regu state\n");
+		SOCPS_PowerStateSetInSleep(STATE1_LDOPC_SWRPFM_07);
 	}
 
 	/* 2. regu (SWR and core LDO) normal status configuration: default settings,state6: SWR-PFM, LDO-NORM.*/
@@ -304,10 +302,12 @@ void SOCPS_PowerManage(u8 regu_state)
 	}
 
 	/*Set core ldo dummy load*/
-	reg_temp = HAL_READ32(PMC_BASE, DUMMY_LOAD_CTRL);
-	reg_temp &= ~ PMC_BIT_SYS_DMYL_SLP;
-	reg_temp |= PMC_BIT_SYS_DMYL_MNL;
-	HAL_WRITE32(PMC_BASE, DUMMY_LOAD_CTRL, reg_temp);
+	if (EFUSE_GetChipVersion() == SYSCFG_CUT_VERSION_A) {
+		reg_temp = HAL_READ32(PMC_BASE, DUMMY_LOAD_CTRL);
+		reg_temp &= ~ PMC_BIT_SYS_DMYL_SLP;
+		reg_temp |= PMC_BIT_SYS_DMYL_MNL;
+		HAL_WRITE32(PMC_BASE, DUMMY_LOAD_CTRL, reg_temp);
+	}
 
 	/*modify pfm parameters of SWR*/
 	reg_temp = SWR->SWR_PARAM_PFM;
@@ -322,21 +322,41 @@ void SOCPS_PowerManage(u8 regu_state)
 	reg_temp |= SWR_BIT_SPS_DIG_ZCD_FEN;
 	SWR->SWR_DIG_ZCD = reg_temp;
 
-	/* Enable dummyload to accelerate voltage reduction and reduce power cut delay time.*/
+	reg_temp = SWR->SWR_PARAM_PWML;
+	reg_temp &= ~ SWR_MASK_REG_SWR_ZCD_CTRL_PWML;
+	reg_temp |= SWR_REG_SWR_ZCD_CTRL_PWML(0x01);
+	SWR->SWR_PARAM_PWML = reg_temp;
+
+	reg_temp = SWR->SWR_PARAM_PWMH;
+	reg_temp &= ~ SWR_MASK_REG_SWR_ZCD_CTRL_PWMH;
+	reg_temp |= SWR_REG_SWR_ZCD_CTRL_PWMH(0x01);
+	SWR->SWR_PARAM_PWMH = reg_temp;
+
 	if (EFUSE_GetChipVersion() == SYSCFG_CUT_VERSION_A) {
+		/* Only after writing the following patch, the Acut setting regu delay parameter will take effect.*/
 		HAL_WRITE32(SYSTEM_CTRL_BASE, REG_AON_PMC_PATCH_GRP0_1, 0xE107FCB5);
 		HAL_WRITE32(SYSTEM_CTRL_BASE, REG_AON_PMC_PATCH_GRP0_2, 0x1818460C);
-
-		/*enable swr dummy load to speed up when pfm voltage falling.*/
-		reg_temp = LDO->LDO_DUMMY;
-		reg_temp |= LDO_BIT_OPT_EN_SLP_DUMMY;
-		LDO->LDO_DUMMY = reg_temp;
-		SOCPS_ReguDelayAdjust(REGU_DELAY_1MS);
+	} else if (EFUSE_GetChipVersion() >= SYSCFG_CUT_VERSION_B) {
+		/*If an interruption occurs during the Wi-Fi sleep process, the voltage of core ldo will remain at 0.8V.
+		  At 0.8V, the RF cannot function properly, which will cause the Wi-Fi connection to drop.*/
+		HAL_WRITE32(SYSTEM_CTRL_BASE, REG_AON_PMC_PATCH_GRP0_1, 0xb0c964ab);
+		HAL_WRITE32(SYSTEM_CTRL_BASE, REG_AON_PMC_PATCH_GRP0_2, 0x0d89c341);
+		HAL_WRITE32(SYSTEM_CTRL_BASE, REG_AON_PMC_PATCH_GRP1_1, 0xe10190b7);
+		HAL_WRITE32(SYSTEM_CTRL_BASE, REG_AON_PMC_PATCH_GRP1_2, 0x1818460c);
 	}
+	/*Enable swr dummy load to speed up when pfm voltage falling.*/
+	reg_temp = LDO->LDO_DUMMY;
+	reg_temp |= LDO_BIT_OPT_EN_SLP_DUMMY;
+	LDO->LDO_DUMMY = reg_temp;
+	SOCPS_ReguDelayAdjust(REGU_DELAY_1MS);
+
 	/*Modify the LDO dummy load to 2mA*/
 	reg_temp = LDO->LDO_RFAFE_1209;
 	reg_temp &= ~(LDO_BIT_REG_DMYLOAD_X3_L_1209 | LDO_BIT_REG_DMYLOAD_X2_L_1209);
 	LDO->LDO_RFAFE_1209 = reg_temp;
+
+	/*close usb digital phy to save power(0.9v,900uA), and it will be enabled in usb_init*/
+	PLL->PLL_UPLL_CTRL0 &= ~PLL_BIT_USB_DPHY_EN;
 }
 
 u32 SOCPS_CPURoleGet(void)

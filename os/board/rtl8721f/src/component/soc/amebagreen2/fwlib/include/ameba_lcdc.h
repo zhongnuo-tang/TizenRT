@@ -572,6 +572,10 @@ typedef struct {
 /* AUTO_GEN_END */
 
 /* MANUAL_GEN_START */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 //Please add your definition here
 /* Exported Types --------------------------------------------------------*/
@@ -1119,10 +1123,12 @@ void LCDC_MCUDMATrigger(LCDC_TypeDef *LCDCx);
 u32 LCDC_MCUGetRunStatus(LCDC_TypeDef *LCDCx);
 void LCDC_MCUIOWriteData(LCDC_TypeDef *LCDCx, u32 Data);
 u32 LCDC_MCUIOReadData(LCDC_TypeDef *LCDCx);
+void LCDC_MCUIOMode(LCDC_TypeDef *LCDCx);
 void LCDC_MCUIOWriteCmd(LCDC_TypeDef *LCDCx, u32 Cmd);
 void LCDC_MCUSetPreCmd(LCDC_TypeDef *LCDCx, const u8 *const Cmd, u8 CmdNum);
 void LCDC_MCUResetPreCmd(LCDC_TypeDef *LCDCx);
 void LCDC_MCUDmaMode(LCDC_TypeDef *LCDCx, Lcdc_McuDmaCfgDef *DmaCfg);
+void LCDC_MCUCtrlSwap(LCDC_TypeDef *LCDCx, u8 Status);
 void LCDC_RGBStructInit(LCDC_RGBInitTypeDef   *LCDC_RGBInitStruct);
 void LCDC_RGBInit(LCDC_TypeDef *LCDCx, const LCDC_RGBInitTypeDef *LCDC_RGBInitStruct);
 void LCDC_RGBGetSyncStatus(LCDC_TypeDef *LCDCx, u32 *pHSStatus, u32 *pVSStatus);
@@ -1134,10 +1140,13 @@ void LCDC_DMAImgCfg(LCDC_TypeDef *LCDCx, u32 ImgBaseAddrA);
 void LCDC_DMAImageOfstConfig(LCDC_TypeDef *LCDCx, u32 HsOfst, u32 VsOfst);
 void LCDC_INTConfig(LCDC_TypeDef *LCDCx, u32 LCDC_IT, u32 NewState);
 void LCDC_LineINTPosConfig(LCDC_TypeDef *LCDCx, u32 LineNum);
+void LCDC_PanelSizeConfig(LCDC_TypeDef *LCDCx, uint32_t width, uint32_t height);
 u32 LCDC_GetINTStatus(LCDC_TypeDef *LCDCx);
 u32 LCDC_GetRawINTStatus(LCDC_TypeDef *LCDCx);
 void LCDC_ClearAllINT(LCDC_TypeDef *LCDCx);
 void LCDC_ClearINT(LCDC_TypeDef *LCDCx, u32 LCDC_IT);
+void LCDC_ColorFomatInputConfig(LCDC_TypeDef *LCDCx, u32 CorlorFmtIn);
+void LCDC_ColorFomatOutputConfig(LCDC_TypeDef *LCDCx, u32 CorlorFmtOut);
 void LCDC_GetImgOffset(LCDC_TypeDef *LCDCx, u32 *pImgHs, u32 *pImgVs);
 void LCDC_GetImgAddr(LCDC_TypeDef *LCDCx, u32 *pImgA, u32 *pImgB);
 void LCDC_GetCurPosStatus(LCDC_TypeDef *LCDCx, u32 *pCurPosX, u32 *pCurPosY);
@@ -1154,6 +1163,10 @@ extern u32 LCDC_SYS_CLK;// = 400000000;
 
 // #define LCDC_VO_SHPERI_USE_USB_PLL		1
 // // #define LCDC_ACLK_USE_SYS_PLL			1
+
+#ifdef __cplusplus
+}
+#endif
 
 /* MANUAL_GEN_END */
 

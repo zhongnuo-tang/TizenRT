@@ -7,6 +7,10 @@
 #ifndef _AMEBA_BOOT_H_
 #define _AMEBA_BOOT_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern u8 __image1_validate_code__[];
 extern u8 __image1_bss_start__[];
 extern u8 __image1_bss_end__[];
@@ -70,9 +74,14 @@ extern u8 __km4tz_psram_tz_entry_end__[];
 extern u8 __km4tz_bd_psram_start__[];
 extern u8 __non_secure_psram_end__[]; /* if psram is 8MB, than write 0x60800000 will write 0x60000000 */
 
-#ifdef CONFIG_WIFI_HOST_CONTROL
+#if (!defined (CONFIG_WHC_INTF_IPC) && defined (CONFIG_WHC_DEV))
 extern u8 __tcm_heap_buffer_start__[];
 extern u8 __tcm_heap_buffer_size__[];
+#endif
+
+#if defined (CONFIG_UNITY_TEST) && CONFIG_UNITY_TEST
+extern u8 __unity_table_start__[];
+extern u8 __unity_table_end__[];
 #endif
 
 extern u8 __git_ver_table_start__[];
@@ -174,8 +183,14 @@ extern void BOOT_RccConfig(void);
 #define NP_BOOT_INDEX				0x02020202
 
 #define IS_FLASH_ADDR(addr)			((addr >= 0x00200000) && (addr <= 0x1FFFFFFF))
+#define IS_DATA_FLASH_ADDR(addr)	((addr >= 0x60000000) && (addr <= 0x7FFFFFFF))
 #define RANGE_IS_BOOTRAM(src, len)	(((src) >= BOOT_LOADER_START) && ((len) < BOOT_LOADER_LIMIT - BOOT_LOADER_START) && ((src + len) < BOOT_LOADER_LIMIT))
 #define RANGE_IS_FULLMAC(src, len)	((((src) | TZ_IDAU_SEC_OFFSET) >= (FULLMAC_ADDR_START | TZ_IDAU_SEC_OFFSET)) && ((len) < FULLMAC_ADDR_END - FULLMAC_ADDR_START) && \
 									(((src + len) | TZ_IDAU_SEC_OFFSET) < (FULLMAC_ADDR_END | TZ_IDAU_SEC_OFFSET)))
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif   //_AMEBA_BOOT_H_
 

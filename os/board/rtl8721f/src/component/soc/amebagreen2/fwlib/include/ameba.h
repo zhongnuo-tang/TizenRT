@@ -100,11 +100,16 @@
 #include "ameba_a2c.h"
 #include "ameba_pmctimer.h"
 #include "ameba_thermal.h"
+#include "ameba_nandflash.h"
 
 #include "ameba_rcc.h"
 #include "ameba_usrcfg.h"
 #include "rom/log.h"
 #include "rom/sscanf_minimal.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define IMAGE_HEADER_LEN		0x20
 typedef struct {
@@ -148,5 +153,9 @@ __NO_RETURN void io_assert_failed(char *function, uint32_t line);
 #else
 #define assert_param(expr) ((void)0)
 #endif /* USE_FULL_ASSERT */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //_HAL_AMEBA_H_
