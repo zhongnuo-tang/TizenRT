@@ -114,7 +114,8 @@ static void Flash_Write_Lock_IPC(u8 sync_type)
  */
 void FLASH_Write_Lock(void)
 {
-	rtos_sched_suspend();
+	/*TODO: does tizenrt support or required this?*/
+	// rtos_sched_suspend();
 	/* Get core-to-core hardware semphone */
 	while (IPC_SEMTake(IPC_SEM_FLASH, 1000) != TRUE) {
 		RTK_LOGW(NOTAG, "FLASH_Write_Lock get hw sema fail\n");
@@ -142,8 +143,8 @@ void FLASH_Write_Unlock(void)
 	irq_enable_restore(PrevIrqStatus);
 	/* Free core-to-core hardware semphone */
 	IPC_SEMFree(IPC_SEM_FLASH);
-
-	rtos_sched_resume();
+	/*TODO: does tizenrt support or required this?*/
+	//rtos_sched_resume(); 
 }
 
 /**
