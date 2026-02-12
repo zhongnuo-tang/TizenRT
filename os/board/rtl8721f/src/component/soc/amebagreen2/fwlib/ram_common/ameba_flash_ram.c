@@ -5,7 +5,7 @@
  */
 
 #include "ameba_soc.h"
-
+#include <tinyara/irq.h>
 uint32_t PrevIrqStatus;
 
 #define WRITE_SYNC_CLEAR   0
@@ -125,7 +125,7 @@ void FLASH_Write_Lock(void)
 	Flash_Write_Lock_IPC(WRITE_SYNC_LOCK);
 #endif
 	/* disable irq */
-	PrevIrqStatus = irq_disable_save();
+	PrevIrqStatus = irqsave();
 }
 
 /**
@@ -140,7 +140,7 @@ void FLASH_Write_Unlock(void)
 	Flash_Write_Lock_IPC(WRITE_SYNC_UNLOCK);
 #endif
 	/* restore irq */
-	irq_enable_restore(PrevIrqStatus);
+	irqrestore(PrevIrqStatus);
 	/* Free core-to-core hardware semphone */
 	IPC_SEMFree(IPC_SEM_FLASH);
 	/*TODO: does tizenrt support or required this?*/
