@@ -142,6 +142,7 @@ SECTIONS
 		. = ALIGN(32);
 
 		*(.sramdram.only.text*)
+        *(.wlan.critical.text*)
 		*(.sram.only.text*)
 		*(.sram.only.data*)
 		__sram_image2_end__ = .;
