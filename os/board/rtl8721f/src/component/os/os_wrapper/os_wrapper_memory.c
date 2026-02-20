@@ -75,9 +75,10 @@ void rtos_mem_free(void *pbuf)
 
 uint32_t rtos_mem_get_free_heap_size(void)
 {
-	/* TIZEN_RT_NOT_REQUIRED */
-	dbg("%s not implemented\n", __FUNCTION__);
-	return 0;
+	struct mallinfo heap_info;
+	heap_info = mallinfo();
+
+	return heap_info.fordblks;
 }
 
 uint32_t rtos_mem_get_minimum_ever_free_heap_size(void)
