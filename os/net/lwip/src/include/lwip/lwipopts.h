@@ -57,6 +57,11 @@
 
 #include <tinyara/config.h>
 
+/* ---------- Hardware checksum port layer ---------- */
+#ifdef CONFIG_NET_LWIP_HW_CHKSUM_PORT
+#include "lwip/port/hw_chksum_port.h"
+#endif
+
 /* --------- PreDefined Configurations -------------*/
 /*
  * Note
@@ -131,6 +136,10 @@
 
 #ifdef CONFIG_NET_ETH_PAD_SIZE
 #define ETH_PAD_SIZE                    CONFIG_NET_ETH_PAD_SIZE
+#endif
+
+#ifdef CONFIG_NET_PBUF_LINK_ENCAPSULATION_HLEN
+#define PBUF_LINK_ENCAPSULATION_HLEN    CONFIG_NET_PBUF_LINK_ENCAPSULATION_HLEN
 #endif
 
 #ifdef CONFIG_NET_ARP_STATIC_ENTRIES

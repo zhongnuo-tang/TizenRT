@@ -763,7 +763,10 @@ int _wt_parse_set(struct wt_options *opt, int argc, char *argv[])
 			return -1;
 		}
 	} else if (argc == 4) {
-		// to-do separate ibss open and open
+		opt->ssid = argv[2];
+		opt->security = argv[3];
+		opt->auth_type = WIFI_MANAGER_AUTH_OPEN;
+		opt->crypto_type = WIFI_MANAGER_CRYPTO_NONE;
 	} else {
 		return -1;
 	}
@@ -984,7 +987,12 @@ int wm_test_main(int argc, char *argv[])
 #ifdef __LINUX__
 	_wt_process(argc, argv);
 #else
-	task_create("wifi test sample", 100, 1024 * 10, (main_t)_wt_process, argv);
+	int tid = task_create("wifi test sample", 100, 1024 * 10, (main_t)_wt_process, argv);
+	if (tid < 0) {
+		WT_LOGE(TAG, "task create fail, errno=%d", errno);
+		_wt_signal_deinit();
+		return -1;
+	}
 #endif
 
 	WT_TEST_FUNC_WAIT;

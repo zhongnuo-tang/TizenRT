@@ -111,6 +111,10 @@ int arm_start_handler(int irq, void *context, void *arg)
 
 	svdbg("CPU%d Started\n", this_cpu());
 
+#ifdef CONFIG_CPU_HOTPLUG
+	up_set_cpu_state(this_cpu(), CPU_RUNNING);
+#endif
+
 #ifdef CONFIG_SCHED_INSTRUMENTATION
 	/* Notify that this CPU has started */
 
@@ -175,33 +179,25 @@ int up_cpu_on(int cpu)
 {
 	int ret ;
 
-	smpvdbg("Starting CPU%d\n", cpu);
+	smpllvdbg("Starting CPU%d\n", cpu);
 
 	DEBUGASSERT(cpu >= 0 && cpu < CONFIG_SMP_NCPUS && cpu != this_cpu());
 
-#ifdef CONFIG_CPU_HOTPLUG
-	if (up_get_cpu_state(cpu) == CPU_HOTPLUG) {
-		ret = up_cpu_up(cpu);
-		if (ret < 0) {
-			smpdbg("Failed to boot the secondary core CPU%d\n", cpu);
-			return ret;
-		}
+	ret = up_cpu_up(cpu);
+	if (ret < 0) {
+		smplldbg("Failed to boot the secondary core CPU%d\n", cpu);
+		return ret;
 	}
-#endif
 
 #ifdef CONFIG_SCHED_INSTRUMENTATION
 	/* Notify of the start event */
 	sched_note_cpu_start(this_task(), cpu);
 #endif
 
-#ifdef CONFIG_CPU_HOTPLUG
-	up_set_cpu_state(cpu, CPU_RUNNING);
-#endif
-
 	/* Execute SGI1 */
 	ret = arm_cpu_sgi(GIC_IRQ_SGI1, (1 << cpu));
 	if (ret < 0) {
-		smpdbg("Failed to execute SGI1 for CPU%d", cpu);
+		smplldbg("Failed to execute SGI1 for CPU%d", cpu);
 		return ret;
 	}
 

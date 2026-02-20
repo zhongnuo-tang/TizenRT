@@ -1,0 +1,180 @@
+#
+# For a description of the syntax of this configuration file,
+# see kconfig-language at https://www.kernel.org/doc/Documentation/kbuild/kconfig-language.txt
+#
+
+if ARCH_BOARD_BK7239N
+
+source "board/bk7239n/src/middleware/arch/cm33/Kconfig"
+source "board/bk7239n/src/middleware/compal/Kconfig"
+source "board/bk7239n/src/middleware/boards/bk7239n/vnd_cal/Kconfig"
+source "board/bk7239n/src/middleware/boards/bk7239n/vnd_flash/Kconfig"
+source "board/bk7239n/src/middleware/soc/Kconfig"
+source "board/bk7239n/src/middleware/soc/bk7239n/Kconfig"
+source "board/bk7239n/src/middleware/driver/Kconfig"
+source "board/bk7239n/src/components/tfm/Kconfig"
+source "board/bk7239n/src/components/wpa_supplicant-2.10/Kconfig"
+source "board/bk7239n/src/components/bk_startup/Kconfig"
+source "board/bk7239n/src/components/bk_system/Kconfig"
+source "board/bk7239n/src/components/cmsis/Kconfig"
+source "board/bk7239n/src/components/tfm_mbedtls/Kconfig"
+# source "board/bk7239n/src/components/bk_rtos/Kconfig"
+source "board/bk7239n/src/components/temp_detect/Kconfig"
+source "board/bk7239n/src/components/bk_wifi/Kconfig"
+source "board/bk7239n/src/components/bk_ate/Kconfig"
+source "board/bk7239n/src/components/bk_pm/Kconfig"
+source "board/bk7239n/src/components/bk_bluetooth/Kconfig"
+source "board/bk7239n/src/components/psa_mbedtls/customization/Kconfig"
+source "board/bk7239n/src/components/psa_mbedtls/Kconfig"
+source "board/bk7239n/src/components/bk_cli/uart_debug/Kconfig"
+source "board/bk7239n/src/components/bk_cli/Kconfig"
+source "board/bk7239n/src/components/bk_phy/Kconfig"
+source "board/bk7239n/src/components/easy_flash/Kconfig"
+# source "board/bk7239n/src/components/secure_deployment/Kconfig"
+source "board/bk7239n/src/libs/Kconfig"
+
+
+menu "PSRAM config"
+
+config BK_PSRAM_BASE
+	hex "PSRAM base address"
+	default 0x70000000
+	help
+		Physical base address of PSRAM.
+
+config BK_PSRAM_TOTAL_SIZE
+	hex "PSRAM total size"
+	default 0x800000
+	help
+		Total PSRAM size in bytes. For bk7239n this is typically 0x800000 (8MB).
+
+config BK_PSRAM_SECURE_SIZE
+	hex "PSRAM secure reserved size"
+	default 0x40000
+	help
+		Reserved PSRAM size for secure world. This region occupies the first
+		CONFIG_BK_PSRAM_SECURE_SIZE bytes from CONFIG_BK_PSRAM_BASE.
+
+config BK_PSRAM_DATA_BASE
+	hex "PSRAM data base address"
+	default 0x70040000 if !XIP_KERNEL
+	default 0x70000000
+	help
+		Base address of PSRAM data region.
+		When !XIP_KERNEL, the base must be 0x70040000 because the
+		first 256KB is reserved by secure world.
+		This region must not overlap PSRAM code or RAM_KREGIONx heaps.
+
+config BK_PSRAM_CODE_BASE
+	hex "PSRAM code base address"
+	default 0x70060000 if  !XIP_KERNEL
+	default 0x70020000
+	help
+		Base address of PSRAM code region.
+		This should equal CONFIG_BK_PSRAM_DATA_BASE + CONFIG_BK_PSRAM_DATA_SIZE.
+		This region must not overlap PSRAM data or RAM_KREGIONx heaps.
+
+config BK_PSRAM_DATA_SIZE
+	hex "PSRAM data size"
+	default 0x20000
+	help
+		Size of PSRAM data region.
+
+config BK_PSRAM_CODE_SIZE
+	hex "PSRAM code size"
+	default 0x180000 if !XIP_KERNEL
+	default 0x80000
+	help
+		Size of PSRAM code region.
+		The PSRAM data/code/heap/app regions must be non-overlapping and within
+		the total PSRAM size.
+
+
+
+endmenu
+
+menu "SPI Flash driver"
+config DUMMY_FS_BIN
+	bool "Generate a dummy filesystem bin (all 0xFF)"
+	default n
+	help
+		Enable this option to generate a filesystem bin filled entirely with 0xFF bytes
+		during the bin packing process. Useful for placeholder or empty filesystem images.
+
+config FLASH_VSTART
+    hex
+    default 0x12000000
+    help
+        A start virtual address of flash (in hex).
+        This is fixed value, so user doesn't need to change it.
+	Keep this value same as FLASH_START_ADDR.
+
+config FLASH_START_ADDR
+    hex "FLASH_START_ADDR"
+    default 0x0
+    help
+        A start address of flash (in hex).
+        This is fixed value, so user doesn't need to change it.
+
+config FLASH_VSTART_LOADABLE
+    hex
+    default 0x12236000
+    depends on XIP_ELF
+    help
+        A start virtual address of flash (in hex). This macro
+        will be used to do address remapping for loadable running on XIP.
+        This value should be set to the virtual flash address where loadable
+        apps (common, app1, app2) start, typically after the kernel partition.
+        For bk7239n, this is typically 0x12236000.
+
+config TRPK_CONTAINS_MULTIPLE_BINARY
+    bool
+    default y
+    depends on XIP_ELF
+    help
+        This macro is to differentiate whether the kernel trpk contains
+        more than 1 binary. If yes, we have to recalculate the offset
+        according to the binary that is running on Tizen Lite, to make
+        sure the loadable_apps for XIP_ELF is placed to the correct
+        virtual flash address (ie. Only Loadable_apps with running on
+        XIP is needed, because the core has to know where to execute
+        from the correct remapped address)
+        This macro is not needed for flat configs, due to the kernel 
+        binaries remapping will be handled by the bootloader.
+
+config FLASH_SIZE
+    int "FLASH_SIZE"
+    default 4194304
+    help
+        A size of flash (in bytes).
+        This is fixed value, so user doesn't need to change it.
+
+config BK_FLASH_BASE
+    hex "Start address for user filesystem"
+    default 0x200000
+    help
+        Setting this vaule to configure flash start address for user filesystem,
+        such as smartfs, romfs.
+
+config BK_FLASH_CAPACITY
+    hex "Size for user filesystem"
+    default 0x400000
+    help
+        Setting this vaule to configure flash size  for user filesystem,
+        such as smartfs, romfs.
+
+config BK_FLASH_PAGE_SIZE
+    int "Read/write unit size of SPI flash"
+    default 256
+    help
+        Setting this vaule to configure read/write unit size of BK SPI flash.
+
+    config BK_FLASH_SECTOR_SIZE
+        int "Erase unit size of SPI flash"
+        default 4096
+        help
+            Setting this vaule to configure erase unit size of BK SPI flash.
+
+endmenu
+
+endif
