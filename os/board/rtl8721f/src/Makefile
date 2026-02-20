@@ -81,10 +81,6 @@ include component/soc/amebagreen2/hal/src/Make.defs
 include component/usrcfg/rtl8721f/Make.defs
 
 include component/lwip/api/Make.defs
-#include component/os_dep/Make.defs
-# include component/wifi/inic/Make.defs
-# include component/wifi/driver/src/core/Make.defs
-# include component/wifi/driver/src/core/option/Make.defs
 # include component/ssl/mbedtls_ram_map/rom/Make.defs
 # include component/mbed/targets/hal/rtl8721f/Make.defs
 include component/os/tizenrt/Make.defs
@@ -96,7 +92,6 @@ include component/wifi/Make.defs
 include component/wifi/rtk_app/wifi_feature_disable/Make.defs
 include component/wifi/rtk_app/wifi_init/Make.defs
 include component/wifi/wpa_supplicant/wpa_supplicant/Make.defs
-include component/os/tizenrt/Make.defs # Temporary, only for testing, should be covered either under wifi or ble
 endif
 
 ifeq ($(CONFIG_AMEBAGREEN2_BLE),y)
@@ -160,19 +155,9 @@ CFLAGS += -I$(TARGETDIR)/fwlib/include/cmsis/source
 # CFLAGS += -I$(TARGETDIR)/app/xmodem
 # CFLAGS += -I$(TARGETDIR)/swlib
 # CFLAGS += -I$(TARGETDIR)/misc
-# CFLAGS += -I$(COMPONENT_DIR)/os_dep
 CFLAGS += -I$(COMPONENT_DIR)/usrcfg/common
 CFLAGS += -I$(COMPONENT_DIR)/usrcfg/rtl8721f/include
 
-# CFLAGS += -I$(COMPONENT_DIR)/wifi
-# CFLAGS += -I$(COMPONENT_DIR)/wifi/api
-# CFLAGS += -I$(COMPONENT_DIR)/wifi/driver/include
-# CFLAGS += -I$(COMPONENT_DIR)/wifi/driver/src/intf
-# CFLAGS += -I$(COMPONENT_DIR)/wifi/inic
-# CFLAGS += -I$(COMPONENT_DIR)/wifi/wifi_config
-# CFLAGS += -I$(COMPONENT_DIR)/wifi/driver/include
-# CFLAGS += -I$(COMPONENT_DIR)/wifi/driver/src/core/option
-# CFLAGS += -I$(COMPONENT_DIR)/wifi/wpa_supplicant/src/crypto
 CFLAGS += -I$(COMPONENT_DIR)/lwip/api
 # CFLAGS += -I$(COMPONENT_DIR)/ssl/mbedtls_ram_map/rom
 CFLAGS += -I$(COMPONENT_DIR)/os/tizenrt

@@ -704,7 +704,6 @@ trwifi_result_e wifi_netmgr_utils_get_info(struct netdev *dev, trwifi_info *wifi
 				wifi_info->wifi_status = TRWIFI_SOFTAP_MODE;
 			}
 			/* STA is always on so we can always get stats if we are connected */
-			/* Check if can use this instead, no more wifi_is_connected_to_ap() */
 			u8 connect_status = RTW_JOINSTATUS_UNKNOWN;
 			if(wifi_get_join_status(&connect_status) != RTK_SUCCESS) {
 				dbg_noarg("[RTK] Failed to get connection status!");
