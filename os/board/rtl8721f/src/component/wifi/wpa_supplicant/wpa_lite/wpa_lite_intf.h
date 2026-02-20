@@ -61,7 +61,7 @@ void rtw_psk_set_psk_info(struct psk_info *psk_data);
 void rtw_psk_set_pmk_from_eap(u8 *pmk, u8 *hwaddr);
 
 void rtw_psk_disconnect_hdl(u8 *mac_addr, u8 iface_type);
-void rtw_set_to_roam(u8 roam_try_cnt);
+void rtw_set_to_roam(u8 trigger_roam);
 u8 rtw_roam_nb_ch_num_get(void);
 u16 rtw_roam_nb_ch_get(u8 ch);
 
@@ -90,7 +90,8 @@ void rtw_ft_auth_start(u8 *evt_info);/*RTW_EVENT_FT_AUTH_START*/
 void rtw_ft_rx_mgnt(u8 *evt_info);/*RTW_EVENT_FT_RX_MGNT*/
 #endif
 #endif
-void rtw_psk_deauth_info_flash_event_hdl(u8 *evt_info);/*RTW_EVENT_DEAUTH_INFO_FLASH*/
-void rtw_psk_deauth_info_flash(u8 *data, s32 len, s32 flags);
+// remove for tizenrt first
+// void rtw_psk_deauth_info_flash_event_hdl(u8 *evt_info);/*RTW_EVENT_DEAUTH_INFO_FLASH*/
+// void rtw_psk_deauth_info_flash(u8 *data, s32 len, s32 flags);
 #endif
 

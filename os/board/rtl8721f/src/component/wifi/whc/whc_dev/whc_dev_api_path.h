@@ -71,7 +71,7 @@ void whc_event_wifi_scan_abort(u32 api_id, u32 *param_buf);
 void whc_event_wifi_custom_ie_ops(u32 api_id, u32 *param_buf);
 void whc_event_wifi_set_usr_config(u32 api_id, u32 *param_buf);
 void whc_event_wifi_set_host_rtos(u32 api_id, u32 *param_buf);
-void whc_event_wifi_set_edcca_mode(u32 api_id, u32 *param_buf);
+void whc_event_wifi_set_edcca_param(u32 api_id, u32 *param_buf);
 void whc_event_wifi_get_edcca_mode(u32 api_id, u32 *param_buf);
 void whc_event_wifi_get_ant_info(u32 api_id, u32 *param_buf);
 void whc_event_war_offload_ctrl(u32 api_id, u32 *param_buf);
@@ -111,6 +111,7 @@ void whc_event_wifi_dhcp_success(u32 api_id, u32 *param_buf);
 void whc_event_get_traffic_stats(u32 api_id, u32 *param_buf);
 void whc_event_start_join_cmd(u32 api_id, u32 *param_buf);
 void whc_event_get_eap_phase(u32 api_id, u32 *param_buf);
+void whc_dev_update_regd_event_indicate(struct rtw_country_code_table *table);
 #endif
 
 #ifdef CONFIG_SUPPLICANT_SME

@@ -8,6 +8,7 @@
 #define whc_dev_init             whc_usb_dev_init
 #define whc_dev_trigger_rx_handle   whc_usb_dev_trigger_rx_handle
 #define _whc_dev_api_bus_is_idle       whc_usb_dev_bus_is_idle
+#define whc_dev_api_send_data    whc_usb_dev_send_cmd_data
 
 #define DEV_DMA_ALIGN			CACHE_LINE_SIZE
 #define USB_DMA_ALIGN(x)	(((x + CACHE_LINE_SIZE - 1) / CACHE_LINE_SIZE) * CACHE_LINE_SIZE)
@@ -46,7 +47,7 @@ struct whc_usb_irq_info {
 	u8 txdone;
 	/* host->device */
 	u8 rxdone_epnum[WIFI_WHC_USB_BULKOUT_EP_NUM];  // store the usb rx endpoint num in interrupt order
-	u16 len[WIFI_WHC_USB_BULKOUT_EP_NUM];
+	u32 len[WIFI_WHC_USB_BULKOUT_EP_NUM];
 	u8 intr_widx; // idx of the rxdone_epnum list to write for usb interrupt
 	u8 task_ridx; // idx of the rxdone_epnum list to read for device task
 	u8 wait_xmit_skb;  // set 1 means when free skb, sema up device task to deal blocked usb rx data
@@ -75,6 +76,7 @@ void whc_usb_dev_send(struct whc_buf_info *pbuf);
 u8 whc_usb_dev_tx_path_avail(void);
 void whc_usb_dev_trigger_rx_handle(void);
 u8 whc_usb_dev_bus_is_idle(void);
+void whc_usb_dev_send_cmd_data(u8 *data, u32 len);
 
 #endif
 

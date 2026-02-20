@@ -37,8 +37,8 @@ __weak void whc_host_pkt_rx_to_user(u8 *payload, u32 len)
 			ipaddr = CONCAT_TO_UINT32(ptr[0], ptr[1], ptr[2], ptr[3]);
 			netmask = CONCAT_TO_UINT32(NETMASK_ADDR0, NETMASK_ADDR1, NETMASK_ADDR2, NETMASK_ADDR3);
 			gw = CONCAT_TO_UINT32(ptr[0], ptr[1], ptr[2], 1);
-			LwIP_SetIP(STA_WLAN_INDEX, ipaddr, netmask, gw);
-			LwIP_netif_set_link_up(0);
+			LwIP_SetIP(NETIF_WLAN_STA_INDEX, ipaddr, netmask, gw);
+			LwIP_netif_set_link_up(NETIF_WLAN_STA_INDEX);
 			break;
 
 		case WHC_WIFI_TEST_SCAN_RESULT:
@@ -91,7 +91,7 @@ void whc_host_get_ip(uint8_t idx)
 	whc_host_send_to_dev(buf, buf_len);
 }
 
-void whc_host_set_rdy(void)
+void whc_host_set_rdy(uint8_t state)
 {
 	uint8_t buf[12] = {0};
 	uint8_t *ptr = buf;
@@ -103,11 +103,13 @@ void whc_host_set_rdy(void)
 	*ptr = WHC_WIFI_TEST_SET_READY;
 	ptr += 1;
 	buf_len += 1;
+	*ptr = state;
+	buf_len += 1;
 
 	whc_host_send_to_dev(buf, buf_len);
 }
 
-void whc_host_wifi_on(void)
+void whc_host_set_wifi_on(void)
 {
 	uint8_t buf[12] = {0};
 	uint8_t *ptr = buf;
@@ -218,6 +220,7 @@ u32 cmd_whc_test(u16 argc, u8  *argv[])
 {
 	UNUSED(argc);
 	char *pwd = NULL;
+	u8 state = 1;
 
 	if (_strcmp((const char *)argv[0], "getmac") == 0) {
 		whc_host_get_mac_addr(0);
@@ -230,13 +233,19 @@ u32 cmd_whc_test(u16 argc, u8  *argv[])
 	}
 
 	if (_strcmp((const char *)argv[0], "setrdy") == 0) {
-		LwIP_netif_set_up(0);
-		whc_host_set_rdy();
+		LwIP_netif_set_up(NETIF_WLAN_STA_INDEX);
+		if (argc > 1) {
+			if (_strcmp((const char *)argv[1], "unready") == 0) {
+				state = 0;
+			}
+		}
+
+		whc_host_set_rdy(state);
 		goto exit;
 	}
 
 	if (_strcmp((const char *)argv[0], "wifion") == 0) {
-		whc_host_wifi_on();
+		whc_host_set_wifi_on();
 		goto exit;
 	}
 
@@ -268,8 +277,5 @@ exit:
 
 CMD_TABLE_DATA_SECTION
 const COMMAND_TABLE   whc_test_cmd_table[] = {
-	{
-		(const u8 *)"whc", 8, cmd_whc_test, (const u8 *)"\twhc \n"
-		"\t\t whc test \n"
-	},
+	{"whc", cmd_whc_test},
 };

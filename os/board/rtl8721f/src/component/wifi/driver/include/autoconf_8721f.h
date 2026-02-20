@@ -20,7 +20,13 @@
 
 #define STATIC_RXRING_POOL 1
 
-// #define CONFIG_WIFI_TUNNEL
+// #define CONFIG_WIFI_TUNNEL // currently not ported on tizenrt, add tizenrt macro in the future
+#ifdef CONFIG_AMEBAPRO3
+#undef CONFIG_WIFI_TUNNEL
+#endif
+#if !defined(CONFIG_WHC_DEV) || defined(CONFIG_WHC_INTF_IPC)
+// #define CONFIG_WTN_SOCKET_APP // currently not ported on tizenrt, add tizenrt macro in the future
+#endif
 
 /* For STA+AP Concurrent MODE */
 /****************** configurations for concurrent mode ************************/
@@ -28,10 +34,8 @@
 #define CONFIG_MCC_MODE
 #ifdef CONFIG_NAN
 #define CONFIG_NAN_V2 1
-#define NET_IF_NUM	3
 #define SUPPORT_ADAPTER_NUM	3
 #else
-#define NET_IF_NUM 2
 #define SUPPORT_ADAPTER_NUM	2
 #endif
 /**************** configurations for concurrent mode end **********************/
@@ -59,6 +63,15 @@
 /* PHY layer band config end */
 
 // #define SW_WEP_TKIP
+
+/* Mgnt Frame Encryption -> txdesc.sectype can distinguish between data frames and management frames separately.
+ * Mgnt Frame Decryption -> Unable to distinguish between data frames and management frames separately, both SW DEC or HW DEC.
+ * HW BUG: GCMP-256 mgnt frame dec/enc abnoraml[smart/lite/dp/g2], fix for AmebaGreen2_Bcut */
+#ifdef CONFIG_AMEBAGREEN2_A_CUT
+#undef CONFIG_PMF_USE_HW_CRYPTO
+#else
+#define CONFIG_PMF_USE_HW_CRYPTO
+#endif
 
 //#define CONFIG_BT_COEXIST
 
@@ -167,6 +180,8 @@
 #undef CONFIG_WIFI_TDMA_DIG /*for softap*/
 #undef CONFIG_WIFI_EDCCA
 #undef CONFIG_WIFI_ANTDIV
+#undef CONFIG_WIFI_TUNNEL
+#undef CONFIG_WTN_SOCKET_APP
 #define DISABLE_FW
 #endif
 

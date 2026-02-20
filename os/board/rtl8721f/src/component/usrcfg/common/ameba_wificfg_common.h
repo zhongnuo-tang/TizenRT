@@ -88,6 +88,9 @@ struct wifi_user_conf {
 		1 means disable rx broadcast in tickless wowlan mode, 0 means enable(default) rx broadcast in tickless wowlan mode.*/
 	u8 wowlan_rx_bcmc_dis;
 
+	/* set rx unicast packet timeout in LPS, unit:ms*/
+	u8 lps_rx_unicast_pkt_timeout;
+
 	/*!	U-APSD WMM power save mode. After connection, with low traffic, part of WIFI can be powered off and woken up upon packet interaction.\n
 		There are two power save modes: legacy power save and uapsd mode. Can only enable one of them.
 		0: Disable uapsd mode, 1: Enable. */
@@ -105,14 +108,11 @@ struct wifi_user_conf {
 	/*!	0: Disable ampdu tx, 1: Enable ampdu tx. */
 	u8 ampdu_tx_enable;
 
-	/*!	0: If the pkt's destination address doesn't match, it won't be dropped, 1: If the pkt's destination address doesn't match, it will be dropped. */
-	u8 check_dest_address_en;
-
 	/*!	The ap_compatibilty_enabled is used to configure the wlan settings, each bit controls one aspect.
 		- <b>bit 0:</b> 0: follow 802.11 spec, do not issue deauth, 1(default): issue deauth in 1st REAUTH_TO to be compatible with ap;
 		- <b>bit 1:</b> 0: do not check beacon info to connect with AP with multiple SSID, 1(default): check beacon info;
-		- <b>bit 2:</b> 0(default): do not issue deauth at start of auth, 1: issue deauth at start of auth;
-		- <b>bit 3:</b> 0: do not switch WEP auth algo unless WLAN_STATUS_NOT_SUPPORTED_AUTH_ALG, 1(default): switch WEP auth algo from shared key to open system in 1st REAUTH_TO;
+		- <b>bit 2:</b> 0: do not issue deauth at start of auth, 1(default): issue deauth at start of auth;
+		- <b>bit 4:</b> 1: addressing compatibility problems with the AP's BA mechanism, such as the timing of the ADDBA Resp and issues with the reordering buffer timer settings;
 		- <b>other bits:</b> reserved */
 	u8 ap_compatibilty_enabled;
 
@@ -129,9 +129,6 @@ struct wifi_user_conf {
 		- \b Bit0: RTW_RFK_DIS_DPK;
 		- <b>Other bits:</b> reserved.*/
 	u16 rf_calibration_disable;
-
-	/*! The maximum number of roaming attempts triggered by BTM.*/
-	u8 max_roaming_times;
 
 	/*!	AP periodically sends null pkt to check whether the STA is offline, not support right now.*/
 	u8 ap_polling_sta;
@@ -223,8 +220,25 @@ struct wifi_user_conf {
 		skb_num_np needs to be adjusted simultaneously.*/
 	u8 rx_ampdu_num;
 
-	/* set cck rate mask for tx data frame. Set bit to 1 to mask corresponding cck rate (bit 0 ~ 3: CCK 1M, 2M, 5.5M, 11M) */
+	/*! set cck rate mask for tx data frame. Set bit to 1 to mask corresponding cck rate (bit 0 ~ 3: CCK 1M, 2M, 5.5M, 11M) */
 	u8 rate_mask_cck;
+
+	/*!	set short GI capability for HT/VHT mode when tx data frame (not work for fix-rate mode).
+		0: disable short gi, always use long GI; 1: enable short GI, GI mode will be decided by driver & AP */
+	u8 sgi;
+
+	/*!	Set HE GI & LTF capability bitmap for AX mode (not work for fix-rate mode).
+		- e.g. set value RTW_HE_32_GI_4X_LTF to fix use 3.2us+2X-LTF.
+		- e.g. set value (RTW_HE_16_GI_2X_LTF | RTW_HE_08_GI_2X_LTF) to support 1.6us+2X-LTF and 0.8us+2X-LTF.
+		- @ref RTW_HE_32_GI_4X_LTF : support HE 3.2us GI + 4X-LTF
+		- @ref RTW_HE_08_GI_4X_LTF : support HE 0.8us GI + 4X-LTF
+		- @ref RTW_HE_16_GI_2X_LTF : support HE 1.6us GI + 2X-LTF
+		- @ref RTW_HE_08_GI_2X_LTF : support HE 0.8us GI + 2X-LTF
+		- @ref RTW_HE_16_GI_1X_LTF : support HE 1.6us GI + 1X-LTF
+		- @ref RTW_HE_08_GI_1X_LTF : support HE 0.8us GI + 1X-LTF
+		- @ref RTW_HE_GI_LTF_ALL : support all HE GI-LTF modes
+	*/
+	u8 he_gi_ltf_cap;
 
 	/*!	The maximum number of aggregated MPDU in an tx AMPDU. 0: default 20, 1: equivalent to wifi_user_config.ampdu_tx_enable = 0, Otherwise: max aggregation number, up to 0x3F.*/
 	u8 tx_ampdu_num;

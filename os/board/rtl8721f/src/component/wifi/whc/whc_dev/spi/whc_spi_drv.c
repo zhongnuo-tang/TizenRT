@@ -115,10 +115,12 @@ u32 whc_spi_dev_rxdma_irq_handler(void *pData)
 
 	/* check and clear RX DMA ISR */
 	int_status = GDMA_ClearINT(GDMA_InitStruct->GDMA_Index, GDMA_InitStruct->GDMA_ChNum);
-	if ((int_status & (TransferType | BlockType)))  {
-		if (spi_priv.dev_status & DEV_STS_WAIT_RXDMA_DONE) {
-			rtos_sema_give(spi_priv.rxirq_sema);
-		}
+	if ((int_status & (TransferType)))  {
+		set_dev_rdy_pin(DEV_BUSY);
+		rtos_critical_enter(RTOS_CRITICAL_WIFI);
+		spi_priv.dev_status |= DEV_STS_WAIT_RXDMA_DONE;
+		rtos_critical_exit(RTOS_CRITICAL_WIFI);
+		rtos_sema_give(spi_priv.rxirq_sema);
 	}
 
 	if (int_status & ErrType) {
@@ -139,10 +141,12 @@ u32 whc_spi_dev_txdma_irq_handler(void *pData)
 
 	/* check and clear TX DMA ISR */
 	int_status = GDMA_ClearINT(GDMA_InitStruct->GDMA_Index, GDMA_InitStruct->GDMA_ChNum);
-	if (int_status & (TransferType | BlockType)) {
-		if (spi_priv.dev_status & DEV_STS_WAIT_TXDMA_DONE) {
-			rtos_sema_give(spi_priv.txirq_sema);
-		}
+	if (int_status & (TransferType)) {
+		set_dev_txreq_pin(DEV_TX_IDLE);
+		rtos_critical_enter(RTOS_CRITICAL_WIFI);
+		spi_priv.dev_status |= DEV_STS_WAIT_TXDMA_DONE;
+		rtos_critical_exit(RTOS_CRITICAL_WIFI);
+		rtos_sema_give(spi_priv.txirq_sema);
 	}
 
 	if (int_status & ErrType) {
@@ -187,7 +191,7 @@ int whc_spi_dev_set_dev_status(struct whc_spi_priv_t *whc_spi_priv, u32 ops, u32
 
 				/* re-enable SPI RXF interrupt */
 				SSI_INTConfig(WHC_SPI_DEV, SPI_BIT_RXFIM, ENABLE);
-				whc_spi_priv->rx_req = FALSE;
+				whc_spi_priv->tx_req = FALSE;
 
 				if (!whc_spi_priv->wait_tx) {
 					/* set DEV_RDY pin to idle */
@@ -201,9 +205,9 @@ int whc_spi_dev_set_dev_status(struct whc_spi_priv_t *whc_spi_priv, u32 ops, u32
 			/* Set status */
 			set_dev_rdy_pin(DEV_BUSY);
 
-			if (whc_spi_priv->rx_req) {
-				/* Host initiate rx_req, set RX_REQ pin to idle */
-				set_dev_rxreq_pin(DEV_RX_IDLE);
+			if (whc_spi_priv->tx_req) {
+				/* Host initiate tx_req, set TX_REQ pin to idle */
+				set_dev_txreq_pin(DEV_TX_IDLE);
 			}
 			whc_spi_priv->dev_status = sts;
 
@@ -226,7 +230,7 @@ int whc_spi_dev_set_dev_status(struct whc_spi_priv_t *whc_spi_priv, u32 ops, u32
 
 			ops = ENABLE;
 			sts = DEV_STS_SPI_CS_LOW | DEV_STS_WAIT_RXDMA_DONE;
-			if (whc_spi_priv->rx_req) {
+			if (whc_spi_priv->tx_req) {
 				sts |= DEV_STS_WAIT_TXDMA_DONE;
 			}
 		} else {
@@ -307,7 +311,7 @@ u32 whc_spi_dev_interrupt_handler(void *param)
 		SSI_INTConfig(WHC_SPI_DEV, SPI_BIT_RXFIM, DISABLE);
 
 		status = DEV_STS_SPI_CS_LOW | DEV_STS_WAIT_RXDMA_DONE;
-		if (whc_spi_priv->rx_req) {
+		if (whc_spi_priv->tx_req) {
 			status |= DEV_STS_WAIT_TXDMA_DONE;
 		}
 
@@ -332,8 +336,8 @@ static u32 whc_spi_dev_suspend(u32 expected_idle_time, void *param)
 	UNUSED(expected_idle_time);
 	UNUSED(param);
 	if (pmu_get_sleep_type() == SLEEP_PG) {
-		InterruptDis(SPI0_IRQ);
-		InterruptUnRegister(SPI0_IRQ);
+		InterruptDis(SPIS_IRQ);
+		InterruptUnRegister(SPIS_IRQ);
 	}
 	return TRUE;
 }
@@ -348,11 +352,11 @@ static u32 whc_spi_dev_resume(u32 expected_idle_time, void *param)
 	u32 index = (WHC_SPI_DEV == SPI0_DEV) ? 0 : 1;
 
 	if (pmu_get_sleep_type() == SLEEP_PG) {
-		set_dev_rxreq_pin(DEV_RX_IDLE);
+		set_dev_txreq_pin(DEV_TX_IDLE);
 
 		/* Initialize SPI */
-		PAD_PullCtrl(SPI0_CS, GPIO_PuPd_UP);  // pull-up, default 1
-		PAD_PullCtrl(SPI0_SCLK, GPIO_PuPd_DOWN);
+		PAD_PullCtrl(SPIS_CS, GPIO_PuPd_UP);  // pull-up, default 1
+		PAD_PullCtrl(SPIS_SCLK, GPIO_PuPd_DOWN);
 
 		SSI_SetRole(WHC_SPI_DEV, SSI_SLAVE);
 		SSI_StructInit(&SSI_InitStructSlave);
@@ -362,8 +366,8 @@ static u32 whc_spi_dev_resume(u32 expected_idle_time, void *param)
 		SSI_InitStructSlave.SPI_Role = SSI_SLAVE;
 		SSI_Init(WHC_SPI_DEV, &SSI_InitStructSlave);
 
-		InterruptRegister((IRQ_FUN)whc_spi_dev_interrupt_handler, SPI0_IRQ, (u32)(&spi_priv), INT_PRI_MIDDLE);
-		InterruptEn(SPI0_IRQ, INT_PRI_MIDDLE);
+		InterruptRegister((IRQ_FUN)whc_spi_dev_interrupt_handler, SPIS_IRQ, (u32)(&spi_priv), INT_PRI_MIDDLE);
+		InterruptEn(SPIS_IRQ, INT_PRI_MIDDLE);
 
 		/* Enable RX full interrupt */
 		SSI_INTConfig(WHC_SPI_DEV, SPI_BIT_RXFIM | SPI_BIT_SSRIM, ENABLE);
@@ -379,6 +383,7 @@ static u32 whc_spi_dev_resume(u32 expected_idle_time, void *param)
 		GDMA_Init(GDMA_InitStruct->GDMA_Index, GDMA_InitStruct->GDMA_ChNum, GDMA_InitStruct);
 	}
 
+	whc_dev_ps_resume_cb();
 	return TRUE;
 }
 
@@ -400,11 +405,11 @@ void whc_spi_dev_device_init(void)
 	rtos_sema_create(&whc_spi_priv->free_skb_sema, 0, RTOS_SEMA_MAX_COUNT);
 
 	/* Initialize GPIO */
-	GPIO_InitStruct.GPIO_Pin = RX_REQ_PIN;
+	GPIO_InitStruct.GPIO_Pin = DEV_TX_REQ_PIN;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_Init(&GPIO_InitStruct);
-	set_dev_rxreq_pin(DEV_RX_IDLE);
+	set_dev_txreq_pin(DEV_TX_IDLE);
 
 	GPIO_InitStruct.GPIO_Pin = DEV_READY_PIN;
 	GPIO_Init(&GPIO_InitStruct);
@@ -435,13 +440,18 @@ void whc_spi_dev_device_init(void)
 	RTIM_INTConfig(TIMx[WHC_RECOVER_TIM_IDX], TIM_IT_Update, ENABLE);
 
 	/* Initialize SPI */
-	RCC_PeriphClockCmd(APBPeriph_SPI0, APBPeriph_SPI0_CLOCK, ENABLE);
-	Pinmux_Config(SPI0_MOSI, PINMUX_FUNCTION_SPIS);//MOSI
-	Pinmux_Config(SPI0_MISO, PINMUX_FUNCTION_SPIS);//MISO
-	Pinmux_Config(SPI0_SCLK, PINMUX_FUNCTION_SPIS);//CLK
-	Pinmux_Config(SPI0_CS, PINMUX_FUNCTION_SPIS);//CS
-	PAD_PullCtrl(SPI0_CS, GPIO_PuPd_UP);  // pull-up, default 1
-	PAD_PullCtrl(SPI0_SCLK, GPIO_PuPd_DOWN);
+	if (WHC_SPI_DEV == SPI0_DEV) {
+		RCC_PeriphClockCmd(APBPeriph_SPI0, APBPeriph_SPI0_CLOCK, ENABLE);
+	} else {
+		RCC_PeriphClockCmd(APBPeriph_SPI1, APBPeriph_SPI1_CLOCK, ENABLE);
+	}
+
+	Pinmux_Config(SPIS_MOSI, PINMUX_FUNCTION_SPIS);//MOSI
+	Pinmux_Config(SPIS_MISO, PINMUX_FUNCTION_SPIS);//MISO
+	Pinmux_Config(SPIS_SCLK, PINMUX_FUNCTION_SPIS);//CLK
+	Pinmux_Config(SPIS_CS, PINMUX_FUNCTION_SPIS);//CS
+	PAD_PullCtrl(SPIS_CS, GPIO_PuPd_UP);  // pull-up, default 1
+	PAD_PullCtrl(SPIS_SCLK, GPIO_PuPd_DOWN);
 
 	SSI_SetRole(WHC_SPI_DEV, SSI_SLAVE);
 	SSI_StructInit(&SSI_InitStructSlave);
@@ -451,8 +461,8 @@ void whc_spi_dev_device_init(void)
 	SSI_InitStructSlave.SPI_Role = SSI_SLAVE;
 	SSI_Init(WHC_SPI_DEV, &SSI_InitStructSlave);
 
-	InterruptRegister((IRQ_FUN)whc_spi_dev_interrupt_handler, SPI0_IRQ, (u32)whc_spi_priv, INT_PRI_MIDDLE);
-	InterruptEn(SPI0_IRQ, INT_PRI_MIDDLE);
+	InterruptRegister((IRQ_FUN)whc_spi_dev_interrupt_handler, SPIS_IRQ, (u32)whc_spi_priv, INT_PRI_MIDDLE);
+	InterruptEn(SPIS_IRQ, INT_PRI_MIDDLE);
 
 	/* Enable RX full interrupt */
 	SSI_INTConfig(WHC_SPI_DEV, SPI_BIT_RXFIM | SPI_BIT_SSRIM, ENABLE);
@@ -476,12 +486,12 @@ void whc_spi_dev_device_init(void)
 	pmu_register_sleep_callback(PMU_WHC_WIFI, (PSM_HOOK_FUN)whc_spi_dev_suspend, NULL, (PSM_HOOK_FUN)whc_spi_dev_resume, NULL);
 
 	/* Create irq task */
-	if (rtos_task_create(NULL, "SPI_RXDMA_IRQ_TASK", whc_spi_dev_rxdma_irq_task, (void *)whc_spi_priv, 1024 * 4, 7) != RTK_SUCCESS) {
+	if (rtos_task_create(NULL, "SPI_RXDMA_IRQ_TASK", whc_spi_dev_rxdma_irq_task, (void *)whc_spi_priv, 1024 * 4, 9) != RTK_SUCCESS) {
 		RTK_LOGE(TAG_WLAN_INIC, "Create SPI_RXDMA_IRQ_TASK Err!!\n");
 		return;
 	}
 
-	if (rtos_task_create(NULL, "SPI_TXDMA_IRQ_TASK", whc_spi_dev_txdma_irq_task, (void *)whc_spi_priv, 1024 * 4, 7) != RTK_SUCCESS) {
+	if (rtos_task_create(NULL, "SPI_TXDMA_IRQ_TASK", whc_spi_dev_txdma_irq_task, (void *)whc_spi_priv, 1024 * 4, 9) != RTK_SUCCESS) {
 		RTK_LOGE(TAG_WLAN_INIC, "Create SPI_TXDMA_IRQ_TASK Err!!\n");
 		return;
 	}
@@ -610,15 +620,15 @@ s8 whc_dev_spi_wait_dev_idle(void)
 	s8 ret = 0;
 
 	/* Wait for last SPI transaction done, including stages:
-		1) trigger RX_REQ to host, wait for host to initiate SPI transfer (spi_priv.rx_req=TRUE)
+		1) trigger TX_REQ to host, wait for host to initiate SPI transfer (spi_priv.tx_req=TRUE)
 		2) host initiates SPI transfer ~ device respond to RXF interrupt (SSI_Busy)
 		3) device respond to RXF interrupt ~ device TRXDMA done (spi_priv.dev_status != DEV_STS_IDLE)*/
-	while (spi_priv.rx_req || spi_priv.dev_status != DEV_STS_IDLE || SSI_Busy(WHC_SPI_DEV)) {
+	while (spi_priv.tx_req || spi_priv.dev_status != DEV_STS_IDLE || SSI_Busy(WHC_SPI_DEV)) {
 		spi_priv.wait_tx = TRUE;
 		if (rtos_sema_take(spi_priv.spi_transfer_done_sema, WHC_DEV_SPI_TRANSFER_TIMEOUT) == RTK_FAIL) {
-			RTK_LOGE(TAG_WLAN_INIC, "take sema fail,dev_sts:%d,rx_req:%d, SSI_Busy:%d\n",
-					 spi_priv.dev_status, spi_priv.rx_req, SSI_Busy(WHC_SPI_DEV));
-#ifdef CONFIG_WHC_DUAL_TCPIP
+			RTK_LOGE(TAG_WLAN_INIC, "take sema fail,dev_sts:%d,tx_req:%d, SSI_Busy:%d\n",
+					 spi_priv.dev_status, spi_priv.tx_req, SSI_Busy(WHC_SPI_DEV));
+#ifdef CONFIG_WHC_DEV_TCPIP_KEEPALIVE
 			whc_dev_api_set_host_state(WHC_HOST_UNREADY);
 #endif
 			ret = -1;
@@ -632,7 +642,7 @@ s8 whc_dev_spi_wait_dev_idle(void)
 
 u8 whc_spi_dev_bus_is_idle(void)
 {
-	if (spi_priv.rx_req || spi_priv.dev_status != DEV_STS_IDLE || SSI_Busy(WHC_SPI_DEV)) {
+	if (spi_priv.tx_req || spi_priv.dev_status != DEV_STS_IDLE || SSI_Busy(WHC_SPI_DEV)) {
 		return FALSE;
 	}
 	return TRUE;
@@ -724,17 +734,17 @@ retry:
 
 	/* RXF interrupt would occur after whc_dev_spi_wait_dev_idle(). This case would increase time, during which Host would start SPI transfer.
 	 So double check SPI is not busy, then start TXDMA */
-	if (SSI_Busy(WHC_SPI_DEV)) {
+	if (SSI_Busy(WHC_SPI_DEV) || (spi_priv.dev_status != DEV_STS_IDLE)) {
 		rtos_critical_exit(RTOS_CRITICAL_WIFI);
 		goto retry;
 	}
 
 	GDMA_Cmd(GDMA_InitStruct->GDMA_Index, GDMA_InitStruct->GDMA_ChNum, ENABLE);
 
-	spi_priv.rx_req = TRUE;
+	spi_priv.tx_req = TRUE;
 
-	/* Send rx request signal to host */
-	set_dev_rxreq_pin(DEV_RX_REQ);
+	/* Send tx request signal to host */
+	set_dev_txreq_pin(DEV_TX_REQ);
 	set_dev_rdy_pin(DEV_READY);
 
 	rtos_critical_exit(RTOS_CRITICAL_WIFI);

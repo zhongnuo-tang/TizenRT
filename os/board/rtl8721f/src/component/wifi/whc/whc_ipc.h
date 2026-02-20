@@ -29,6 +29,9 @@
 #include "os_wrapper.h"
 #include "wifi_api.h"
 #include "wifi_intf_drv_to_app_internal.h"
+#ifdef CONFIG_WIFI_TUNNEL
+#include "wifi_api_wtn.h"
+#endif
 #endif
 /* -------------------------------- Defines --------------------------------- */
 /*msg q task*/
@@ -57,6 +60,7 @@
 #define whc_dev_get_lwip_info                            whc_ipc_dev_get_lwip_info
 #define whc_dev_set_netif_info                           whc_ipc_dev_set_netif_info
 #define whc_dev_cfg80211_indicate_scan_report            whc_ipc_dev_cfg80211_indicate_scan_report
+#define whc_dev_update_regd_event_indicate               whc_ipc_dev_update_regd_event_indicate
 #define whc_dev_api_init                                 whc_ipc_dev_api_init
 
 #ifndef CONFIG_FULLMAC
@@ -74,6 +78,7 @@
 
 #ifdef CONFIG_WIFI_TUNNEL
 #define whc_dev_wtn_rnat_ap_init                         whc_ipc_dev_wtn_rnat_ap_init
+#define whc_dev_wtn_ota_callback_indicate                whc_ipc_dev_wtn_ota_callback_indicate
 #ifdef CONFIG_WTN_SOCKET_APP
 #define whc_dev_wtn_socket_send                          whc_ipc_dev_wtn_socket_send
 #define whc_dev_wtn_socket_init                          whc_ipc_dev_wtn_socket_init
@@ -175,6 +180,7 @@ void whc_ipc_dev_acs_info_indicate(struct rtw_acs_mntr_rpt *acs_mntr_rpt);
 void whc_ipc_dev_scan_each_report_user_callback_indicate(struct rtw_scan_result *scanned_ap_info, void *user_data);
 u8 whc_ipc_dev_promisc_callback_indicate(struct rtw_rx_pkt_info *pkt_info);
 void whc_ipc_dev_ap_ch_switch_callback_indicate(unsigned char channel, s8 ret);
+void whc_ipc_dev_update_regd_event_indicate(struct rtw_country_code_table *table);
 int whc_ipc_dev_set_netif_info(int idx_wlan, unsigned char *dev_addr);
 int whc_dev_get_lwip_info(u32 type, unsigned char *input, int index);
 u64 whc_ipc_host_api_get_wifi_tsf(unsigned char port_id);
@@ -193,8 +199,8 @@ void whc_ipc_dev_cfg80211_indicate_channel_ready(void *scan_userdata);
 #endif
 int whc_ipc_dev_ip_in_table_indicate(u8 gate, u8 ip);
 #ifdef CONFIG_WIFI_TUNNEL
-int whc_ipc_host_api_wtn_identity_key_calc(u8 *password, u32 password_len);
 void whc_ipc_dev_wtn_rnat_ap_init(u8 enable);
+int whc_ipc_dev_wtn_ota_callback_indicate(u8 *buf, u16 len);
 #ifdef CONFIG_WTN_SOCKET_APP
 int whc_ipc_dev_wtn_socket_send(u8 *buf, u32 len);
 void whc_ipc_dev_wtn_socket_init(u8 enable, u8 rnat_ap_start);

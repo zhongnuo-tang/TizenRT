@@ -48,6 +48,12 @@ extern void wifi_set_rom2flash(void);
 #endif
 #elif defined(CONFIG_WHC_INTF_USB)
 #include "whc_usb_dev.h"
+#elif defined(CONFIG_WHC_INTF_UART)
+#if defined(CONFIG_WHC_HOST)
+#include "whc_uart_host.h"
+#else
+#include "whc_uart_dev.h"
+#endif
 #endif
 
 #define WIFI_STACK_SIZE_INIT ((512 + 768) * 4)
@@ -86,7 +92,7 @@ void wifi_init_thread(void *param)
 {
 	UNUSED(param);
 
-#if defined(CONFIG_LWIP_LAYER) && defined(CONFIG_WHC_DUAL_TCPIP)
+#if defined(CONFIG_LWIP_LAYER) && defined(CONFIG_WHC_DEV_TCPIP_KEEPALIVE)
 	LwIP_Init();
 #endif
 

@@ -43,6 +43,10 @@
 #include "whc_spi_drv.h"
 #elif defined (CONFIG_WHC_INTF_USB)
 #include "whc_usb_dev.h"
+#elif defined (CONFIG_WHC_INTF_UART)
+#include "serial_api.h"
+#include "whc_uart_drv.h"
+
 #endif
 
 #include "whc_dev_api.h"
@@ -57,6 +61,7 @@
 #include "rtw_nan_enum.h"
 #endif
 
+#include "whc_dev_powersave.h"
 /* remove after rom freeze */
 #ifndef CONFIG_BUILD_ROM
 #include "bt_inic_defs.h"
@@ -74,5 +79,10 @@ enum WHC_WIFI_CTRL_TYPE {
 	WHC_BT_EVT_MAX = WHC_BT_ID_BASE + 0x1000000
 };
 #endif
+
+#if defined(CONFIG_WPA_STD)
+#include "wpas_std_wifi_intf.h"
+#endif //CONFIG_WPA_STD
+
 
 #endif /* __INIC_SDIO_H__ */

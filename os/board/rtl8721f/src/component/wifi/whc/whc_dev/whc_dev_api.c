@@ -5,7 +5,7 @@
  ******************************************************************************/
 #include "whc_dev.h"
 
-#ifdef CONFIG_WHC_DUAL_TCPIP
+#ifdef CONFIG_WHC_DEV_TCPIP_KEEPALIVE
 #include "whc_dev_tcpip.h"
 
 #include "lwip/sys.h"
@@ -177,17 +177,6 @@ u8  whc_dev_api_get_default_direction(void)
 	return whc_default_direction;
 }
 #endif
-
-void whc_dev_api_set_tickps_cmd(u8 subtype)
-{
-	if (subtype == WHC_CMD_TICKPS_R) {
-		pmu_release_wakelock(PMU_OS);
-	} else if (subtype == WHC_CMD_TICKPS_TYPE_PG) {
-		pmu_set_sleep_type(SLEEP_PG);
-	} else if (subtype == WHC_CMD_TICKPS_TYPE_CG) {
-		pmu_set_sleep_type(SLEEP_CG);
-	}
-}
 
 #ifdef CONFIG_WHC_CMD_PATH
 /**

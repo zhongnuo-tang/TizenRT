@@ -40,7 +40,9 @@
 /**********************************************************************************************
  *                                          Globals
  *********************************************************************************************/
-#if !(defined CONFIG_WHC_DEV) || defined(CONFIG_WPA_LOCATION_DEV) || defined(CONFIG_WHC_WPA_SUPPLICANT_OFFLOAD)
+/* 1. single core or host 2.WPAoD. */
+#if (!(defined CONFIG_WHC_DEV) || defined(CONFIG_WHC_WPA_SUPPLICANT_OFFLOAD))
+#ifndef CONFIG_WPA_STD
 
 extern int (*p_store_fast_connect_info)(unsigned int data1, unsigned int data2);
 extern u8 rtw_join_status;
@@ -52,31 +54,9 @@ extern void eap_disconnected_hdl(void);
 extern u8 wifi_cast_get_initialized(void);
 extern void wifi_cast_wifi_join_status_ev_hdl(u8 *evt_info);
 #endif
-extern struct rtw_event_hdl_func_t event_external_hdl[];
-extern u16 array_len_of_event_external_hdl;
-#ifdef CONFIG_WIFI_TUNNEL
+#if defined(CONFIG_WHC_HOST) && !defined(CONFIG_PLATFORM_ZEPHYR) && !defined(CONFIG_MP_SHRINK) && defined(CONFIG_RMESH_EN)
 extern void wtn_zrpp_get_ap_info_evt_hdl(u8 *evt_info);
 #endif
-
-/**********************************************************************************************
- *                                          External events
- *********************************************************************************************/
-void wifi_event_handle_external(u32 event_cmd, u8 *evt_info)
-{
-	if (!array_len_of_event_external_hdl) {
-		return;
-	}
-
-	for (u32 i = 0; i < array_len_of_event_external_hdl; i++) {
-		if (event_external_hdl[i].evt_id == event_cmd) {
-			if (event_external_hdl[i].handler == NULL) {
-				continue;
-			}
-			event_external_hdl[i].handler(evt_info);
-		}
-	}
-}
-
 /**********************************************************************************************
  *                                          Internal events
  *********************************************************************************************/
@@ -116,8 +96,10 @@ void wifi_event_join_status_internal_hdl(u8 *evt_info)
 			g_link_up(&reason);
 		}
 #endif //#ifndef CONFIG_PLATFORM_TIZENRT_OS
+#ifndef CONFIG_PLATFORM_TIZENRT_OS
 #if defined(CONFIG_LWIP_LAYER) && CONFIG_LWIP_LAYER
-		LwIP_netif_set_link_up(0);
+		LwIP_netif_set_link_up(NETIF_WLAN_STA_INDEX);
+#endif
 #endif
 
 		/* if not use fast dhcp, store fast connect info to flash when connect successfully*/
@@ -165,8 +147,8 @@ void wifi_event_join_status_internal_hdl(u8 *evt_info)
 #ifndef CONFIG_PLATFORM_TIZENRT_OS
 		at_printf_indicate("wifi disconnected\r\n");
 #if defined(CONFIG_LWIP_LAYER) && CONFIG_LWIP_LAYER
-		LwIP_DHCP_stop(0);
-		LwIP_netif_set_link_down(0);
+		LwIP_DHCP_stop(NETIF_WLAN_STA_INDEX);
+		LwIP_netif_set_link_down(NETIF_WLAN_STA_INDEX);
 #endif
 
 #if (!defined(CONFIG_WHC_DEV) && !(defined(ZEPHYR_WIFI) && defined(CONFIG_WHC_HOST))) || defined(CONFIG_WHC_WPA_SUPPLICANT_OFFLOAD)
@@ -204,7 +186,7 @@ void wifi_event_join_status_internal_hdl(u8 *evt_info)
 	rtw_reconn_join_status_hdl(evt_info);
 #endif
 
-#if defined(CONFIG_WHC_HOST) && !defined(CONFIG_ZEPHYR_SDK)
+#if defined(CONFIG_WHC_HOST) && !defined(CONFIG_PLATFORM_ZEPHYR)
 	if (wifi_cast_get_initialized()) {
 		wifi_cast_wifi_join_status_ev_hdl(evt_info);
 	}
@@ -250,6 +232,7 @@ void rtw_join_status_hdl(u8 *evt_info)
 
 void rtw_eapol_start_hdl(u8 *evt_info)
 {
+	(void)evt_info;
 #ifdef CONFIG_ENABLE_EAP
 	if (get_eap_phase()) {
 		eap_eapol_start_hdl(evt_info);
@@ -260,6 +243,7 @@ void rtw_eapol_start_hdl(u8 *evt_info)
 void rtw_eapol_recvd_hdl(u8 *evt_info)
 {
 	struct rtw_event_report_frame *evt_rpt_frm = (struct rtw_event_report_frame *)evt_info;
+	(void)evt_rpt_frm;
 #ifdef CONFIG_ENABLE_EAP
 	if (get_eap_phase()) {
 		eap_eapol_recvd_hdl(evt_rpt_frm->frame, evt_rpt_frm->frame_len);
@@ -332,8 +316,8 @@ const struct rtw_event_hdl_func_t event_internal_hdl[] = {
 #ifdef CONFIG_P2P
 	{RTW_EVENT_WPA_P2P_CHANNEL_RDY,	rtw_p2p_channel_switch_ready},
 #endif
-	// {RTW_EVENT_DEAUTH_INFO_FLASH,	rtw_psk_deauth_info_flash_event_hdl}, //currently not supported on tizenrt, unless we have a specific flash region to use
-#ifdef CONFIG_WIFI_TUNNEL
+	// {RTW_EVENT_DEAUTH_INFO_FLASH,	rtw_psk_deauth_info_flash_event_hdl}, //currently not supported on Tizenrt unless we have a flash region we can use
+#if defined(CONFIG_WHC_HOST) && !defined(CONFIG_PLATFORM_ZEPHYR) && !defined(CONFIG_MP_SHRINK) && defined(CONFIG_RMESH_EN)
 	{RTW_EVENT_WTN_ZRPP_GET_AP_INFO, wtn_zrpp_get_ap_info_evt_hdl},
 #endif
 };
@@ -363,23 +347,7 @@ void wifi_event_handle_internal(u32 event_cmd, u8 *evt_info)
 	UNUSED(evt_info);
 #endif
 }
-
-/**********************************************************************************************
- *                                          Common events
- *********************************************************************************************/
-int wifi_event_handle(u32 event_cmd, u8 *evt_info)
-{
-	if ((event_cmd >= RTW_EVENT_MAX && event_cmd <= RTW_EVENT_INTERNAL_BASE) || event_cmd > RTW_EVENT_INTERNAL_MAX) {
-		RTK_LOGS(TAG_WLAN_INIC, RTK_LOG_ERROR, "invalid evt: %d \n", event_cmd);
-		return -RTK_ERR_BADARG;
-	}
-
-	wifi_event_handle_internal(event_cmd, evt_info);
-
-	wifi_event_handle_external(event_cmd, evt_info);
-
-	return RTK_SUCCESS;
-}
+#endif
 
 void wifi_event_init(void)
 {
@@ -387,17 +355,81 @@ void wifi_event_init(void)
 }
 #endif
 
+/* 1. single core or host 2.not ipc dev. */
+#if !(defined CONFIG_WHC_DEV) || !defined(CONFIG_WHC_INTF_IPC)
+extern struct rtw_event_hdl_func_t event_external_hdl[];
+extern u16 array_len_of_event_external_hdl;
+/**********************************************************************************************
+ *                                          External events
+ *********************************************************************************************/
+void wifi_event_handle_external(u32 event_cmd, u8 *evt_info)
+{
+	if (!array_len_of_event_external_hdl) {
+		return;
+	}
+
+	for (u32 i = 0; i < array_len_of_event_external_hdl; i++) {
+		if (event_external_hdl[i].evt_id == event_cmd) {
+			if (event_external_hdl[i].handler == NULL) {
+				continue;
+			}
+			event_external_hdl[i].handler(evt_info);
+		}
+	}
+}
+#endif
+
+/**********************************************************************************************
+ *                                          Common events
+ *********************************************************************************************/
+int wifi_event_handle(u32 event_cmd, u8 *evt_info)
+{
+	u32 prepend_len;
+	(void)evt_info;
+	(void)prepend_len;
+
+	if (event_cmd & (BIT(31))) {
+		/* WPAoH: due to whc_dev_wifi_event_indicate*/
+		prepend_len = 2 * sizeof(u32);
+	} else {
+		/* 1.host or single 2.ipc dev 3.WPAoD */
+		prepend_len = 0;
+	}
+	event_cmd &= (~(BIT(31)));
+	if ((event_cmd >= RTW_EVENT_MAX && event_cmd <= RTW_EVENT_INTERNAL_BASE) || event_cmd > RTW_EVENT_INTERNAL_MAX) {
+		RTK_LOGS(TAG_WLAN_INIC, RTK_LOG_ERROR, "invalid evt: %d \n", event_cmd);
+		return -RTK_ERR_BADARG;
+	}
+
+	/* 1. single core or host 2.WPAoD. */
+#if (!(defined CONFIG_WHC_DEV) || defined(CONFIG_WHC_WPA_SUPPLICANT_OFFLOAD))
+#ifndef CONFIG_WPA_STD
+	wifi_event_handle_internal(event_cmd, evt_info + prepend_len); //prepend_len = 0
+#endif
+#endif
+	/* 1. single core or host 2.not ipc dev. */
+#if !(defined CONFIG_WHC_DEV) || !defined(CONFIG_WHC_INTF_IPC)
+	wifi_event_handle_external(event_cmd, evt_info + prepend_len);
+#endif
+	return RTK_SUCCESS;
+}
+
 void wifi_indication(u32 event, u8 *evt_info, s32 evt_len)
 {
 	(void)evt_len;
+
+	/* 1. ipc dev 2. WPAoH */
 #if defined(CONFIG_WHC_DEV) && !defined(CONFIG_WHC_WPA_SUPPLICANT_OFFLOAD)
 	extern void whc_dev_wifi_event_indicate(u32 event_cmd, u8 * evt_info, s32 evt_len);
 	whc_dev_wifi_event_indicate(event, evt_info, evt_len);
 #endif
 
-#if !(defined CONFIG_WHC_DEV) || defined(CONFIG_WPA_LOCATION_DEV) || defined(CONFIG_WHC_WPA_SUPPLICANT_OFFLOAD)
-	wifi_event_handle(event, evt_info);
+#if defined(CONFIG_WPA_STD)
+	extern void whc_dev_wpas_wifi_event_indicate(u32 event_cmd, u8 * evt_info, s32 evt_len);
+	whc_dev_wpas_wifi_event_indicate(event, evt_info, evt_len);
 #endif
+
+	wifi_event_handle(event, evt_info);
 }
 
 void wifi_indication_ext(u32 event, u8 *info_buf, s32 info_len, u8 *frame_buf, s32 frame_len)
@@ -406,6 +438,7 @@ void wifi_indication_ext(u32 event, u8 *info_buf, s32 info_len, u8 *frame_buf, s
 	s32 data_len = info_len + frame_len;
 	u32 evt_buf_len, prepend_len = 0;
 
+	/* WPAoH: due to whc_dev_wifi_event_indicate*/
 #if defined(CONFIG_WHC_DEV) && !defined(CONFIG_WHC_WPA_SUPPLICANT_OFFLOAD) && !defined(CONFIG_WHC_INTF_IPC)
 	prepend_len = 2 * sizeof(u32);   /* Prepend event and data_len if non IPC intf */
 #endif

@@ -20,6 +20,9 @@
 #define __WIFI_CONF_INTERNAL_H
 
 #include "wifi_api_types.h"
+#ifndef CONFIG_FULLMAC
+#include "lwip_netconf.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -141,7 +144,7 @@ struct rtw_crypt_info {
  * @brief  The structure is status of wpa_4way.
  */
 struct rtw_wpa_4way_status {
-	u8 *mac_addr;             /**< Mac addr of 4-way interactive peer device. */
+	u8 mac_addr[6];             /**< Mac addr of 4-way interactive peer device. */
 	u8 wlan_idx;              /**< Index of wlan interface. */
 	u8 is_start : 1;          /**< Start(1) or stop(0) of 4way/2way exchange. */
 	u8 is_grpkey_update : 1;  /**< Indicate first key change(0) or update grp_key change(1). */
@@ -315,6 +318,14 @@ struct rtw_nan_func_t {
 #endif
 
 /**
+  * @brief  the parameters for edcca test, only used for driver internal to set the edcca.
+  */
+struct rtw_edcca_param_t {
+	unsigned int edcca_mode; /**< 0: normal; 1: ETSI; 2 Janpan; 9: Disable */
+	int edcca_th; /**< EDCCA threshold, unit is dBm, the scope is [-128, 127], and the minimum step is 1.*/
+};
+
+/**
  * @brief  Set the current Media Access Control (MAC) address
  *	(or Ethernet hardware address) of the 802.11 device.
  * @param[in]  idx: Set STA or SoftAP mac address.
@@ -329,9 +340,11 @@ int wifi_set_mac_address(int idx, unsigned char *mac, u8 efuse);
 /**
  * @brief  for wifi certification of ETSI mode
  * @param[in]  edcca_mode: 0: normal; 1: ETSI; 2 Janpan; 9: Disable
+ * @param[in]  edcca_th: EDCCA threshold, unit is dBm, the scope is
+ *	[-60, -80], and the minimum step is 1.
  * @return  null.
  */
-void wifi_set_edcca_mode(u8 edcca_mode);
+void wifi_set_edcca_param(struct rtw_edcca_param_t *param);
 
 /**
  * @brief  Set global variable wifi_wpa_mode.
@@ -498,6 +511,12 @@ int wifi_if_send_eapol(unsigned char wlan_idx, char *buf, u16 buf_len, u16 flags
   * @return  RTK_SUCCESS or RTK_FAIL.
   */
 int wifi_wake_pll_rdy_in_ps_state(u8 need);
+
+/**
+  * @brief  for bt on to disable/enable ips/lps function
+  * @param[in] enable [DISABLE-disable and leave ips/lps; ENABLE-Release the control of BT ON over IPS/LPS]
+  */
+void wifi_ps_en_by_bt_on(u8 enable);
 
 /**
  * @brief  Enable Wi-Fi interface-2.

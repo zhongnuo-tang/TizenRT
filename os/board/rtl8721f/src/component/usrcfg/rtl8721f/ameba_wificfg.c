@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-//#include "platform_autoconf.h"
+#include "platform_autoconf.h"
 #include <wifi_api.h>
 #if defined(CONFIG_WHC_HOST)
 #include "whc_ipc.h"
@@ -31,7 +31,7 @@ _WEAK void wifi_set_user_config(void)
 	wifi_user_config.skb_num_np = 20;  /* skb_num_np should >= rx_ampdu_num + skb_num_np_rsvd */
 	wifi_user_config.skb_num_ap = 0;
 	wifi_user_config.rx_ampdu_num = 8;
-#elif defined(CONFIG_WHC_INTF_SPI)
+#elif defined(CONFIG_WHC_INTF_SPI)  || defined(CONFIG_WHC_INTF_UART)
 	skb_num_np_rsvd = 7; /*4 for rx_ring_buffer + 2 for mgnt trx + 1 for spi rx_dma_buffer */
 	wifi_user_config.skb_num_np = 14;  /* skb_num_np should >= rx_ampdu_num + skb_num_np_rsvd */
 	wifi_user_config.skb_num_ap = 0;
@@ -51,6 +51,7 @@ _WEAK void wifi_set_user_config(void)
 	wifi_user_config.skb_num_ap = 0;
 #endif
 #endif
+	wifi_user_config.tx_ampdu_num = 0; /* 0: default 20, 1: equivalent to wifi_user_config.ampdu_tx_enable = 0, Otherwise: max aggregation number, up to 0x3F*/
 	wifi_user_config.skb_buf_size = 0;
 	wifi_user_config.wifi_wpa_mode_force = RTW_WPA_AUTO_MODE;
 
@@ -73,6 +74,7 @@ _WEAK void wifi_set_user_config(void)
 	/* LPS(Legacy Power Save), power save when wifi connected */
 	wifi_user_config.lps_enable = 1;
 	wifi_user_config.lps_listen_interval = 0;
+	wifi_user_config.lps_rx_unicast_pkt_timeout = 40;	/* set rx unicast packet timeout in LPS, unit:ms, max_value:100*/
 	wifi_user_config.wowlan_rx_bcmc_dis = 0;
 
 	/* Softap related */
@@ -82,18 +84,21 @@ _WEAK void wifi_set_user_config(void)
 	/* MISC */
 	wifi_user_config.en_mcc = (u8) DISABLE;  /* must select ENABLE_MCC in menuconfig when wifi_user_config.en_mcc=1 */
 	wifi_user_config.mcc_force_p1_slot_ratio = 44;
-	wifi_user_config.max_roaming_times = 2;
 	wifi_user_config.ampdu_rx_enable = (u8)TRUE;
 	wifi_user_config.ampdu_tx_enable = (u8)TRUE;
-	wifi_user_config.check_dest_address_en = (u8)TRUE;
-	wifi_user_config.ap_compatibilty_enabled = 0x0B;
+	wifi_user_config.ap_compatibilty_enabled = 0x07;
 	wifi_user_config.set_channel_api_do_rfk = 1;
 	wifi_user_config.dpk_peak_limit = 0;
 	wifi_user_config.rf_calibration_disable = 0;
 	wifi_user_config.tx_shortcut_enable = 1;
 	wifi_user_config.rx_shortcut_enable = 1;
 	wifi_user_config.keepalive_interval = 20;
-#if defined(CONFIG_FULLMAC_DEV) &&  !defined(CONFIG_WHC_WPA_SUPPLICANT_OFFLOAD)
+	wifi_user_config.rx_cca_thresh = 0;
+	wifi_user_config.rate_mask_cck = 0x0;
+	wifi_user_config.sgi = 1;
+	wifi_user_config.he_gi_ltf_cap = RTW_HE_GI_LTF_ALL;
+
+#if defined(CONFIG_WHC_DEV) && !defined(CONFIG_WHC_INTF_IPC) &&  !defined(CONFIG_WHC_WPA_SUPPLICANT_OFFLOAD)
 	/* Linux wifi supports cfg80211 ops. */
 	wifi_user_config.cfg80211 = 1;
 #else

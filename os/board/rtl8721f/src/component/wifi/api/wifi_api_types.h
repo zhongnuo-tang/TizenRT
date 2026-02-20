@@ -74,6 +74,23 @@ extern "C" {
 				((u8*)(x))[4],((u8*)(x))[5]      /**< Formats MAC address for printing. Usage Example: RTK_LOGS(NOTAG, RTK_LOG_INFO, "MAC addr="MAC_FMT"\n", MAC_ARG(mac_addr));*/
 #define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"  /**< Format string for printing MAC address.*/
 
+#define INVALID_RX_SNR			127
+
+/* SECCAM sec_type define, equal to rxdesc format */
+#define _NO_PRIVACY_    0x0
+#define _WEP40_         0x1
+#define _TKIP_          0x2
+#define _TKIP_WTMIC_    0x3
+#define _AES_           0x4	//_CCMP_128_ + _CCMP_256_
+#define _WEP104_        0x5
+#define _SMS4_          0x6	//_WAPI_
+#define _GCMP_          0x7	//_GCMP_128_ + _GCMP_256_
+#define _GCMP_256_      (_GCMP_ | BIT(3))
+#define _CCMP_256_      (_AES_ | BIT(3))
+#define _GCM_WAPI_      (_SMS4_ | BIT(3)) //_GCM_WAPI_
+#define _BIP_           0x8
+#define _BIP_GMAC_256   0x9
+
 /** @} End of WIFI_Exported_Constants group*/
 
 
@@ -101,7 +118,7 @@ enum rtw_security_flag {
 };
 
 /**
-  * @brief  Enumerates the disconnect reasons used in @ref rtw_join_status_info
+  * @brief  Enumerates the disconnect reasons used in @ref rtw_event_join_status_info
   *         when a disconnect event (@ref RTW_JOINSTATUS_DISCONNECT) occurs (size: u16).
   *         The reasons include both standard 802.11 specification-based reasons and custom-defined
   *         reasons by the driver and application layers.
@@ -135,14 +152,14 @@ enum rtw_disconn_reason {
 #endif
 	/*RTK defined: Driver-detected issues causing disconnection. */
 	RTW_DISCONN_RSN_DRV_BASE                            = 60000,
-	RTW_DISCONN_RSN_DRV_AP_LOSS                         = 60001, /*~DIAG: no rx for a long time*/
-	RTW_DISCONN_RSN_DRV_AP_CHANGE                       = 60002, /*~DIAG: AP change*/
+	RTW_DISCONN_RSN_DRV_AP_LOSS                         = 60001, /**< <!-- DIAG: --> no rx for a long time*/
+	RTW_DISCONN_RSN_DRV_AP_CHANGE                       = 60002, /**< <!-- DIAG: --> AP change*/
 	RTW_DISCONN_RSN_DRV_BASE_END                        = 60099,
 
 	/*RTK defined: Application layer call some API to cause wifi disconnect.*/
 	RTW_DISCONN_RSN_APP_BASE                            = 60100,
-	RTW_DISCONN_RSN_APP_DISCONN                         = 60101, /*~DIAG: by APP*/
-	RTW_DISCONN_RSN_APP_CONN_WITHOUT_DISCONN            = 60102, /*~DIAG: disconnect before connecting*/
+	RTW_DISCONN_RSN_APP_DISCONN                         = 60101, /**< <!-- DIAG: --> by APP*/
+	RTW_DISCONN_RSN_APP_CONN_WITHOUT_DISCONN            = 60102, /**< <!-- DIAG: --> disconnect before connecting*/
 	RTW_DISCONN_RSN_APP_BASE_END                        = 60199,
 
 	RTW_DISCONN_RSN_MAX                                 = 65535,/*0xffff*/
@@ -303,6 +320,16 @@ enum rtw_rate {
 	RTW_RATE_UNKNOWN = 0xff  /**< 0xff */
 };
 
+enum rtw_gi_ltf_cap {
+	RTW_HE_32_GI_4X_LTF	= BIT(0), /** HE 3.2us 4x LTF */
+	RTW_HE_08_GI_4X_LTF	= BIT(1), /** HE 0.8us 4x LTF */
+	RTW_HE_16_GI_2X_LTF	= BIT(2), /** HE 1.6us 2x LTF */
+	RTW_HE_08_GI_2X_LTF	= BIT(3), /** HE 0.8us 2x LTF */
+	RTW_HE_16_GI_1X_LTF	= BIT(4), /** HE 1.6us 1x LTF */
+	RTW_HE_08_GI_1X_LTF	= BIT(5), /** HE 0.8us 1x LTF */
+	RTW_HE_GI_LTF_ALL	= 0xFF /** support all GI-LTF modes */
+};
+
 /**
   * @brief CSI triggering management frame subtypes (size: u16).
   */
@@ -429,9 +456,6 @@ enum rtw_csi_role {
 enum rtw_trp_tis_mode {
 	RTW_TRP_TIS_DISABLE = 0,               /**< Disable TRP/TIS certification (default) */
 	RTW_TRP_TIS_NORMAL = 1,
-	RTW_TRP_TIS_DYNAMIC = 3,               /**< Enable dynamic mechanism */
-	RTW_TRP_TIS_FIX_ACK_RATE = 5,          /**<  Fix ACK rate to 6M */
-	RTW_TRP_TIS_FIX_PHY_ACK_HIGH_RATE = 9  /**<  Fix PHY ACK rate to RATE_54M | RATE_48M | RATE_36M | RATE_24M | RATE_18M | RATE_12M | RATE_9M | RATE_6M */
 };
 
 /**
@@ -629,6 +653,42 @@ enum rtw_frame_type_subtype {
 	RTW_QOS_DATA_NULL	= (BIT(6) | RTW_QOS_DATA_TYPE),
 };
 
+/**
+ * @brief RMesh node types (size: u8).
+ */
+enum rtw_rmesh_node_type {
+	RMESH_SELF_NODE = 0,
+	RMESH_FATHER_NODE = 1,
+	RMESH_ROOT_NODE = 2,
+};
+
+/**
+ * @brief update_masks field definition for struct rtw_tx_advanced_cfg{} (size: u16).
+ */
+
+enum rtw_tx_advanced_cfg_update_masks {
+	RTW_UPDATE_TXCFG_TX_LIFE_TIME_BEBK      = BIT(0),
+	RTW_UPDATE_TXCFG_TX_LIFE_TIME_VIVO      = BIT(1),
+	RTW_UPDATE_TXCFG_BCN_TX_PROTECT_TIME    = BIT(2),
+	RTW_UPDATE_TXCFG_BCN_RX_PROTECT_TIME    = BIT(3),
+	RTW_UPDATE_TXCFG_NAV_UPDATE_TH          = BIT(4),
+	RTW_UPDATE_TXCFG_IGNORE_TX_NAV          = BIT(5),
+	RTW_UPDATE_TXCFG_PARAM_ALL              = 0xFFFF,
+};
+
+/**
+ * @brief update_masks field definition for struct rtw_conn_step_retries{} (size: u16).
+ */
+
+enum rtw_conn_step_retries_update_masks {
+	RTW_UPDATE_CONN_RESCAN                = BIT(0),
+	RTW_UPDATE_CONN_REAUTH                = BIT(1),
+	RTW_UPDATE_CONN_SAE_REAUTH            = BIT(2),
+	RTW_UPDATE_CONN_REASSOC               = BIT(3),
+	RTW_UPDATE_CONN_RESEND_EAPOL          = BIT(4),
+	RTW_UPDATE_CONN_PARAM_ALL             = 0xFFFF,
+};
+
 /** @} End of WIFI_Exported_Enumeration_Types group*/
 
 /** @addtogroup WIFI_Exported_Structure_Types Structure Type
@@ -714,7 +774,7 @@ struct rtw_scan_param {
 	 *  APs with the lowest RSSI are discarded if scanned APs exceed this number. */
 	u16                              max_ap_record_num;
 	void                            *scan_user_data;   /**< User-defined data passed to callback functions for handling scan results. */
-	u8                              rom_rsvd[8]; //resverd for next cut
+	u8                              rom_rsvd[8];       //resverd for next cut
 
 	/** @brief Callback for normal asynchronous mode.
 	  * @param[in] ap_num: Total number of scanned APs.
@@ -798,6 +858,8 @@ struct rtw_sme_auth_info {
  * @note   All retry limits are capped at 10.
  */
 struct rtw_conn_step_retries {
+	u16 update_masks;                /**< Mask subfield. If a parameter is set, its corresponding bit in update_masks must also be set. @ref RTW_UPDATE_CONN_RESCAN... */
+	u8 rescan_limit : 4;             /**< Retry limit for scan when joinbss. */
 	u8 reauth_limit : 4;             /**< Retry limit for authentication (open/shared key). */
 	u8 sae_reauth_limit : 4;         /**< Retry limit for SAE authentication. */
 	u8 reassoc_limit : 4;            /**< Retry limit for association. */
@@ -913,6 +975,7 @@ struct rtw_csa_parm {
 */
 struct rtw_rx_pkt_info {
 	s8 recv_signal_power;  /**< Received signal strength indicator (RSSI) in dBm. */
+	s8 snr;                /**< Signal-to-noise ratio in dB. Unsupported ICs include Amebalite, Amebasmart, Amebagreen2 using INVALID_RX_SNR*/
 	u8 data_rate;          /**< Data rate of the received packet. Values: @ref RTW_RATE_1M, @ref RTW_RATE_2M, etc. */
 	u8 channel;            /**< Channel on which the packet was received. */
 	u8 *buf;               /**< Pointer to the buffer containing the received packet data. */
@@ -924,8 +987,8 @@ struct rtw_rx_pkt_info {
 */
 struct rtw_promisc_para {
 	/** @brief Specify which packets to receive by setting filtering conditions.
-		- @ref RTW_PROMISC_FILTER_ALL_PKT : Receive all packets in the air.
-		- @ref RTW_PROMISC_FILTER_AP_ALL : Receive all packtets sent by the connected AP.
+		- @ref RTW_PROMISC_FILTER_ALL_PKT : No address filtering.
+		- @ref RTW_PROMISC_FILTER_AP_ALL : Receive only packtets sent to or from the connected AP.
 		*/
 	u8 filter_mode;
 	/** @brief Callback function to handle received packets.
@@ -952,11 +1015,15 @@ struct rtw_edca_param {
 /**
 *@brief Provide optional parameters for improving tx performance in special scenario
 */
+
 struct rtw_tx_advanced_cfg {
+	u16 update_masks;             /**< Mask subfield. If a parameter is set, its corresponding bit in update_masks must also be set. @ref RTW_UPDATE_TXCFG_TX_LIFE_TIME_BEBK... */
 	u16 pkt_lifetime_bebk;        /**< Packet lifetime in units of 256us for AC_BE/AC_BK. */
 	u16 pkt_lifetime_vivo;        /**< Packet lifetime in units of 256us for AC_VI/AC_VO. */
-	u8 nav_update_th;             /**< Rx NAV (Network Allocation Vector) update threshold in units of 128us[can not tx during Rx NAV]. */
-	u8 b_ignore_tx_nav_done : 1;  /**< Queue BKF not need to wait TX Nav finished. */
+	u16 tx_bcn_protect_time;      /**< A reserved period for Beacon TX, preventing other transmissions, unit:32us */
+	u8 rx_bcn_protect_time;       /**< A reserved period for Beacon RX, preventing other transmissions, unit:2.048ms; */
+	u8 rx_nav_update_th;          /**< Rx NAV (Network Allocation Vector) update threshold in units of 128us[can not tx during Rx NAV]. */
+	u8 b_ignore_tx_nav : 1;       /**< Queue BKF not need to wait TX Nav finished. */
 };
 
 /**********************************************************************************************
@@ -1113,6 +1180,15 @@ struct rtw_tx_power_ctl_info {
  */
 struct rtw_acs_config {
 	u8 band; /**< Frequency band: @ref RTW_SUPPORT_BAND_2_4G, etc. */
+};
+
+/**
+ * @brief Informations of RMesh node.
+ */
+struct rtw_rmesh_node_info {
+	u8 mac[6]; /**< MAC addressof node.*/
+	u8 layer; /**< layer of node.*/
+	u8 is_rnat; /**< 1 for node is rnat, 0 for node is not rnat.*/
 };
 
 /** @} End of WIFI_Exported_Structure_Types group*/

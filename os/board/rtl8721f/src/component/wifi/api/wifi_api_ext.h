@@ -77,6 +77,44 @@ s32 wifi_set_lps_enable(u8 enable);
  */
 s32 wifi_set_lps_listen_interval(u8 interval);
 
+/**
+ * @brief   Enable or disable manual configuration of rxbcn window under LPS.
+ * @param[in]  enable: It could be TRUE or FALSE.
+ * 	FALSE(default) means rxbcn window automatically decided by IC; TRUE means rxbcn window set by this api parameters.
+ * @param[in] bcn_ely_time(unit: 128us):set the rx bcn wakpup-ely-time before TBTT.
+ * @param[in] rx_bcn_timeout(unit: 1 ms): If no bcn is received within rx_bcn_timeout, RF will be turned off. Max to 31ms.
+ * @return  RTW_SUCCESS if setting successful.
+ * @return  RTW_ERROR otherwise.
+ */
+s32 wifi_set_lps_bcn_window(u8 enable, u8 bcn_ely_time, u8 rx_bcn_timeout);
+
+/**
+ * @brief   Enable or disable rx broadcast in tickless wowlan mode.
+ * @param[in]  enable: FALSE means disable rx broadcast in tickless wowlan mode, TRUE means enable(default) rx broadcast in tickless wowlan mode.
+ * @return
+ *    - @ref RTK_SUCCESS : The API executed successfully.
+ */
+s32 wifi_set_wowlan_rx_broadcast(u8 enable);
+
+/**
+ * @brief Set up custom TCP/UDP broadcast port filter white list for wifi wake application core under tickless state
+ * @warning There are up to 6 port numbers.
+ * @param[in] port_list: port list need to add in port filter white list
+ * @param[in] list_count: number of port list
+ * @code
+ * u16 port_list[] = {1234, 2234, 3234, 4234};
+ * wifi_set_broadcast_port_wakeup_white_list(port_list, 4);
+ * @endcode
+ * @return
+ *    - @ref RTK_SUCCESS : The API executed successfully.
+ *    - @ref RTK_FAIL : The API executed fail.
+ *    - @ref RTK_ERR_WIFI_NOT_INIT : wifi not initial
+ *    - @ref RTK_ERR_WIFI_POWEROFF : Wi-Fi is powered off in IPS(Inactive Power Save) mode.
+ * @note
+ *    - If the port of TCP/UDP broadcast packet not match port_list, drop the packet and not wakeup host
+ *    - If this API is not set, all ports will not be filtered
+ */
+s32 wifi_set_broadcast_port_wakeup_white_list(u16 *port_list, u8 list_count);
 
 /**
  * @brief  Set the auto-reconnect mode for Wi-Fi connection.
@@ -273,6 +311,8 @@ s32 wifi_set_wireless_mode(u32 wmode);
  *        - Do not support calling APIs in callback.
  *        - Enabling promisc mode temporarily disables LPS(Legacy Power Save) and IPS(Inactive Power Save).
  *        - Original power save settings are restored when promisc mode is disabled.
+ *        - Promiscuous mode can coexist with STA mode and SoftAP mode. After packets are processed by the application layer, the Wi-Fi driver layer can proceed with further processing.
+ *        - Promiscuous mode can report Data Frames and Management Frames, but Control Frames are currently not reported.
  * @return  None.
  */
 void wifi_promisc_enable(u32 enable, struct rtw_promisc_para *para);
@@ -356,7 +396,6 @@ s32 wifi_get_txbuf_pkt_num(s32 *pkt_num);
  */
 s32 wifi_get_antdiv_info(u8 *antdiv_mode, u8 *curr_ant);
 
-//-------------------------------------------------------------//
 /**
  * @brief Get the supported frequency band type.
  * @param[out]  band_type: Pointer to store the supported band type. Values:
@@ -397,7 +436,10 @@ s32 wifi_get_latched_tsf_i2s(struct rtw_speaker_read_latch_req *req, struct rtw_
  * @code
  *  u8 ie1[] = {221, 2, 2, 2};
  *  u8 ie2[] = {221, 2, 1, 1};
- *  struct rtw_custom_ie ie_list[2] = {{ie1, RTW_CUS_IE_BEACON|RTW_CUS_IE_PROBERSP}, {ie2, RTW_CUS_IE_PROBERSP}};
+ *  struct rtw_custom_ie ie_list[2] = {
+ *	  {ie1, RTW_CUS_IE_BEACON|RTW_CUS_IE_PROBERSP},
+ *    {ie2, RTW_CUS_IE_PROBERSP}
+ *  };
  *  wifi_add_custom_ie(ie_list, 2);
  * @endcode
  * @return
@@ -468,14 +510,23 @@ s32 wifi_set_tx_rate_by_tos(u8 enable, u8 tos_precedence, u8 tx_rate);
  * @brief  Set EDCA parameters for STA/SOFTAP. Suggest to call API when wifi connected for STA mode, e,g., in RTW_EVENT_JOIN_STATUS event handler.
  * @param[in]  pedca_param: EDCA parameters {ACI, AIFSN, CWmax, CWmin, TXOP, SlotTime} (as WMM_Specification_1.1 table 13):
  * @code
- * struct rtw_edca_param edca_param_0 = {0, 7, 0xa, 0x4, 0x0, 0}; // BE Queue, AIFSN=7, CWmax=10, CWmin=4, TXOP=0, SlotTime default (short slot time 9us, long slot time 20us)
- * struct rtw_edca_param edca_param_1 = {1, 3, 0xa, 0x4, 0x0, 0}; // BK Queue, AIFSN=3, CWmax=10, CWmin=4, TXOP=0, SlotTime default (short slot time 9us, long slot time 20us)
- * struct rtw_edca_param edca_param_2 = {2, 2, 0x4, 0x3, 0x5e, 0}; // VI Queue, AIFSN=2, CWmax=4, CWmin=3, TXOP=3.008ms, SlotTime default (short slot time 9us, long slot time 20us)
- * struct rtw_edca_param edca_param_3 = {3, 2, 0x3, 0x2, 0x2f, 0}; // VO Queue, AIFSN=2, CWmax=3, CWmin=2, TXOP=1.504ms, SlotTime default (short slot time 9us, long slot time 20us)
+ * struct rtw_edca_param edca_param_0 = {0, 7, 0xa, 0x4, 0x0, 0};
+ * // BE Queue, AIFSN=7, CWmax=10, CWmin=4, TXOP=0, SlotTime default
+ * (short slot time 9us, long slot time 20us)
+ * struct rtw_edca_param edca_param_1 = {1, 3, 0xa, 0x4, 0x0, 0};
+ * // BK Queue, AIFSN=3, CWmax=10, CWmin=4, TXOP=0, SlotTime default
+ * (short slot time 9us, long slot time 20us)
+ * struct rtw_edca_param edca_param_2 = {2, 2, 0x4, 0x3, 0x5e, 0};
+ * // VI Queue, AIFSN=2, CWmax=4, CWmin=3, TXOP=3.008ms, SlotTime default
+ * (short slot time 9us, long slot time 20us)
+ * struct rtw_edca_param edca_param_3 = {3, 2, 0x3, 0x2, 0x2f, 0};
+ * // VO Queue, AIFSN=2, CWmax=3, CWmin=2, TXOP=1.504ms, SlotTime default
+ * (short slot time 9us, long slot time 20us)
  * wifi_set_edca_param(&edca_param_0);
  * wifi_set_edca_param(&edca_param_1);
  * wifi_set_edca_param(&edca_param_2);
  * wifi_set_edca_param(&edca_param_3);
+ * @endcode
  * @return
  *    - @ref RTK_SUCCESS : The API executed successfully.
  *    - -@ref RTK_ERR_WIFI_POWEROFF : Wi-Fi is powered off in IPS(Inactive Power Save) mode,

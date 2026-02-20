@@ -296,7 +296,7 @@ retry:
 		}
 
 		/* check RX_REQ level */
-		if (GPIO_ReadDataBit(RX_REQ_PIN)) {
+		if (GPIO_ReadDataBit(DEV_TX_REQ_PIN)) {
 			rtos_sema_take(spi_host_priv.host_recv_done, MUTEX_WAIT_TIMEOUT);
 			spi_host_priv.host_dma_waiting_status = HOST_RX_DMA_CB_DONE | HOST_TX_DMA_CB_DONE;
 
@@ -335,7 +335,7 @@ static int whc_spi_host_devrdy_handler(int irq, void *context)
 	return 1; //IRQ_HANDLED;
 }
 
-static int whc_spi_host_rx_req_handler(int irq, void *context)
+static int whc_spi_host_dev_txreq_handler(int irq, void *context)
 {
 	(void)irq;
 	(void)context;
@@ -352,14 +352,14 @@ static void whc_spi_host_setup_gpio(void)
 	InterruptEn(GPIOB_IRQ, 6);
 
 	/* Initialize GPIO */
-	/* rx req only need rising */
-	GPIO_InitStruct.GPIO_Pin = RX_REQ_PIN;
+	/* tx req only need rising */
+	GPIO_InitStruct.GPIO_Pin = DEV_TX_REQ_PIN;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_DOWN;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_INT;
 	GPIO_InitStruct.GPIO_ITTrigger = GPIO_INT_Trigger_EDGE;
 	GPIO_InitStruct.GPIO_ITPolarity = GPIO_INT_POLARITY_ACTIVE_HIGH;
 	GPIO_Init(&GPIO_InitStruct);
-	GPIO_UserRegIrq(GPIO_InitStruct.GPIO_Pin, whc_spi_host_rx_req_handler, &GPIO_InitStruct);
+	GPIO_UserRegIrq(GPIO_InitStruct.GPIO_Pin, whc_spi_host_dev_txreq_handler, &GPIO_InitStruct);
 	GPIO_INTConfig(GPIO_InitStruct.GPIO_Pin, ENABLE);
 
 	/* dev ready need both edge */
@@ -482,13 +482,18 @@ static void whc_spi_host_spi_init(void)
 
 	u8 index = (WHC_SPI_DEV == SPI0_DEV) ? 0 : 1;
 
-	RCC_PeriphClockCmd(APBPeriph_SPI0, APBPeriph_SPI0_CLOCK, ENABLE);
-	Pinmux_Config(SPI1_MOSI, PINMUX_FUNCTION_SPIM);//MOSI
-	Pinmux_Config(SPI1_MISO, PINMUX_FUNCTION_SPIM);//MISO
-	Pinmux_Config(SPI1_SCLK, PINMUX_FUNCTION_SPIM);//CLK
-	//Pinmux_Config(SPI1_CS, PINMUX_FUNCTION_SPIM);//CS
-	//PAD_PullCtrl(SPI1_CS, GPIO_PuPd_UP);  // pull-up, default 1
-	PAD_PullCtrl(SPI1_SCLK, GPIO_PuPd_DOWN);
+	if (WHC_SPI_DEV == SPI0_DEV) {
+		RCC_PeriphClockCmd(APBPeriph_SPI0, APBPeriph_SPI0_CLOCK, ENABLE);
+	} else {
+		RCC_PeriphClockCmd(APBPeriph_SPI1, APBPeriph_SPI1_CLOCK, ENABLE);
+	}
+
+	Pinmux_Config(SPIM_MOSI, PINMUX_FUNCTION_SPIM);//MOSI
+	Pinmux_Config(SPIM_MISO, PINMUX_FUNCTION_SPIM);//MISO
+	Pinmux_Config(SPIM_SCLK, PINMUX_FUNCTION_SPIM);//CLK
+	//Pinmux_Config(SPIM_CS, PINMUX_FUNCTION_SPIM);//CS
+	//PAD_PullCtrl(SPIM_CS, GPIO_PuPd_UP);  // pull-up, default 1
+	PAD_PullCtrl(SPIM_SCLK, GPIO_PuPd_DOWN);
 
 	SSI_SetRole(WHC_SPI_DEV, SSI_MASTER);
 	SSI_StructInit(&SSI_InitStructMaster);
@@ -499,7 +504,7 @@ static void whc_spi_host_spi_init(void)
 	/* for stable now */
 #ifndef SPI_TOOD
 #endif
-	SSI_InitStructMaster.SPI_ClockDivider = 4;
+	SSI_InitStructMaster.SPI_ClockDivider = SPI_CLOCK_DIVIDER;
 	SSI_Init(WHC_SPI_DEV, &SSI_InitStructMaster);
 
 	spi_host_priv.rx_buf = rtos_mem_zmalloc(SPI_BUFSZ);
